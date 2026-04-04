@@ -1,0 +1,195 @@
+<section
+  *ngIf="isOpen"
+  class="login-backdrop"
+  (click)="onBackdropClick($event)"
+  aria-label="Boite de dialogue de connexion"
+>
+  <div class="login-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+      ×
+    </button>
+
+    <div class="title-wrap">
+      <p class="eyebrow">Bienvenue</p>
+      <h2 id="login-title">
+        {{
+          mode === 'login'
+            ? 'Connexion'
+            : mode === 'register'
+              ? 'Creer un compte'
+              : 'Mot de passe oublie'
+        }}
+      </h2>
+      <p class="subtitle">
+        {{
+          mode === 'login'
+            ? 'Connectez-vous pour acceder a votre espace de gestion.'
+            : mode === 'register'
+              ? 'Inscrivez-vous en quelques secondes.'
+              : 'Recevez un lien de reinitialisation de mot de passe par email.'
+        }}
+      </p>
+
+      <div class="switch-row" role="tablist" aria-label="Selection du mode">
+        <button
+          type="button"
+          class="switch-btn"
+          [class.active]="mode === 'login'"
+          (click)="switchMode('login')"
+        >
+          Connexion
+        </button>
+        <button
+          type="button"
+          class="switch-btn"
+          [class.active]="mode === 'register'"
+          (click)="switchMode('register')"
+        >
+          Inscription
+        </button>
+      </div>
+    </div>
+
+    <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="form-grid" novalidate>
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="vous@exemple.com" />
+      </label>
+      <small class="error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
+        Email invalide.
+      </small>
+
+      <label class="field">
+        <span>Mot de passe</span>
+        <input type="password" formControlName="password" placeholder="Au moins 6 caracteres" />
+      </label>
+      <small class="error" *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid">
+        Mot de passe invalide.
+      </small>
+
+      <label class="remember-row">
+        <input type="checkbox" formControlName="remember" />
+        <span>Se souvenir de moi</span>
+      </label>
+
+      <p class="error" *ngIf="loginError">{{ loginError }}</p>
+
+      <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Connexion...' : 'Se connecter' }}
+      </button>
+
+      <p class="switch-text">
+        Pas encore de compte ?
+        <button type="button" class="text-link" (click)="switchMode('register')">Creer un compte</button>
+      </p>
+
+      <p class="switch-text">
+        Mot de passe oublie ?
+        <button type="button" class="text-link" (click)="switchMode('forgot')">Reinitialiser</button>
+      </p>
+    </form>
+
+    <form *ngIf="mode === 'forgot'" [formGroup]="forgotForm" (ngSubmit)="submitForgotPassword()" class="form-grid" novalidate>
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="vous@exemple.com" />
+      </label>
+      <small class="error" *ngIf="forgotForm.controls.email.touched && forgotForm.controls.email.invalid">
+        Email invalide.
+      </small>
+
+      <p class="switch-text" *ngIf="forgotSuccess">{{ forgotSuccess }}</p>
+      <p class="error" *ngIf="forgotError">{{ forgotError }}</p>
+
+      <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Envoi...' : 'Envoyer le lien' }}
+      </button>
+
+      <p class="switch-text">
+        Retour a la connexion ?
+        <button type="button" class="text-link" (click)="switchMode('login')">Se connecter</button>
+      </p>
+    </form>
+
+    <form *ngIf="mode === 'register'" [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="form-grid" novalidate>
+      <label class="field">
+        <span>Nom utilisateur</span>
+        <input type="text" formControlName="username" placeholder="Votre nom" />
+      </label>
+      <small class="error" *ngIf="registerForm.controls.username.touched && registerForm.controls.username.invalid">
+        Nom utilisateur invalide.
+      </small>
+
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="vous@exemple.com" />
+      </label>
+      <small class="error" *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
+        Email invalide.
+      </small>
+
+      <div class="field">
+        <span>Role</span>
+        <button type="button" class="role-trigger" (click)="openRoleDialog()">
+          <span>{{ selectedRoleLabel }}</span>
+          <strong>Choisir</strong>
+        </button>
+      </div>
+
+      <label class="field">
+        <span>Telephone (optionnel)</span>
+        <input type="text" formControlName="phone" placeholder="+216 ..." />
+      </label>
+
+      <label class="field">
+        <span>Mot de passe</span>
+        <input type="password" formControlName="password" placeholder="Au moins 6 caracteres" />
+      </label>
+
+      <label class="field">
+        <span>Confirmer mot de passe</span>
+        <input type="password" formControlName="confirmPassword" placeholder="Retaper le mot de passe" />
+      </label>
+
+      <p class="error" *ngIf="registerError">{{ registerError }}</p>
+
+      <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creation...' : 'Creer mon compte' }}
+      </button>
+
+      <p class="switch-text">
+        Vous avez deja un compte ?
+        <button type="button" class="text-link" (click)="switchMode('login')">Se connecter</button>
+      </p>
+    </form>
+
+    <section
+      *ngIf="roleDialogOpen"
+      class="role-backdrop"
+      (click)="closeRoleDialog()"
+      aria-label="Boite de dialogue de selection du role"
+    >
+      <div class="role-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div class="role-dialog-head">
+          <h3>Choisir un role</h3>
+          <button type="button" class="role-close" (click)="closeRoleDialog()" aria-label="Fermer">×</button>
+        </div>
+
+        <p class="role-subtitle">Selectionnez le role le plus adapte a votre compte.</p>
+
+        <div class="role-list" role="listbox" aria-label="Liste des roles">
+          <button
+            *ngFor="let role of roleOptions"
+            type="button"
+            class="role-item"
+            [class.active]="registerForm.controls.role.value === role.value"
+            (click)="chooseRole(role.value)"
+          >
+            <span class="role-item-title">{{ role.label }}</span>
+            <small>{{ role.description }}</small>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

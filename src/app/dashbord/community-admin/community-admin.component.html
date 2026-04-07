@@ -1,0 +1,173 @@
+<div class="min-h-screen bg-slate-50">
+  <app-dash-side-nav></app-dash-side-nav>
+
+  <main class="md:ml-64">
+    <div class="px-6 lg:px-10 py-8 max-w-[1440px] mx-auto">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-2xl">
+          <p class="text-sm uppercase tracking-[0.35em] text-slate-500 mb-3">Community CRUD</p>
+          <h1 class="text-4xl font-extrabold tracking-tight text-slate-950">Gestion des communautés</h1>
+          <p class="mt-4 text-sm leading-7 text-slate-600">Créez, modifiez et supprimez des communautés depuis une interface claire, inspirée du style du site.</p>
+        </div>
+        <button (click)="openCreate()"
+          class="inline-flex items-center gap-2 rounded-2xl bg-blue-900 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-900/10 hover:bg-blue-800 transition">
+          <span class="material-symbols-outlined text-base">add</span>
+          Nouvelle communauté
+        </button>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-3 mt-8">
+        <div class="rounded-[32px] bg-gradient-to-r from-slate-950 via-slate-900 to-blue-900 p-6 text-white shadow-2xl">
+          <p class="text-xs uppercase tracking-[0.35em] text-slate-300">Total communautés</p>
+          <p class="mt-4 text-4xl font-black">{{ communities.length }}</p>
+          <p class="mt-2 text-sm text-slate-300">Communautés actives sur la plateforme</p>
+        </div>
+        <div class="rounded-[32px] bg-white border border-slate-200 p-6 shadow-sm">
+          <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Membres totaux</p>
+          <p class="mt-4 text-3xl font-bold text-slate-950">{{ totalMembers }}</p>
+          <p class="mt-2 text-sm text-slate-500">Dans toutes les communautés</p>
+        </div>
+        <div class="rounded-[32px] bg-white border border-slate-200 p-6 shadow-sm">
+          <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Demandes en attente</p>
+          <p class="mt-4 text-3xl font-bold text-slate-950">{{ pendingRequests.length }}</p>
+          <p class="mt-2 text-sm text-slate-500">Requêtes à traiter par l’administrateur</p>
+        </div>
+      </div>
+
+      <div *ngIf="pendingRequests.length > 0" class="mt-8 rounded-[32px] bg-white border border-amber-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-[0.35em] text-amber-600">Notifications</p>
+            <h2 class="mt-2 text-xl font-semibold text-slate-950">Demandes d’adhésion en attente</h2>
+          </div>
+          <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{{ pendingRequests.length }} en attente</span>
+        </div>
+        <div class="mt-6 space-y-4">
+          <div *ngFor="let request of pendingRequests" class="rounded-3xl border border-slate-200 bg-slate-50 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold text-slate-900">{{ request.user.username }} souhaite rejoindre {{ request.communityName }}</p>
+              <p class="text-xs text-slate-500">Demande envoyée le {{ request.requestedAt | date:'short' }}</p>
+            </div>
+            <button type="button" (click)="approveJoinRequest(request)"
+              class="rounded-3xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-600/10 hover:bg-emerald-500 transition">
+              Approuver
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section class="grid gap-8 lg:grid-cols-[1.7fr_1fr] mt-8">
+        <div class="rounded-[32px] bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div class="flex items-center justify-between gap-4 px-6 py-5 border-b border-slate-200 bg-slate-50">
+            <div>
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Liste</p>
+              <h2 class="text-xl font-semibold text-slate-950">Communautés existantes</h2>
+            </div>
+            <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ communities.length }} items</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-slate-600">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-[0.2em]">
+                <tr>
+                  <th class="px-6 py-4">Nom</th>
+                  <th class="px-6 py-4">Catégorie</th>
+                  <th class="px-6 py-4">Membres</th>
+                  <th class="px-6 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let c of communities" class="hover:bg-slate-50 transition-colors cursor-pointer" (click)="openEdit(c)">
+                  <td class="px-6 py-4 font-semibold text-slate-900">{{ c.name }}</td>
+                  <td class="px-6 py-4"><span class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900">{{ c.category }}</span></td>
+                  <td class="px-6 py-4">{{ c.totalMembers || 0 }}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2 justify-end">
+                      <button type="button" (click)="openEdit(c); $event.stopPropagation()"
+                        class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                        Modifier
+                      </button>
+                      <button type="button" (click)="delete(c.id!); $event.stopPropagation()"
+                        class="inline-flex items-center gap-2 rounded-2xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="communities.length === 0">
+                  <td colspan="4" class="px-6 py-16 text-center text-slate-400">Aucune communauté trouvée.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="space-y-6">
+          <div class="rounded-[32px] bg-white border border-slate-200 shadow-sm p-6">
+            <div class="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Formulaire</p>
+                <h2 class="text-2xl font-bold text-slate-950">{{ isEditing ? 'Modifier une communauté' : 'Créer une communauté' }}</h2>
+              </div>
+              <button *ngIf="isFormOpen" type="button" (click)="closeForm()"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div *ngIf="!isFormOpen" class="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+              <p class="text-sm text-slate-600">Utilise ce panneau pour créer ou modifier une communauté.</p>
+              <button type="button" (click)="openCreate()"
+                class="mt-6 inline-flex w-full items-center justify-center rounded-full bg-blue-900 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-800 transition">
+                Ouvrir le formulaire
+              </button>
+            </div>
+
+            <form *ngIf="isFormOpen" #communityForm="ngForm" (ngSubmit)="submit(communityForm)" novalidate class="space-y-5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nom</label>
+                <input name="name" [(ngModel)]="form.name" required pattern="^[A-ZÀ-Ý].*" type="text"
+                  placeholder="Voyageurs de Tunisie" #nameInput="ngModel"
+                  class="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-900 focus:ring-2 focus:ring-blue-900/10" />
+                <p *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="mt-2 text-xs text-red-600">
+                  <span *ngIf="nameInput.errors?.['required']">Le nom est obligatoire.</span>
+                  <span *ngIf="nameInput.errors?.['pattern']">Le nom doit commencer par une majuscule.</span>
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                <textarea name="description" [(ngModel)]="form.description" required minlength="24" rows="5"
+                  placeholder="Décrivez la communauté..." #descInput="ngModel"
+                  class="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-900 focus:ring-2 focus:ring-blue-900/10 resize-none"></textarea>
+                <p *ngIf="descInput.invalid && (descInput.dirty || descInput.touched)" class="mt-2 text-xs text-red-600">
+                  <span *ngIf="descInput.errors?.['required']">La description est obligatoire.</span>
+                  <span *ngIf="descInput.errors?.['minlength']">La description doit contenir au moins 24 caractères.</span>
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Catégorie</label>
+                <select name="category" [(ngModel)]="form.category" required #categoryInput="ngModel"
+                  class="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-900 focus:ring-2 focus:ring-blue-900/10">
+                  <option value="" disabled>Choisir une catégorie</option>
+                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                </select>
+                <p *ngIf="categoryInput.invalid && (categoryInput.dirty || categoryInput.touched)" class="mt-2 text-xs text-red-600">
+                  <span *ngIf="categoryInput.errors?.['required']">La catégorie est obligatoire.</span>
+                </p>
+              </div>
+
+              <button type="submit" [disabled]="communityForm.invalid"
+                class="w-full rounded-3xl bg-blue-900 px-4 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-900/10 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
+                {{ isEditing ? 'Mettre à jour' : 'Créer' }}
+              </button>
+            </form>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,202 @@
+/* Tunisian Forum Animations and Styles */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out forwards;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Delay classes for staggered animations */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-1000 { animation-delay: 1s; }
+.delay-2000 { animation-delay: 2s; }
+.delay-3000 { animation-delay: 3s; }
+
+/* Enhanced hover effects */
+.forum-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.forum-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(251, 191, 36, 0.15);
+}
+
+/* Tunisian-inspired gradients */
+.tunisian-gradient {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #dc2626 100%);
+}
+
+.tunisian-bg {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fecaca 100%);
+}
+
+/* Custom scrollbar for forum content */
+.forum-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.forum-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.forum-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  border-radius: 3px;
+}
+
+.forum-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+}
+
+/* Enhanced focus states */
+.forum-input:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse animation for attention-grabbing elements */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Star rating hover effects */
+.star-rating {
+  transition: all 0.2s ease;
+}
+
+.star-rating:hover {
+  transform: scale(1.1);
+}
+
+/* Button hover effects with Tunisian colors */
+.btn-tunisian {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  transition: all 0.3s ease;
+}
+
+.btn-tunisian:hover {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(251, 191, 36, 0.15);
+}
+
+/* Responsive design enhancements */
+@media (max-width: 768px) {
+  .animate-fade-in,
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-slide-in-up {
+    animation-duration: 0.4s;
+  }
+
+  .forum-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .tunisian-bg {
+    background: linear-gradient(135deg, #451a03 0%, #7c2d12 50%, #991b1b 100%);
+  }
+}

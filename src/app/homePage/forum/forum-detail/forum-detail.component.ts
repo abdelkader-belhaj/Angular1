@@ -230,10 +230,12 @@ export class ForumDetailComponent implements OnInit {
           this.infoMessage = 'Sujet créé avec succès.';
           // Ajouter localement en tête de liste
           this.forums = [createdForum, ...this.forums];
+
           // Initialiser les interactions pour le nouveau forum
           this.reactionsMap.set(createdForum.id!, []);
           this.commentsMap.set(createdForum.id!, []);
           this.reviewsMap.set(createdForum.id!, []);
+          this.sendForumNotification(createdForum);
           this.resetForm();
           this.loading = false;
         },
@@ -465,5 +467,19 @@ export class ForumDetailComponent implements OnInit {
       this.infoMessage = '';
       this.loadData();
     }
+  }
+  private sendForumNotification(forum: Forum): void {
+    try {
+      const notifications = JSON.parse(localStorage.getItem('forumNotifications') || '[]');
+      notifications.unshift({
+        id: Date.now(),
+        username: this.currentUser?.username || 'Inconnu',
+        forumTitle: forum.title,
+        communityName: this.community?.name || 'Communauté',
+        createdAt: new Date().toISOString(),
+        read: false
+      });
+      localStorage.setItem('forumNotifications', JSON.stringify(notifications));
+    } catch {}
   }
 }

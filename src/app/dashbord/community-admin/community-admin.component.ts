@@ -3,6 +3,16 @@ import { NgForm } from '@angular/forms';
 import { CommunityService, JoinRequest } from '../../services/community.service';
 import { Community } from '../../models/community.model';
 import { interval } from 'rxjs';
+
+export interface ForumNotification {
+  id: number;
+  username: string;
+  forumTitle: string;
+  communityName: string;
+  createdAt: string;
+  read: boolean;
+}
+
 @Component({
   selector: 'app-community-admin',
   templateUrl: './community-admin.component.html',
@@ -12,6 +22,7 @@ export class CommunityAdminComponent implements OnInit {
 
   communities: Community[] = [];
   pendingRequests: Array<JoinRequest & { communityName: string }> = [];
+  forumNotifications: ForumNotification[] = [];
   isFormOpen = false;
   isEditing = false;
   loading = false;
@@ -19,24 +30,56 @@ export class CommunityAdminComponent implements OnInit {
   errorMsg = '';
 
   form: Community = this.emptyForm();
-
   categories = ['Tourisme', 'Culture', 'Sport', 'Gastronomie', 'Tech', 'Art', 'Music', 'Travel'];
 
   constructor(private communityService: CommunityService) {}
 
   get totalMembers(): number {
-    return this.communities.reduce((sum, community) => sum + (community.totalMembers || 0), 0);
+    return this.communities.reduce((sum, c) => sum + (c.totalMembers || 0), 0);
   }
 
   get uniqueCategories(): number {
-    return new Set(this.communities.map((community) => community.category)).size;
+    return new Set(this.communities.map(c => c.category)).size;
+  }
+
+  get unreadNotifications(): number {
+    return this.forumNotifications.filter(n => !n.read).length;
   }
 
   ngOnInit(): void {
     this.loadAll();
-     interval(5000).subscribe(() => {
-    this.loadAll();
-  });
+    this.loadNotifications();
+    interval(5000).subscribe(() => {
+      this.loadAll();
+      this.loadNotifications();
+    });
+  }
+
+  loadNotifications(): void {
+    try {
+      const data = localStorage.getItem('forumNotifications');
+      if (!data) return;
+      this.forumNotifications = JSON.parse(data) || [];
+    } catch {
+      this.forumNotifications = [];
+    }
+  }
+
+  markAllAsRead(): void {
+    this.forumNotifications = this.forumNotifications.map(n => ({ ...n, read: true }));
+    localStorage.setItem('forumNotifications', JSON.stringify(this.forumNotifications));
+  }
+
+  markAsRead(id: number): void {
+    this.forumNotifications = this.forumNotifications.map(n =>
+      n.id === id ? { ...n, read: true } : n
+    );
+    localStorage.setItem('forumNotifications', JSON.stringify(this.forumNotifications));
+  }
+
+  deleteNotification(id: number): void {
+    this.forumNotifications = this.forumNotifications.filter(n => n.id !== id);
+    localStorage.setItem('forumNotifications', JSON.stringify(this.forumNotifications));
   }
 
   loadAll(): void {
@@ -44,10 +87,10 @@ export class CommunityAdminComponent implements OnInit {
     this.communityService.getAll().subscribe({
       next: (data) => {
         this.communities = data;
-        this.pendingRequests = data.flatMap((community) =>
-          (community.joinRequests ?? [])
-            .filter((request) => request.status === 'pending')
-            .map((request) => ({ ...request, communityName: community.name }))
+        this.pendingRequests = data.flatMap(c =>
+          (c.joinRequests ?? [])
+            .filter(r => r.status === 'pending')
+            .map(r => ({ ...r, communityName: c.name }))
         );
         this.loading = false;
       },
@@ -56,12 +99,12 @@ export class CommunityAdminComponent implements OnInit {
   }
 
   approveJoinRequest(request: JoinRequest): void {
-    this.communityService.approveJoin(request.communityId, request.user.id).subscribe((ok) => {
+    this.communityService.approveJoin(request.communityId, request.user.id).subscribe(ok => {
       if (ok) {
-        this.successMsg = `La demande de ${request.user.username} a été approuvée.`;
+        this.successMsg = `La demande de ${request.user.username} a ete approuvee.`;
         this.loadAll();
       } else {
-        this.errorMsg = 'Impossible d’approuver cette demande.';
+        this.errorMsg = 'Impossible d approuver cette demande.';
       }
     });
   }
@@ -89,34 +132,30 @@ export class CommunityAdminComponent implements OnInit {
   submit(form: NgForm): void {
     this.successMsg = '';
     this.errorMsg = '';
-
     if (form.invalid || !this.isFormDataValid()) {
-      this.errorMsg = 'Veuillez corriger les erreurs du formulaire avant de continuer.';
+      this.errorMsg = 'Veuillez corriger les erreurs du formulaire.';
       return;
     }
-
     if (this.isEditing) {
       this.communityService.update(this.form.id!, this.form).subscribe({
         next: () => {
-          this.successMsg = 'Communauté mise à jour !';
+          this.successMsg = 'Communaute mise a jour !';
           this.loadAll();
           this.closeForm();
         },
         error: (err: any) => {
-          console.error('UPDATE ERROR:', err);
-          this.errorMsg = 'Erreur lors de la mise à jour.';
+          this.errorMsg = 'Erreur lors de la mise a jour.';
         }
       });
     } else {
       this.communityService.create(this.form).subscribe({
         next: () => {
-          this.successMsg = 'Communauté créée !';
+          this.successMsg = 'Communaute creee !';
           this.loadAll();
           this.closeForm();
         },
         error: (err: any) => {
-          console.error('CREATE ERROR:', err);
-          this.errorMsg = 'Erreur lors de la création.';
+          this.errorMsg = 'Erreur lors de la creation.';
         }
       });
     }
@@ -126,40 +165,27 @@ export class CommunityAdminComponent implements OnInit {
     const name = this.form.name?.trim() ?? '';
     const description = this.form.description?.trim() ?? '';
     const category = this.form.category?.trim() ?? '';
-
-    const startsWithUppercase = /^[A-ZÀ-Ý]/.test(name);
-    const validCategory = category !== '' && this.categories.includes(category);
-
     return (
       name !== '' &&
-      startsWithUppercase &&
+      /^[A-ZÀ-Ý]/.test(name) &&
       description.length >= 24 &&
-      validCategory
+      category !== '' &&
+      this.categories.includes(category)
     );
   }
 
   delete(id?: number): void {
-    if (id == null) {
-      this.errorMsg = 'Impossible de supprimer : identifiant invalide.';
-      return;
-    }
-
-    if (!confirm('Supprimer cette communauté ?')) return;
-
+    if (id == null) { this.errorMsg = 'Identifiant invalide.'; return; }
+    if (!confirm('Supprimer cette communaute ?')) return;
     this.communityService.delete(id).subscribe({
-      next: () => {
-        this.successMsg = 'Communauté supprimée.';
-        this.loadAll();
-      },
+      next: () => { this.successMsg = 'Communaute supprimee.'; this.loadAll(); },
       error: (err: any) => {
-        console.error('DELETE ERROR:', err);
-
         if (err.status === 0) {
-          this.errorMsg = 'Erreur suppression : le serveur est injoignable.';
+          this.errorMsg = 'Serveur injoignable.';
         } else if (err.status === 401 || err.status === 403) {
-          this.errorMsg = 'Erreur suppression : accès refusé. Vérifiez votre session ou vos permissions.';
+          this.errorMsg = 'Acces refuse.';
         } else {
-          this.errorMsg = err.error?.message || err.message || 'Erreur suppression.';
+          this.errorMsg = err.error?.message || 'Erreur suppression.';
         }
       }
     });

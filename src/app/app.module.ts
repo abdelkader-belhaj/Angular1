@@ -33,6 +33,7 @@ import { ForumCardComponent } from './homePage/forum/forum-card/forum-card.compo
 import { CommentSectionComponent } from './homePage/forum/comment-section/comment-section.component';
 import { ReviewSectionComponent } from './homePage/forum/review-section/review-section.component';
 import { CommunityAdminComponent } from './dashbord/community-admin/community-admin.component';
+import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions-modal/forum-conditions-modal.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +63,8 @@ import { CommunityAdminComponent } from './dashbord/community-admin/community-ad
     ForumCardComponent,
     CommentSectionComponent,
     ReviewSectionComponent,
-    CommunityAdminComponent
+    CommunityAdminComponent,
+    ForumConditionsModalComponent
   ],
   imports: [
     BrowserModule,

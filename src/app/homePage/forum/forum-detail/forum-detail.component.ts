@@ -6,7 +6,9 @@ import { AuthService } from '../../../services/auth.service';
 import { Community } from '../../../models/community.model';
 import { Forum } from '../../../models/forum.model';
 import { Reaction, ForumComment, Review } from '../../../models/forum-interactions.model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ModerationService } from '../../../services/ModerationService';
+
 @Component({
   selector: 'app-forum-detail',
   templateUrl: './forum-detail.component.html',
@@ -42,7 +44,8 @@ export class ForumDetailComponent implements OnInit {
     private communityService: CommunityService,
     private forumService: ForumService,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private moderationService: ModerationService 
   ) {}
 
   ngOnInit(): void {
@@ -70,14 +73,17 @@ export class ForumDetailComponent implements OnInit {
 
       this.community = community;
 
-      if (!this.isMember()) {
-        this.errorMessage = 'Accès refusé. Vous devez être membre de cette communauté.';
-        return;
-      }
+     if (!this.isMember()) {
+  this.errorMessage = 'Accès refusé. Vous devez être membre de cette communauté.';
+  return;
+}
 
-      // ✅ Charger les vrais forums depuis la BDD
+      // ✅ Utilise HttpHeaders correctement
       const token = localStorage.getItem('auth_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
+      const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      });
 
       this.http.get<Forum[]>(
         `http://localhost:8080/api/forums/community/${communityId}`,
@@ -97,7 +103,6 @@ export class ForumDetailComponent implements OnInit {
     }
   });
 }
-
   private loadInteractionsForForum(forumId: number): void {
   this.forumService.getReactions(forumId).subscribe({
     next: (reactions) => this.reactionsMap.set(forumId, reactions),
@@ -130,6 +135,10 @@ export class ForumDetailComponent implements OnInit {
   }
 
   startEdit(forum: Forum): void {
+    if (!this.currentUser || forum.user?.id !== this.currentUser.id) {
+      this.errorMessage = 'Vous ne pouvez modifier que vos propres sujets.';
+      return;
+    }
     this.editingForum = { ...forum };
     this.forumTitle = forum.title;
     this.forumContent = forum.content;
@@ -238,6 +247,10 @@ export class ForumDetailComponent implements OnInit {
   }
 
   deleteForum(forum: Forum): void {
+    if (!this.currentUser || forum.user?.id !== this.currentUser.id) {
+      this.errorMessage = 'Vous ne pouvez supprimer que vos propres sujets.';
+      return;
+    }
     if (!forum.id) return;
     if (!this.community?.id) return;
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce sujet ?')) return;
@@ -322,20 +335,42 @@ export class ForumDetailComponent implements OnInit {
     return;
   }
 
-  if (content.trim().length < 5) {
+  const trimmed = content.trim();
+
+  if (trimmed.length < 5) {
     this.errorMessage = 'Le commentaire doit contenir au moins 5 caractères.';
     return;
   }
 
-  this.forumService.addComment(forumId, this.currentUser, content.trim()).subscribe({
-    next: (comment) => {
-      const comments = [...this.getComments(forumId), comment];
-      this.commentsMap.set(forumId, comments);
-      this.errorMessage = '';
+  // 1. Pré-filtre local (instantané, sans réseau)
+  if (this.moderationService.containsForbiddenWords(trimmed)) {
+    this.errorMessage = 'Votre commentaire contient des termes non autorisés.';
+    return;
+  }
+
+  // 2. Modération IA via Spring Boot
+  this.moderationService.analyze(trimmed).subscribe({
+    next: (result) => {
+
+      if (!result.approved) {
+        this.errorMessage = `Commentaire rejeté par la modération IA${result.reason ? ' : ' + result.reason : ''}.`;
+        return;
+      }
+
+      // 3. Approuvé → soumettre au backend
+      this.forumService.addComment(forumId, this.currentUser!, trimmed).subscribe({
+        next: (comment) => {
+          const comments = [...this.getComments(forumId), comment];
+          this.commentsMap.set(forumId, comments);
+          this.errorMessage = '';
+        },
+        error: () => {
+          this.errorMessage = 'Erreur lors de l\'ajout du commentaire.';
+        }
+      });
     },
-    error: (err) => {
-      console.error('Erreur add comment:', err);
-      this.errorMessage = 'Erreur lors de l\'ajout du commentaire.';
+    error: () => {
+      this.errorMessage = 'Service de modération indisponible.';
     }
   });
 }

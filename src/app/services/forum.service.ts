@@ -13,12 +13,22 @@ export class ForumService {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token'); // clé utilisée dans AuthService
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-  }
+  const token = localStorage.getItem('auth_token')
+             || localStorage.getItem('token')
+             || localStorage.getItem('jwt')
+             || localStorage.getItem('access_token')
+             || localStorage.getItem('authToken')
+             || localStorage.getItem('user_token')
+             || '';
+
+  console.log('Clés localStorage:', Object.keys(localStorage));
+  console.log('Token utilisé:', token ? token.substring(0, 30) + '...' : 'AUCUN TOKEN ❌');
+
+  return new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  });
+}
 
   // ─── REACTIONS ──────────────────────────────────────────────────────────────
 

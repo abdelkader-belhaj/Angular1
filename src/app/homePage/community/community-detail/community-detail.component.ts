@@ -15,6 +15,7 @@ export class CommunityDetailComponent implements OnInit {
   currentUser?: { id: number; username: string } | null;
   infoMessage = '';
   errorMessage = '';
+  agreeToRules: boolean = false;
 
   constructor(
     private route: ActivatedRoute,

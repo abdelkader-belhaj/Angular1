@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+
 import { Observable, of, map } from 'rxjs';
 import { Community } from '../models/community.model';
 import { Forum } from '../models/forum.model';
-
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 export interface JoinRequest {
   id: number;
   communityId: number;
@@ -134,10 +134,10 @@ export class CommunityService {
     return of(true);
   }
 
-  isMember(communityId: number, userId: number): boolean {
-    const state = this.loadState()[communityId];
-    return !!state?.members.some((member) => member.id === userId);
-  }
+ isMember(communityId: number, userId: number): boolean {
+  const state = this.loadState()[communityId];
+  return !!state?.members.some((member) => member.id === userId);  // ← localStorage seulement !
+}
 
   getJoinRequests(communityId: number): JoinRequest[] {
     const state = this.loadState()[communityId];
@@ -150,57 +150,41 @@ export class CommunityService {
   }
 
   createForum(communityId: number, forum: Forum): Observable<Forum> {
-    const stateRoot = this.loadState();
-    const state = stateRoot[communityId] ?? { joinRequests: [], members: [], forums: [] };
-    const newForum = {
-      ...forum,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      status: forum.status ?? 'open',
-      likesCount: forum.likesCount ?? 0,
-      dislikesCount: forum.dislikesCount ?? 0,
-      views: forum.views ?? 0,
-      flaggedByAI: forum.flaggedByAI ?? false,
-      toxicityScore: forum.toxicityScore ?? 0,
-      aiDecision: forum.aiDecision ?? 'pending',
-      containsForbiddenWords: forum.containsForbiddenWords ?? false,
-      aiStatus: forum.aiStatus ?? 'pending',
-      aiReason: forum.aiReason ?? '',
-      comments: forum.comments ?? [],
-      reviews: forum.reviews ?? [],
-      reactions: forum.reactions ?? []
-    };
-    state.forums.unshift(newForum);
-    stateRoot[communityId] = state;
-    this.saveState(stateRoot);
-    return of(newForum);
-  }
+  const token = localStorage.getItem('auth_token') || '';
+  const headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  });
 
+  return this.http.post<Forum>(
+    `http://localhost:8080/api/forums/community/${communityId}`,
+    forum,
+    { headers }
+  );
+}
   updateForum(communityId: number, forum: Forum): Observable<Forum> {
-    const stateRoot = this.loadState();
-    const state = stateRoot[communityId] ?? { joinRequests: [], members: [], forums: [] };
-    const index = state.forums.findIndex((item) => item.id === forum.id);
-    if (index >= 0) {
-      state.forums[index] = {
-        ...state.forums[index],
-        ...forum,
-        comments: state.forums[index].comments ?? [],
-        reviews: state.forums[index].reviews ?? [],
-        reactions: state.forums[index].reactions ?? []
-      };
-      stateRoot[communityId] = state;
-      this.saveState(stateRoot);
-      return of(state.forums[index]);
-    }
-    return of(forum);
-  }
+  const token = localStorage.getItem('auth_token') || '';
+  const headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  });
 
-  deleteForum(communityId: number, forumId: number): Observable<boolean> {
-    const stateRoot = this.loadState();
-    const state = stateRoot[communityId] ?? { joinRequests: [], members: [], forums: [] };
-    state.forums = state.forums.filter((forum) => forum.id !== forumId);
-    stateRoot[communityId] = state;
-    this.saveState(stateRoot);
-    return of(true);
-  }
+  return this.http.put<Forum>(
+    `http://localhost:8080/api/forums/${forum.id}`,
+    forum,
+    { headers }
+  );
+}
+
+deleteForum(communityId: number, forumId: number): Observable<any> {
+  const token = localStorage.getItem('auth_token') || '';
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`
+  });
+
+  return this.http.delete(
+    `http://localhost:8080/api/forums/${forumId}`,
+    { headers }
+  );
+}
 }

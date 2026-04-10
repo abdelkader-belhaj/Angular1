@@ -184,7 +184,7 @@ deleteForum(communityId: number, forumId: number): Observable<any> {
 
   return this.http.delete(
     `http://localhost:8080/api/forums/${forumId}`,
-    { headers }
+    { headers, responseType: 'text' }
   );
 }
 }

@@ -236,6 +236,7 @@ export class ForumDetailComponent implements OnInit {
           this.commentsMap.set(createdForum.id!, []);
           this.reviewsMap.set(createdForum.id!, []);
           this.sendForumNotification(createdForum);
+          this.generateAiSuggestions(createdForum);
           this.resetForm();
           this.loading = false;
         },
@@ -482,4 +483,70 @@ export class ForumDetailComponent implements OnInit {
       localStorage.setItem('forumNotifications', JSON.stringify(notifications));
     } catch {}
   }
+  // ─── AI SUGGESTIONS ───────────────────────────────────────────────────────────
+aiSuggestionsMap: Map<number, string[]> = new Map();
+aiLoadingMap: Map<number, boolean> = new Map();
+aiSummaryMap: Map<number, string> = new Map();
+aiSourcesMap: Map<number, string[]> = new Map();
+
+
+private generateAiSuggestions(forum: Forum): void {
+  if (!forum.id) return;
+
+  this.aiLoadingMap.set(forum.id, true);
+
+  const token = localStorage.getItem('auth_token') || '';
+
+  this.http.post<{
+    summary: string;
+    sources: string[];
+    suggestions: string[];
+  }>(
+    'http://localhost:8080/api/ai/suggestions',
+    { title: forum.title, content: forum.content },
+    {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      })
+    }
+  ).subscribe({
+    next: (data) => {
+      this.aiSummaryMap.set(forum.id!, data.summary || '');
+      this.aiSourcesMap.set(forum.id!, data.sources || []);
+      this.aiSuggestionsMap.set(forum.id!, data.suggestions || []);
+      this.aiLoadingMap.set(forum.id!, false);
+    },
+    error: () => {
+      this.aiLoadingMap.set(forum.id!, false);
+    }
+  });
+}
+getAiSummary(forumId: number): string {
+  return this.aiSummaryMap.get(forumId) ?? '';
+}
+
+getAiSources(forumId: number): string[] {
+  return this.aiSourcesMap.get(forumId) ?? [];
+}
+
+getAiSuggestions(forumId: number): string[] {
+  return this.aiSuggestionsMap.get(forumId) ?? [];
+}
+
+isAiLoading(forumId: number): boolean {
+  return this.aiLoadingMap.get(forumId) ?? false;
+}
+
+onAiQuestionClick(question: string, forumId: number): void {
+  // Pre-remplit le textarea du commentaire correspondant
+  const textarea = document.querySelector(
+    `[data-forum-id="${forumId}"] textarea`
+  ) as HTMLTextAreaElement;
+  if (textarea) {
+    textarea.value = question;
+    textarea.dispatchEvent(new Event('input'));
+    textarea.focus();
+  }
+}
 }

@@ -84,6 +84,11 @@
       </p>
 
       <p class="switch-text">
+        Vous voulez utiliser Face ID ?
+        <button type="button" class="text-link" (click)="openLoginFaceDialog()">Ouvrir Connexion Face ID</button>
+      </p>
+
+      <p class="switch-text">
         Mot de passe oublie ?
         <button type="button" class="text-link" (click)="switchMode('forgot')">Reinitialiser</button>
       </p>
@@ -153,8 +158,23 @@
 
       <p class="error" *ngIf="registerError">{{ registerError }}</p>
 
+      <div class="field camera-field">
+        <span>Face ID (camera)</span>
+        <button type="button" class="role-trigger" (click)="openRegisterFaceDialog()">
+          <span>{{ registerFaceImageBase64 ? 'Photo Face ID capturee' : 'Capturer votre visage' }}</span>
+          <strong>{{ registerFaceImageBase64 ? 'Modifier' : 'Ouvrir' }}</strong>
+        </button>
+      </div>
+      <p class="error" *ngIf="faceRegisterError">{{ faceRegisterError }}</p>
+
       <button class="submit-btn" type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Creation...' : 'Creer mon compte' }}
+        {{
+          isSubmitting
+            ? 'Creation...'
+            : registerFaceImageBase64
+              ? 'Creer mon compte avec Face ID'
+              : 'Creer mon compte'
+        }}
       </button>
 
       <p class="switch-text">
@@ -189,6 +209,78 @@
             <small>{{ role.description }}</small>
           </button>
         </div>
+      </div>
+    </section>
+
+    <section
+      *ngIf="registerFaceDialogOpen"
+      class="role-backdrop"
+      (click)="closeRegisterFaceDialog()"
+      aria-label="Boite de dialogue Face ID"
+    >
+      <div class="role-dialog face-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div class="role-dialog-head">
+          <h3>Capture Face ID</h3>
+          <button type="button" class="role-close" (click)="closeRegisterFaceDialog()" aria-label="Fermer">×</button>
+        </div>
+
+        <p class="role-subtitle">Cadrez votre visage puis prenez la photo.</p>
+
+        <video *ngIf="registerCameraOpen" #registerVideo class="camera-preview" autoplay playsinline muted></video>
+        <img *ngIf="!registerCameraOpen && registerFaceImageBase64" [src]="registerFaceImageBase64" class="camera-captured" alt="Photo capturee pour inscription Face ID" />
+
+        <div class="camera-actions centered-actions">
+          <button type="button" class="camera-btn icon-btn" title="Prendre photo" aria-label="Prendre photo" (click)="captureFace('register')" [disabled]="!registerCameraOpen || isSubmitting">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm0 4a1 1 0 0 1 1 1v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 1 1 0-2h3V8a1 1 0 0 1 1-1z"/></svg>
+          </button>
+          <button type="button" class="camera-btn icon-btn" title="Reinitialiser" aria-label="Reinitialiser" (click)="clearRegisterFaceCapture()" [disabled]="registerCameraOpen || !registerFaceImageBase64 || isSubmitting">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.3 10H3a1 1 0 1 1 0-2h4a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0v-1.2A9 9 0 1 0 12 3a1 1 0 1 1 0 2z"/></svg>
+          </button>
+        </div>
+
+        <button type="button" class="submit-btn" (click)="useCapturedRegisterFace()" [disabled]="!registerFaceImageBase64 || isSubmitting">
+          Utiliser cette photo
+        </button>
+      </div>
+    </section>
+
+    <section
+      *ngIf="loginFaceDialogOpen"
+      class="role-backdrop"
+      (click)="closeLoginFaceDialog()"
+      aria-label="Boite de dialogue Connexion Face ID"
+    >
+      <div class="role-dialog face-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div class="role-dialog-head">
+          <h3>Connexion Face ID</h3>
+          <button type="button" class="role-close" (click)="closeLoginFaceDialog()" aria-label="Fermer">×</button>
+        </div>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" [formControl]="loginForm.controls.email" placeholder="vous@exemple.com" />
+        </label>
+        <small class="error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
+          Email invalide.
+        </small>
+
+        <video *ngIf="loginCameraOpen" #loginVideo class="camera-preview" autoplay playsinline muted></video>
+        <img *ngIf="!loginCameraOpen && loginFaceImageBase64" [src]="loginFaceImageBase64" class="camera-captured" alt="Photo capturee pour connexion Face ID" />
+
+        <div class="camera-actions centered-actions">
+          <button type="button" class="camera-btn icon-btn" title="Prendre photo" aria-label="Prendre photo" (click)="captureFace('login')" [disabled]="!loginCameraOpen || isSubmitting">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm0 4a1 1 0 0 1 1 1v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 1 1 0-2h3V8a1 1 0 0 1 1-1z"/></svg>
+          </button>
+          <button type="button" class="camera-btn icon-btn" title="Reinitialiser" aria-label="Reinitialiser" (click)="clearLoginFaceCapture()" [disabled]="loginCameraOpen || !loginFaceImageBase64 || isSubmitting">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.3 10H3a1 1 0 1 1 0-2h4a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0v-1.2A9 9 0 1 0 12 3a1 1 0 1 1 0 2z"/></svg>
+          </button>
+        </div>
+
+        <p class="error" *ngIf="faceLoginError">{{ faceLoginError }}</p>
+
+        <button class="submit-btn" type="button" [disabled]="isSubmitting" (click)="submitLoginWithFace()">
+          {{ isSubmitting ? 'Verification...' : 'Se connecter avec Face ID' }}
+        </button>
       </div>
     </section>
   </div>

@@ -250,6 +250,81 @@ h2 {
   cursor: default;
 }
 
+.submit-btn.secondary {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid #8eb0d7;
+}
+
+.camera-field {
+  gap: 10px;
+}
+
+.camera-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.centered-actions {
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.camera-btn {
+  border: 1px solid #9fbce0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--primary);
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.camera-btn.icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f2f7ff 100%);
+  box-shadow: 0 1px 4px rgba(8, 27, 54, 0.08);
+}
+
+.camera-btn.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #0b4f92;
+}
+
+.camera-btn.icon-btn:hover:not(:disabled) {
+  border-color: #78a4d6;
+  box-shadow: 0 3px 10px rgba(8, 27, 54, 0.14);
+  transform: translateY(-1px);
+}
+
+.camera-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.camera-preview,
+.camera-captured {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 12px;
+  border: 1px solid #ced9e8;
+  object-fit: cover;
+  background: #0b1220;
+}
+
+.face-dialog {
+  display: grid;
+  gap: 12px;
+}
+
 .error {
   margin-top: 2px;
   color: var(--danger);

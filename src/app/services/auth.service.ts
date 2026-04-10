@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, finalize, map, tap } from 'rxjs';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -14,13 +14,27 @@ interface UserResponse {
   username: string;
   email: string;
   role: string;
+  enabled: boolean;
+  phone?: string;
+  bio?: string;
+  profileImage?: string;
 }
 
 interface AuthResponse {
-  token: string;
+  token?: string | null;
   type: string;
-  expiresIn: number;
+  expiresIn?: number | null;
   user: UserResponse;
+}
+
+interface SessionInfoResponse {
+  sessionId: string;
+  userId: number;
+  email: string;
+  role: string;
+  sessionCreatedAt: string;
+  lastAccessedAt: string;
+  maxInactiveIntervalSeconds: number;
 }
 
 interface LoginRequest {
@@ -35,6 +49,20 @@ interface RegisterRequest {
   role: string;
 }
 
+interface FaceRegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  imageBase64: string;
+  role: string;
+}
+
+interface FaceLoginRequest {
+  login: string;
+  imageBase64: string;
+  threshold?: number;
+}
+
 interface ForgotPasswordRequest {
   email: string;
 }
@@ -45,9 +73,29 @@ interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+interface UpdateCurrentUserRequest {
+  username: string;
+  email: string;
+  phone?: string;
+  bio?: string;
+  profileImage?: string;
+}
+
+interface UpdateCurrentFaceIdRequest {
+  imageBase64: string;
+}
+
+interface ChangeCurrentPasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly authApiUrl = 'http://localhost:8080/api/auth';
+  private readonly sessionApiUrl = 'http://localhost:8080/api/session';
+  private readonly usersApiUrl = 'http://localhost:8080/api/users';
   private readonly tokenStorageKey = 'auth_token';
   private readonly userStorageKey = 'auth_user';
 
@@ -58,10 +106,7 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => {
-          localStorage.setItem(this.tokenStorageKey, auth.token);
-          localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
-        })
+        tap((auth) => this.persistAuth(auth))
       );
   }
 
@@ -70,10 +115,25 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => {
-          localStorage.setItem(this.tokenStorageKey, auth.token);
-          localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
-        })
+        tap((auth) => this.persistAuth(auth))
+      );
+  }
+
+  registerWithFace(payload: FaceRegisterRequest): Observable<AuthResponse> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register-face`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((auth) => this.persistAuth(auth))
+      );
+  }
+
+  loginWithFace(payload: FaceLoginRequest): Observable<AuthResponse> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login-face`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((auth) => this.persistAuth(auth))
       );
   }
 
@@ -89,7 +149,73 @@ export class AuthService {
       .pipe(map(() => void 0));
   }
 
-  logout(): void {
+  updateCurrentUserProfile(payload: UpdateCurrentUserRequest): Observable<UserResponse> {
+    const currentUser = this.getCurrentUser();
+
+    if (!currentUser?.id) {
+      throw new Error('Utilisateur non connecte');
+    }
+
+    return this.http
+      .put<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((updatedUser) => {
+          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
+        })
+      );
+  }
+
+  updateCurrentUserFaceId(payload: UpdateCurrentFaceIdRequest): Observable<UserResponse> {
+    const currentUser = this.getCurrentUser();
+
+    if (!currentUser?.id) {
+      throw new Error('Utilisateur non connecte');
+    }
+
+    return this.http
+      .patch<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}/face-id`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((updatedUser) => {
+          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
+        })
+      );
+  }
+
+  changeCurrentUserPassword(payload: ChangeCurrentPasswordRequest): Observable<void> {
+    const currentUser = this.getCurrentUser();
+
+    if (!currentUser?.id) {
+      throw new Error('Utilisateur non connecte');
+    }
+
+    return this.http
+      .patch<ApiResponse<null>>(`${this.usersApiUrl}/${currentUser.id}/password`, payload)
+      .pipe(map(() => void 0));
+  }
+
+  getSessionInfo(): Observable<SessionInfoResponse> {
+    return this.http
+      .get<ApiResponse<SessionInfoResponse>>(`${this.sessionApiUrl}/me`)
+      .pipe(map((response) => response.data));
+  }
+
+  logout(): Observable<void> {
+    return this.http.post<ApiResponse<null>>(`${this.authApiUrl}/logout`, {}).pipe(
+      tap(() => {
+        localStorage.removeItem(this.tokenStorageKey);
+        localStorage.removeItem(this.userStorageKey);
+      }),
+      finalize(() => {
+        localStorage.removeItem(this.tokenStorageKey);
+        localStorage.removeItem(this.userStorageKey);
+      }),
+      map(() => void 0)
+    );
+  }
+
+  clearLocalAuth(): void {
     localStorage.removeItem(this.tokenStorageKey);
     localStorage.removeItem(this.userStorageKey);
   }
@@ -113,5 +239,56 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.getCurrentUser()?.role === 'ADMIN';
+  }
+
+  isPendingApproval(user?: UserResponse | null): boolean {
+    if (!user?.role) {
+      return false;
+    }
+
+    return user.role !== 'CLIENT_TOURISTE' && user.enabled === false;
+  }
+
+  getRouteForRole(role?: string | null): string {
+    switch (role) {
+      case 'ADMIN':
+        return '/dashbord';
+      case 'CLIENT_TOURISTE':
+        return '/homePage';
+      case 'HEBERGEUR':
+        return '/hebergeur';
+      case 'TRANSPORTEUR':
+        return '/transporteur';
+      case 'AIRLINE_PARTNER':
+        return '/airline-partner';
+      case 'ORGANISATEUR':
+        return '/organisateur';
+      case 'VENDEUR_ARTI':
+        return '/vendeur-arti';
+      case 'SOCIETE':
+        return '/societe';
+      default:
+        return '/';
+    }
+  }
+
+  private persistAuth(auth: AuthResponse): void {
+    if (!auth?.user) {
+      this.clearLocalAuth();
+      return;
+    }
+
+    if (this.isPendingApproval(auth.user)) {
+      this.clearLocalAuth();
+      return;
+    }
+
+    if (!auth.token) {
+      this.clearLocalAuth();
+      return;
+    }
+
+    localStorage.setItem(this.tokenStorageKey, auth.token);
+    localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
   }
 }

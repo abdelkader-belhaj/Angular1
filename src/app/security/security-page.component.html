@@ -1,0 +1,33 @@
+<main class="settings-page">
+  <section class="settings-card">
+    <header>
+      <p class="eyebrow">Securite</p>
+      <h1>Mot de passe</h1>
+      <p>Renforcez la securite de votre compte.</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label>
+        <span>Mot de passe actuel</span>
+        <input type="password" formControlName="oldPassword" />
+      </label>
+
+      <label>
+        <span>Nouveau mot de passe</span>
+        <input type="password" formControlName="newPassword" />
+      </label>
+
+      <label>
+        <span>Confirmer le mot de passe</span>
+        <input type="password" formControlName="confirmPassword" />
+      </label>
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+      <p class="success" *ngIf="message">{{ message }}</p>
+
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Mise a jour...' : 'Modifier le mot de passe' }}
+      </button>
+    </form>
+  </section>
+</main>

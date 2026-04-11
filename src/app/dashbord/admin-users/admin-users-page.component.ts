@@ -177,6 +177,14 @@ export class AdminUsersPageComponent implements OnInit {
     return source ? source.charAt(0).toUpperCase() : '?';
   }
 
+  getTwoFactorStatusLabel(user: AdminUserResponse): string {
+    return user.twoFactorEnabled ? 'Active' : 'Non active';
+  }
+
+  getFaceIdStatusLabel(user: AdminUserResponse): string {
+    return user.hasFaceId ? 'Enregistre' : 'Non enregistre';
+  }
+
   formatDateTime(value?: string): string {
     if (!value) {
       return 'N/A';

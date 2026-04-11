@@ -15,6 +15,12 @@ export interface AdminUserResponse {
   email: string;
   enabled: boolean;
   role: string;
+  twoFactorEnabled?: boolean;
+  twoFactorActivatedAt?: string;
+  hasFaceId?: boolean;
+  faceModelName?: string;
+  faceDetectorBackend?: string;
+  faceThreshold?: number;
   phone?: string;
   bio?: string;
   profileImage?: string;

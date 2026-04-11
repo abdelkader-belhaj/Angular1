@@ -90,6 +90,14 @@
   color: #0f172a;
 }
 
+.security-ok {
+  color: #137a44;
+}
+
+.security-off {
+  color: #a53c15;
+}
+
 .detail-text {
   font-weight: 500;
   color: #334155;

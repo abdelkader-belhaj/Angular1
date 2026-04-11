@@ -2,9 +2,68 @@
   <section class="settings-card">
     <header>
       <p class="eyebrow">Securite</p>
-      <h1>Mot de passe</h1>
-      <p>Renforcez la securite de votre compte.</p>
+      <h1>Mot de passe et 2FA</h1>
+      <p>Renforcez la securite de votre compte apres login.</p>
     </header>
+
+    <section class="notice-card" *ngIf="showTwoFactorPrompt && !twoFactorSetup">
+      <div class="two-factor-head">
+        <div>
+          <p class="eyebrow">2FA</p>
+          <h2>Etape de securite recommandee</h2>
+        </div>
+        <span class="status-badge">Recommande</span>
+      </div>
+
+      <p class="helper-text">
+        Votre compte n a pas encore de 2FA. Le 2FA protege votre compte apres la connexion.
+        Il reste facultatif, mais fortement recommande.
+      </p>
+
+      <div class="notice-actions">
+        <button type="button" (click)="loadTwoFactorSetup()" [disabled]="isLoadingTwoFactor">
+          {{ isLoadingTwoFactor ? 'Preparation...' : 'Activer le 2FA' }}
+        </button>
+        <button type="button" class="secondary-btn" (click)="skipTwoFactor()">Plus tard</button>
+      </div>
+    </section>
+
+    <section class="two-factor-card" *ngIf="twoFactorSetup">
+      <div class="two-factor-head">
+        <div>
+          <p class="eyebrow">2FA</p>
+          <h2>Configuration TOTP</h2>
+        </div>
+        <span class="status-badge" [class.active]="currentUser?.twoFactorEnabled">
+          {{ currentUser?.twoFactorEnabled ? 'Active' : 'En attente' }}
+        </span>
+      </div>
+
+      <p class="helper-text" *ngIf="!currentUser?.twoFactorEnabled">
+        Ajoutez votre compte dans une application d authentification avec la cle manuelle ci-dessous.
+      </p>
+
+      <div class="qr-wrap">
+        <img *ngIf="twoFactorSetup.qrCodeDataUrl" [src]="twoFactorSetup.qrCodeDataUrl" alt="QR code 2FA" />
+        <div class="secret-box">
+          <span>Cle manuelle</span>
+          <strong>{{ twoFactorSetup.secret }}</strong>
+          <small class="helper-text">Tu peux utiliser Google Authenticator, Microsoft Authenticator ou Authy via l option "Entrer une cle".</small>
+        </div>
+      </div>
+
+      <form class="two-factor-actions" [formGroup]="twoFactorForm" (ngSubmit)="verifyTwoFactor()" novalidate>
+        <label>
+          <span>Code a 6 chiffres</span>
+          <input type="text" formControlName="code" maxlength="6" placeholder="123456" />
+        </label>
+        <p class="error" *ngIf="twoFactorError">{{ twoFactorError }}</p>
+        <p class="success" *ngIf="twoFactorMessage">{{ twoFactorMessage }}</p>
+        <button type="submit" [disabled]="isVerifyingTwoFactor">
+          {{ isVerifyingTwoFactor ? 'Verification...' : 'Valider et activer' }}
+        </button>
+      </form>
+    </section>
 
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <label>

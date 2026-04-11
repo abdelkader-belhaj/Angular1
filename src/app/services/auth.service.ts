@@ -15,6 +15,7 @@ interface UserResponse {
   email: string;
   role: string;
   enabled: boolean;
+  twoFactorEnabled?: boolean;
   phone?: string;
   bio?: string;
   profileImage?: string;
@@ -25,6 +26,19 @@ interface AuthResponse {
   type: string;
   expiresIn?: number | null;
   user: UserResponse;
+}
+
+interface TwoFactorSetupResponse {
+  issuer: string;
+  accountName: string;
+  secret: string;
+  otpauthUri: string;
+  qrCodeDataUrl: string;
+  enabled: boolean;
+}
+
+interface TwoFactorCodeRequest {
+  code: string;
 }
 
 interface SessionInfoResponse {
@@ -218,6 +232,23 @@ export class AuthService {
   clearLocalAuth(): void {
     localStorage.removeItem(this.tokenStorageKey);
     localStorage.removeItem(this.userStorageKey);
+  }
+
+  setupTwoFactor(): Observable<TwoFactorSetupResponse> {
+    return this.http
+      .post<ApiResponse<TwoFactorSetupResponse>>(`${this.authApiUrl}/2fa/setup`, {})
+      .pipe(map((response) => response.data));
+  }
+
+  verifyTwoFactor(payload: TwoFactorCodeRequest): Observable<UserResponse> {
+    return this.http
+      .post<ApiResponse<UserResponse>>(`${this.authApiUrl}/2fa/verify`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((updatedUser) => {
+          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
+        })
+      );
   }
 
   isAuthenticated(): boolean {

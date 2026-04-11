@@ -225,7 +225,17 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
         })
       );
 
-      await this.router.navigateByUrl(this.authService.getRouteForRole(auth.user?.role));
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            returnTo: targetRoute
+          }
+        });
+      } else {
+        await this.router.navigateByUrl(targetRoute);
+      }
 
       this.close();
     } catch (error) {
@@ -368,7 +378,17 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
         })
       );
 
-      await this.router.navigateByUrl(this.authService.getRouteForRole(auth.user?.role));
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            returnTo: targetRoute
+          }
+        });
+      } else {
+        await this.router.navigateByUrl(targetRoute);
+      }
 
       this.close();
     } catch (error) {
@@ -427,7 +447,17 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
           return;
         }
 
-        await this.router.navigateByUrl(this.authService.getRouteForRole(auth.user?.role));
+        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+        if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+          await this.router.navigate(['/security'], {
+            queryParams: {
+              recommendTwoFactor: '1',
+              returnTo: targetRoute
+            }
+          });
+        } else {
+          await this.router.navigateByUrl(targetRoute);
+        }
       } else {
         const auth = await firstValueFrom(
           this.authService.register({
@@ -450,7 +480,17 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
           return;
         }
 
-        await this.router.navigateByUrl(this.authService.getRouteForRole(auth.user?.role));
+        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+        if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+          await this.router.navigate(['/security'], {
+            queryParams: {
+              recommendTwoFactor: '1',
+              returnTo: targetRoute
+            }
+          });
+        } else {
+          await this.router.navigateByUrl(targetRoute);
+        }
       }
 
       this.close();

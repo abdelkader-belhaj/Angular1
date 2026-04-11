@@ -217,6 +217,40 @@
             </div>
 
             <div class="detail-card">
+              <p class="detail-label">2FA</p>
+              <p class="detail-value" [ngClass]="selectedUser.twoFactorEnabled ? 'security-ok' : 'security-off'">
+                {{ getTwoFactorStatusLabel(selectedUser) }}
+              </p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Activation 2FA</p>
+              <p class="detail-value">{{ formatDateTime(selectedUser.twoFactorActivatedAt) }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Face ID</p>
+              <p class="detail-value" [ngClass]="selectedUser.hasFaceId ? 'security-ok' : 'security-off'">
+                {{ getFaceIdStatusLabel(selectedUser) }}
+              </p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Modele Face</p>
+              <p class="detail-value">{{ selectedUser.faceModelName || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Detector</p>
+              <p class="detail-value">{{ selectedUser.faceDetectorBackend || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Seuil Face</p>
+              <p class="detail-value">{{ selectedUser.faceThreshold ?? 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card">
               <p class="detail-label">Telephone</p>
               <p class="detail-value">{{ selectedUser.phone || 'Non renseigne' }}</p>
             </div>

@@ -8,7 +8,8 @@ import { Forum } from '../../../models/forum.model';
 import { Reaction, ForumComment, Review } from '../../../models/forum-interactions.model';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ModerationService } from '../../../services/ModerationService';
-
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import * as L from 'leaflet';
 @Component({
   selector: 'app-forum-detail',
   templateUrl: './forum-detail.component.html',
@@ -45,7 +46,9 @@ export class ForumDetailComponent implements OnInit {
     private forumService: ForumService,
     private authService: AuthService,
     private http: HttpClient,
-    private moderationService: ModerationService 
+    private moderationService: ModerationService ,
+    private sanitizer: DomSanitizer
+    
   ) {}
 
   ngOnInit(): void {
@@ -593,5 +596,273 @@ acceptAiCorrection(): void {
 
 dismissAiCorrection(): void {
   this.aiCorrectionResult = null;
+}
+// ─── LOCATION SHARE ───────────────────────────────────────────────────────────
+locationShareOpen      = false;
+locationAiLoading      = false;
+locationGpsLoading     = false;
+isLocationSharing      = false;
+selectedLocationMinutes = 60;
+locationRemainingTime  = '';
+locationAiData: { message: string; options: { label: string; minutes: number; description: string }[] } | null = null;
+
+private locationTimerInterval?: ReturnType<typeof setInterval>;
+locationEndTime: number = 0;
+
+openLocationShare(): void {
+  this.locationShareOpen = true;
+  this.locationAiLoading = true;
+  this.locationAiData = null;
+
+  const token = localStorage.getItem('auth_token') || '';
+
+  this.http.post<any>(
+    'http://localhost:8080/api/ai/location-message',
+    {
+      username:  this.currentUser?.username || 'Utilisateur',
+      community: this.community?.name || 'la communauté'
+    },
+    { headers: new HttpHeaders({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }) }
+  ).subscribe({
+    next: (data) => {
+      this.locationAiData    = data;
+      this.locationAiLoading = false;
+    },
+    error: () => {
+      // Fallback si l'IA est indisponible
+      this.locationAiData = {
+        message: `${this.currentUser?.username} partage sa position`,
+        options: [
+          { label: '15 minutes', minutes: 15,  description: 'Partage rapide'    },
+          { label: '1 heure',    minutes: 60,  description: 'Recommandé'        },
+          { label: '2 heures',   minutes: 120, description: 'Partage prolongé'  }
+        ]
+      };
+      this.locationAiLoading = false;
+    }
+  });
+}
+
+selectLocationDuration(minutes: number): void {
+  this.selectedLocationMinutes = minutes;
+}
+
+startLocationShare(): void {
+  this.locationGpsLoading = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      this.locationGpsLoading = false;
+      this.isLocationSharing  = true;
+      this.currentCoords = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+      this.locationEndTime    = Date.now() + this.selectedLocationMinutes * 60 * 1000;
+
+      this.updateLocationTimer();
+      this.locationTimerInterval = setInterval(() => this.updateLocationTimer(), 1000);
+
+      // Sauvegarder dans localStorage
+      localStorage.setItem('activeLocationShare', JSON.stringify({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        expiresAt: new Date(this.locationEndTime),
+        username: this.currentUser?.username
+      }));
+
+      // ← LIGNE MANQUANTE — alimente la barre stories
+      this.addLocationShare({
+        userId:   this.currentUser!.id,
+        username: this.currentUser!.username,
+        lat:      pos.coords.latitude,
+        lng:      pos.coords.longitude,
+        minutes:  this.selectedLocationMinutes
+      });
+
+      console.log('Stories actives:', this.activeLocationShares); // debug
+    },
+    () => {
+      this.locationGpsLoading = false;
+      this.errorMessage = 'Impossible d\'accéder à votre position GPS.';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+stopLocationShare(): void {
+  this.isLocationSharing = false;
+  if (this.locationTimerInterval) clearInterval(this.locationTimerInterval);
+  localStorage.removeItem('activeLocationShare');
+  this.locationRemainingTime = '';
+}
+
+private updateLocationTimer(): void {
+  if (!this.locationEndTime) return;
+  const remaining = Math.max(0, Math.floor((this.locationEndTime - Date.now()) / 1000));
+  const h = Math.floor(remaining / 3600);
+  const m = Math.floor((remaining % 3600) / 60);
+  const s = remaining % 60;
+
+  if (h > 0)      this.locationRemainingTime = `${h}h${m.toString().padStart(2,'0')} restante`;
+  else if (m > 0) this.locationRemainingTime = `${m}min ${s.toString().padStart(2,'0')}s restante`;
+  else            this.locationRemainingTime = `${s}s restante`;
+
+  if (remaining === 0) this.stopLocationShare();
+}
+
+closeLocationShare(event?: MouseEvent): void {
+  if (!event || (event.target as HTMLElement).style.position === 'fixed'
+              || (event.target as HTMLElement) === event.currentTarget) {
+    this.locationShareOpen = false;
+  }
+}
+shareAvatarColors = ['#E6F1FB','#FAEEDA','#E1F5EE','#EEEDFE','#FCEBEB'];
+shareTextColors   = ['#0C447C','#633806','#085041','#3C3489','#791F1F'];
+
+activeLocationShares: {
+  userId: number; username: string;
+  lat: number; lng: number;
+  minutes: number; startedAt: number;
+}[] = [];
+
+locationMapOpen  = false;
+selectedShare: any = null;
+locationMapTimer = '';
+private mapTimerInterval?: ReturnType<typeof setInterval>;
+
+// Appeler quand l'user partage sa position
+addLocationShare(share: any): void {
+  // Supprimer ancien partage du même user
+  this.activeLocationShares = this.activeLocationShares
+    .filter(s => s.userId !== share.userId);
+
+  this.activeLocationShares.push({
+    ...share,
+    startedAt: Date.now()
+  });
+
+  // Retirer automatiquement après expiration
+  setTimeout(() => {
+    this.activeLocationShares = this.activeLocationShares
+      .filter(s => s.userId !== share.userId);
+  }, share.minutes * 60 * 1000);
+}
+
+getSharePercent(share: any): number {
+  const total     = share.minutes * 60 * 1000;
+  const elapsed   = Date.now() - share.startedAt;
+  const remaining = Math.max(0, total - elapsed);
+  return Math.round((remaining / total) * 100);
+}
+
+getShareRemainingLabel(share: any): string {
+  const secs = Math.max(0,
+    Math.floor((share.startedAt + share.minutes*60*1000 - Date.now()) / 1000));
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}h${String(m).padStart(2,'0')}`;
+  if (m > 0) return `${m}min`;
+  return `${s}s`;
+}
+private leafletMap?: L.Map;
+openLocationMap(share: any): void {
+  this.selectedShare   = share;
+  this.locationMapOpen = true;
+  this.updateMapTimer();
+  this.mapTimerInterval = setInterval(() => this.updateMapTimer(), 1000);
+
+  // Détruire l'ancienne carte si elle existe
+  if (this.leafletMap) {
+    this.leafletMap.remove();
+    this.leafletMap = undefined;
+  }
+
+  // Attendre que Angular rende le div
+  setTimeout(() => {
+    const mapId = `map-${share.userId}`;
+    const container = document.getElementById(mapId);
+    if (!container) return;
+
+    // Initialiser la carte
+    this.leafletMap = L.map(mapId, {
+      center:  [share.lat, share.lng],
+      zoom:    16,
+      zoomControl: true
+    });
+
+    // Tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(this.leafletMap);
+
+    // Pin personnalisé pulsant
+    const icon = L.divIcon({
+      html: `
+        <div style="position:relative;display:flex;
+                    align-items:center;justify-content:center">
+          <div style="position:absolute;width:40px;height:40px;
+                      border-radius:50%;background:rgba(24,95,165,0.2);
+                      animation:mapPulse 2s ease-out infinite"></div>
+          <div style="width:16px;height:16px;border-radius:50%;
+                      background:#185FA5;border:3px solid white;
+                      box-shadow:0 2px 8px rgba(24,95,165,0.5);
+                      position:relative;z-index:2"></div>
+        </div>`,
+      iconSize:   [40, 40],
+      iconAnchor: [20, 20],
+      className:  ''
+    });
+
+    L.marker([share.lat, share.lng], { icon })
+      .addTo(this.leafletMap)
+      .bindPopup(`
+        <div style="font-family:sans-serif;padding:4px">
+          <b style="color:#185FA5">${share.username}</b>
+          <br>
+          <span style="font-size:12px;color:#666">Position en direct</span>
+        </div>
+      `)
+      .openPopup();
+
+  }, 200);
+}
+
+private updateMapTimer(): void {
+  if (!this.selectedShare) return;
+  this.locationMapTimer = this.getShareRemainingLabel(this.selectedShare);
+  if (this.getSharePercent(this.selectedShare) === 0) {
+    this.closeLocationMap();
+  }
+}
+
+closeLocationMap(event?: MouseEvent): void {
+  if (event && (event.target as HTMLElement) !== event.currentTarget) return;
+
+  // Détruire la carte Leaflet proprement
+  if (this.leafletMap) {
+    this.leafletMap.remove();
+    this.leafletMap = undefined;
+  }
+
+  this.locationMapOpen = false;
+  this.selectedShare   = null;
+  if (this.mapTimerInterval) clearInterval(this.mapTimerInterval);
+}
+
+getMapUrl(lat: number, lng: number): SafeResourceUrl {
+  // zoom plus précis — delta réduit pour voir la rue
+  const delta = 0.005;
+  const url = `https://www.openstreetmap.org/export/embed.html`
+            + `?bbox=${lng - delta},${lat - delta},${lng + delta},${lat + delta}`
+            + `&layer=mapnik`
+            + `&marker=${lat},${lng}`;
+  return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+}
+private currentCoords?: { lat: number; lng: number };
+
+getGoogleMapsUrl(): string {
+  if (!this.currentCoords) return '#';
+  return `https://www.google.com/maps?q=${this.currentCoords.lat},${this.currentCoords.lng}`;
 }
 }

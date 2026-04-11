@@ -53,6 +53,368 @@
         </div>
       </div>
     </div>
+    <!-- Bouton partager position -->
+<button *ngIf="currentUser" (click)="openLocationShare()"
+  style="display:inline-flex;align-items:center;gap:6px;
+         padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;
+         background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4;cursor:pointer">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+  Partager ma position
+</button>
+
+<!-- ─── BARRE STORIES DE POSITIONS ─────────────────────────────────── -->
+<div *ngIf="activeLocationShares.length > 0"
+  style="background:var(--color-background-primary);
+         border-radius:20px;border:0.5px solid var(--color-border-tertiary);
+         margin-bottom:20px;overflow:hidden">
+
+  <!-- En-tête -->
+  <div style="padding:10px 16px;display:flex;align-items:center;
+              justify-content:space-between;
+              border-bottom:0.5px solid var(--color-border-tertiary)">
+    <span style="font-size:13px;font-weight:500;
+                 color:var(--color-text-primary);
+                 display:flex;align-items:center;gap:6px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="#1D9E75" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Positions en direct
+    </span>
+    <span style="font-size:11px;background:#E1F5EE;color:#085041;
+                 padding:2px 8px;border-radius:20px;border:0.5px solid #9FE1CB">
+      {{ activeLocationShares.length }} actif{{ activeLocationShares.length > 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <!-- Stories scrollables -->
+  <div style="display:flex;gap:14px;padding:14px 16px;
+              overflow-x:auto;scrollbar-width:none">
+    <div *ngFor="let share of activeLocationShares; let i = index"
+         (click)="openLocationMap(share)"
+         style="display:flex;flex-direction:column;align-items:center;
+                gap:6px;cursor:pointer;flex-shrink:0">
+
+      <!-- Ring animé avec progression -->
+      <div [style.background]="'conic-gradient(#1D9E75 '+getSharePercent(share)+'%, #D3D1C7 0)'"
+           style="width:62px;height:62px;border-radius:50%;padding:2.5px;position:relative">
+
+        <div [style.background]="shareAvatarColors[i % shareAvatarColors.length]"
+             style="width:100%;height:100%;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:20px;font-weight:500;position:relative;
+                    border:2px solid var(--color-background-primary)">
+
+          <!-- Initiale -->
+          <span [style.color]="shareTextColors[i % shareTextColors.length]">
+            {{ share.username.charAt(0).toUpperCase() }}
+          </span>
+
+          <!-- Pulse ring -->
+          <div style="position:absolute;inset:-6px;border-radius:50%;
+                      border:2px solid #1D9E75;
+                      animation:pulseRing 2s ease-out infinite;
+                      pointer-events:none"></div>
+        </div>
+
+        <!-- Badge GPS -->
+        <div style="position:absolute;bottom:-2px;right:-2px;
+                    width:18px;height:18px;border-radius:50%;
+                    background:#1D9E75;
+                    border:2px solid var(--color-background-primary);
+                    display:flex;align-items:center;justify-content:center">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+               stroke="white" stroke-width="3">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          </svg>
+        </div>
+      </div>
+
+      <span style="font-size:11px;color:var(--color-text-secondary);
+                   max-width:64px;text-align:center;
+                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        {{ share.username }}
+      </span>
+      <span style="font-size:10px;color:#1D9E75;font-weight:500">
+        {{ getShareRemainingLabel(share) }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL CARTE ─────────────────────────────────────────────────── -->
+<div *ngIf="locationMapOpen"
+  style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);
+         display:flex;align-items:center;justify-content:center;padding:20px"
+  (click)="closeLocationMap($event)">
+
+  <div style="background:var(--color-background-primary);
+              border-radius:24px;width:100%;max-width:480px;
+              max-height:90vh;overflow-y:auto;
+              animation:slideUp 0.3s cubic-bezier(.32,1.2,.65,1)"
+       (click)="$event.stopPropagation()">
+
+    <!-- Handle -->
+    <div style="width:36px;height:4px;background:var(--color-border-tertiary);
+                border-radius:2px;margin:12px auto 0"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;
+                border-bottom:0.5px solid var(--color-border-tertiary)">
+      <div [style.background]="shareAvatarColors[0]"
+           style="width:44px;height:44px;border-radius:50%;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:16px;font-weight:500;flex-shrink:0;
+                  border:2px solid var(--color-border-tertiary)">
+        <span [style.color]="shareTextColors[0]">
+          {{ selectedShare?.username?.charAt(0)?.toUpperCase() }}
+        </span>
+      </div>
+      <div style="flex:1">
+        <p style="font-size:15px;font-weight:500;
+                  color:var(--color-text-primary);margin:0 0 2px">
+          {{ selectedShare?.username }}
+        </p>
+        <span style="font-size:12px;color:var(--color-text-secondary)">
+          Partage pendant {{ selectedShare?.minutes }} min
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;
+                  background:#E1F5EE;border:0.5px solid #9FE1CB;
+                  padding:5px 10px;border-radius:20px">
+        <div style="width:6px;height:6px;border-radius:50%;
+                    background:#1D9E75;animation:pulseDot 1.5s infinite"></div>
+        <span style="font-size:11px;color:#085041;font-weight:500">
+          {{ locationMapTimer }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Carte Leaflet -->
+    <div style="height:380px;width:100%;position:relative;overflow:hidden">
+  <div [id]="'map-' + selectedShare?.userId"
+       style="height:100%;width:100%">
+  </div>
+</div>
+
+    <!-- Infos -->
+    <div style="padding:16px 20px 24px">
+
+  <div style="display:flex;gap:10px;margin-bottom:14px">
+    <div style="flex:1;background:var(--color-background-secondary);
+                border-radius:12px;padding:10px 12px;
+                border:0.5px solid var(--color-border-tertiary)">
+      <div style="font-size:10px;text-transform:uppercase;
+                  letter-spacing:0.05em;color:var(--color-text-tertiary)">Lat</div>
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
+        {{ selectedShare?.lat?.toFixed(4) }}°N
+      </div>
+    </div>
+    <div style="flex:1;background:var(--color-background-secondary);
+                border-radius:12px;padding:10px 12px;
+                border:0.5px solid var(--color-border-tertiary)">
+      <div style="font-size:10px;text-transform:uppercase;
+                  letter-spacing:0.05em;color:var(--color-text-tertiary)">Lng</div>
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
+        {{ selectedShare?.lng?.toFixed(4) }}°E
+      </div>
+    </div>
+    <div style="flex:1;background:#E1F5EE;border-radius:12px;padding:10px 12px;
+                border:0.5px solid #9FE1CB">
+      <div style="font-size:10px;text-transform:uppercase;
+                  letter-spacing:0.05em;color:#085041">Expire</div>
+      <div style="font-size:13px;font-weight:500;color:#0F6E56">
+        {{ locationMapTimer }}
+      </div>
+    </div>
+  </div>
+
+      <!-- Barre progression -->
+      <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;
+                font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">
+      <span>Durée restante</span>
+      <span>{{ selectedShare ? getSharePercent(selectedShare) : 0 }}%</span>
+    </div>
+    <div style="height:4px;background:var(--color-border-tertiary);
+                border-radius:2px;overflow:hidden">
+      <div [style.width]="(selectedShare ? getSharePercent(selectedShare) : 0) + '%'"
+           [style.background]="(selectedShare ? getSharePercent(selectedShare) : 100) > 30 ? '#1D9E75' : '#E24B4A'"
+           style="height:100%;border-radius:2px;transition:width 1s linear"></div>
+    </div>
+  </div>
+
+
+     <!-- Boutons -->
+      <div style="display:flex;gap:10px">
+        <a *ngIf="selectedShare"
+           [href]="'https://www.google.com/maps?q=' + selectedShare.lat + ',' + selectedShare.lng"
+           target="_blank"
+           style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+                  padding:13px;border-radius:30px;font-size:14px;font-weight:500;
+                  background:#185FA5;color:white;text-decoration:none;cursor:pointer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Voir sur Maps
+        </a>
+        <button (click)="closeLocationMap()"
+          style="flex:1;padding:13px;border-radius:30px;
+                 background:var(--color-background-secondary);
+                 border:0.5px solid var(--color-border-tertiary);
+                 color:var(--color-text-secondary);font-size:14px;cursor:pointer">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Panel IA de partage de position -->
+<div *ngIf="locationShareOpen"
+  style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);
+         display:flex;align-items:flex-end;justify-content:center"
+  (click)="closeLocationShare($event)">
+
+  <div style="background:var(--color-background-primary);border-radius:20px 20px 0 0;
+              width:100%;max-width:480px;padding:0 0 32px;animation:slideUp 0.3s ease">
+
+    <!-- Handle -->
+    <div style="width:36px;height:4px;background:var(--color-border-tertiary);
+                border-radius:2px;margin:12px auto 20px"></div>
+
+    <!-- Loading IA -->
+    <div *ngIf="locationAiLoading"
+      style="padding:40px 20px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;
+                  color:var(--color-text-secondary);font-size:14px">
+        <svg style="width:16px;height:16px;animation:spin 1s linear infinite"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Génération par l'IA...
+      </div>
+    </div>
+
+    <!-- Contenu généré par l'IA -->
+    <div *ngIf="!locationAiLoading && locationAiData">
+
+      <!-- Avatar + message IA -->
+      <div style="text-align:center;padding:0 20px 20px">
+        <div style="width:56px;height:56px;border-radius:50%;background:#E6F1FB;
+                    border:2px solid #B5D4F4;display:flex;align-items:center;
+                    justify-content:center;font-size:20px;font-weight:500;
+                    color:#0C447C;margin:0 auto 12px">
+          {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
+        </div>
+        <p style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px">
+          Partager ma position
+        </p>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin:0">
+          {{ locationAiData.message }}
+        </p>
+      </div>
+
+      <!-- Options générées par l'IA -->
+      <div style="display:flex;flex-direction:column;gap:10px;padding:0 20px;margin-bottom:16px">
+        <div *ngFor="let opt of locationAiData.options; let i = index"
+          (click)="selectLocationDuration(opt.minutes)"
+          [style.border]="selectedLocationMinutes === opt.minutes ? '1.5px solid #378ADD' : '0.5px solid var(--color-border-tertiary)'"
+          [style.background]="selectedLocationMinutes === opt.minutes ? '#E6F1FB' : 'var(--color-background-secondary)'"
+          style="display:flex;align-items:center;gap:14px;padding:14px 16px;
+                 border-radius:14px;cursor:pointer;transition:all 0.15s">
+
+          <!-- Icône selon index -->
+          <div [style.background]="i===0?'#FAEEDA':i===1?'#E6F1FB':'#E1F5EE'"
+            style="width:40px;height:40px;border-radius:50%;display:flex;
+                   align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              [attr.stroke]="i===0?'#BA7517':i===1?'#185FA5':'#0F6E56'" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+
+          <div style="flex:1">
+            <p style="margin:0;font-size:15px;font-weight:500;color:var(--color-text-primary)">
+              {{ opt.label }}
+            </p>
+            <span style="font-size:12px;color:var(--color-text-secondary)">
+              {{ opt.description }}
+            </span>
+          </div>
+
+          <!-- Check -->
+          <div [style.background]="selectedLocationMinutes===opt.minutes?'#378ADD':'transparent'"
+            [style.borderColor]="selectedLocationMinutes===opt.minutes?'#378ADD':'var(--color-border-secondary)'"
+            style="width:20px;height:20px;border-radius:50%;border:1.5px solid;
+                   display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg *ngIf="selectedLocationMinutes===opt.minutes"
+              width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="white" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timer actif -->
+      <div *ngIf="isLocationSharing"
+        style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:14px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;
+                    animation:pulseDot 1.5s infinite"></div>
+        <span style="font-size:13px;font-weight:500;color:#1D9E75">
+          En direct · {{ locationRemainingTime }}
+        </span>
+      </div>
+
+      <!-- Boutons -->
+      <button (click)="isLocationSharing ? stopLocationShare() : startLocationShare()"
+        [style.background]="isLocationSharing ? '#A32D2D' : '#185FA5'"
+        [disabled]="locationGpsLoading"
+        style="display:block;width:calc(100% - 40px);margin:0 20px;padding:14px;
+               border-radius:30px;border:none;font-size:15px;font-weight:500;
+               color:white;cursor:pointer;transition:all 0.15s">
+        <span *ngIf="locationGpsLoading">Localisation en cours...</span>
+        <span *ngIf="!locationGpsLoading && !isLocationSharing">Partager ma position</span>
+        <span *ngIf="!locationGpsLoading && isLocationSharing">Arrêter le partage</span>
+      </button>
+      <a *ngIf="isLocationSharing && !!locationEndTime"
+         [href]="getGoogleMapsUrl()"
+         target="_blank"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;
+                width:calc(100% - 40px);margin:10px 20px 0;padding:14px;
+                border-radius:30px;background:#E6F1FB;color:#185FA5;
+                border:0.5px solid #B5D4F4;font-size:15px;font-weight:500;
+                text-decoration:none;cursor:pointer;transition:all 0.15s">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        Voir ma position sur Maps
+      </a>
+
+      <!-- ✅ AJOUTEZ CE BOUTON ANNULER -->
+      <button (click)="closeLocationShare()"
+        style="display:block;width:calc(100% - 40px);margin:10px 20px 0;padding:14px;
+               border-radius:30px;background:var(--color-background-secondary);
+               color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);
+               font-size:15px;cursor:pointer">
+        Annuler
+      </button>
+
+    </div>
+  </div>
+</div>
+      
+  
 
     <!-- Community Rules Reminder -->
     <div class="mb-8 rounded-[40px] bg-gradient-to-r from-slate-50 to-blue-50/30 border border-slate-200/50 p-6 shadow-lg backdrop-blur-sm">

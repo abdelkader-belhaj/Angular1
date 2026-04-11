@@ -185,7 +185,8 @@
           <!-- Footer -->
           <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
             <p class="text-xs text-slate-400">
-              Dernière activité : {{ forumNotifications[0]?.createdAt | date:'dd/MM/yyyy à HH:mm' }}
+              Dernière activité : {{ getLastActivityDate() | date:'dd/MM/yyyy à HH:mm' }}
+
             </p>
             <button *ngIf="unreadNotifications > 0" (click)="markAllAsRead()"
               class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">

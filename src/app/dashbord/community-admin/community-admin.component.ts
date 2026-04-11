@@ -194,4 +194,7 @@ export class CommunityAdminComponent implements OnInit {
   emptyForm(): Community {
     return { name: '', description: '', category: '' };
   }
+  getLastActivityDate(): string {
+  return this.forumNotifications[0]?.createdAt ?? '';
+}
 }

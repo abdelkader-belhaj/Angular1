@@ -1,0 +1,469 @@
+/* ══ BANNIÈRE ══ */
+.page-vols { min-height: 100vh; background: #f1f5f9; }
+
+.hero-banner {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdjFDCQymtmRFdEvPIed0_A0QYdaGlhMGwSQzD1DaxxWq7hmeFV73rLhvhApoBNUCJvL0ElYnYMFMW_IfQovBHqJx9_H97kbMA2lGa9YJLrlxB-z_uszAO6YAms5ExzCTAxgkObgAJcZhc36aeCrVQDVwoJ-XtCBsxzxhETuNCLzLB7ZJH1uQITISwpAlNeKrTFhTeJJZS8PpcbRoSVJHAnSaiEa4v2rmREkQMkOxaMTp1vwWzYkU7n9bExnsarsr2OAwo7B73flU');
+  background-size: cover;
+  background-position: center;
+  padding: 50px 40px;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(15,23,42,0.78), rgba(15,23,42,0.35));
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 6px;
+}
+
+.hero-sub {
+  color: rgba(255,255,255,0.75);
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+}
+
+/* Barre recherche glass */
+.glass-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 14px;
+  padding: 8px;
+  max-width: 800px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.gs-field {
+  flex: 1;
+  min-width: 110px;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gs-label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.gs-input {
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  width: 100%;
+}
+.gs-input::placeholder { color: #94a3b8; font-weight: 400; }
+
+.gs-divider { color: rgba(255,255,255,0.5); font-weight: 700; padding: 0 2px; }
+
+.gs-btn {
+  background: #f59e0b;
+  color: #0f172a;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.gs-btn:hover { background: #d97706; }
+
+/* Boutons hero */
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn-action {
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.panier-btn { background: rgba(255,255,255,0.15); color: white; }
+.panier-btn:hover { background: rgba(255,255,255,0.25); }
+
+.res-btn { background: rgba(14,165,233,0.2); color: white; border-color: rgba(14,165,233,0.4); }
+.res-btn:hover { background: rgba(14,165,233,0.35); }
+
+.reset-btn { background: rgba(239,68,68,0.2); color: white; border-color: rgba(239,68,68,0.4); }
+.reset-btn:hover { background: rgba(239,68,68,0.35); }
+
+.badge-count {
+  background: #ef4444;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ══ GRILLE ══ */
+.vols-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  padding: 32px 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Carte vol */
+.vol-card {
+  background: white;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  padding: 20px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+}
+.vol-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(14,165,233,0.12);
+  border-color: #7dd3fc;
+}
+.vol-card.in-panier {
+  border-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, white 60%);
+}
+
+.panier-badge {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: #22c55e;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 3px;
+}
+
+.card-top { display: flex; justify-content: space-between; margin-bottom: 14px; }
+.card-top.mt { margin-top: 18px; }
+.badge { background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; }
+.societe { font-size: 0.72rem; color: #94a3b8; font-weight: 600; }
+
+.route { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.city { display: flex; flex-direction: column; align-items: center; }
+.code { font-size: 1.5rem; font-weight: 800; color: #0f172a; letter-spacing: 1px; }
+.lbl { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; }
+.mid { display: flex; flex-direction: column; align-items: center; flex: 1; padding: 0 8px; }
+.line { width: 100%; height: 1px; background: linear-gradient(90deg, #bae6fd, #0ea5e9); }
+.plane { color: #0ea5e9; font-size: 0.9rem; margin-top: 3px; }
+
+.infos { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; background: #f8fafc; border-radius: 8px; padding: 8px; margin-bottom: 14px; }
+.info { display: flex; flex-direction: column; align-items: center; }
+.il { font-size: 0.58rem; color: #94a3b8; text-transform: uppercase; }
+.iv { font-size: 0.75rem; font-weight: 700; color: #0f172a; }
+.iv.low { color: #ef4444; }
+
+.card-footer { display: flex; justify-content: space-between; align-items: center; }
+.prix { font-size: 1.2rem; font-weight: 800; color: #0ea5e9; }
+.actions { display: flex; gap: 6px; }
+
+.btn-cart {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-cart:hover { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+.btn-cart.in-cart { background: #22c55e; color: white; border-color: #22c55e; }
+.btn-cart.in-cart:hover { background: #dc2626; border-color: #dc2626; }
+.btn-cart:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-res {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-res:hover { opacity: 0.88; }
+.btn-res:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Skeleton */
+.vol-card.skel { animation: pulse 1.5s ease-in-out infinite; }
+.sl { height: 14px; background: #e2e8f0; border-radius: 6px; margin-bottom: 12px; }
+.sl.short { width: 55%; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+
+/* Messages */
+.msg-error { background: #fee2e2; color: #dc2626; padding: 16px 40px; margin: 16px 40px; border-radius: 10px; }
+.msg-empty { text-align: center; padding: 60px 20px; color: #64748b; }
+.msg-empty span { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+
+/* ══ MODAL ══ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  background: #f1f5f9; border: none;
+  width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.modal-title { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin: 0 0 18px; }
+
+/* Carte vol dans modal */
+.mcard {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.mcard.retour { background: #f0fdf4; border-color: #bbf7d0; }
+
+.mcard-lbl {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+.mcard-route { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.mcard-route strong { font-size: 1.1rem; color: #0f172a; }
+.marrow { color: #0ea5e9; font-weight: 700; }
+.mcard-num { font-size: 0.72rem; color: #64748b; display: block; margin-bottom: 4px; }
+.mcard-prix { font-size: 0.82rem; font-weight: 700; color: #0ea5e9; }
+
+.mcard-remove {
+  position: absolute; top: 10px; right: 10px;
+  background: #fee2e2; color: #dc2626;
+  border: none; padding: 4px 8px;
+  border-radius: 6px; font-size: 0.7rem;
+  font-weight: 600; cursor: pointer;
+  transition: background 0.2s;
+}
+.mcard-remove:hover { background: #fecaca; }
+
+/* Bouton ajouter retour */
+.btn-add-retour {
+  width: 100%;
+  background: #f8fafc;
+  border: 1.5px dashed #0ea5e9;
+  color: #0284c7;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: background 0.2s;
+}
+.btn-add-retour:hover { background: #f0f9ff; }
+
+/* Nb passagers */
+.nb-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.nb-lbl { font-size: 0.85rem; font-weight: 600; color: #374151; }
+.nb-ctrl { display: flex; align-items: center; gap: 14px; }
+.nb-ctrl button {
+  background: #e2e8f0;
+  border: none;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.nb-ctrl button:hover { background: #0ea5e9; color: white; }
+.nb-ctrl span { font-size: 1.1rem; font-weight: 800; min-width: 20px; text-align: center; }
+
+/* Prix total */
+.prix-total {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+.prix-total strong { color: #0ea5e9; font-size: 1.15rem; }
+
+.success-msg { background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-weight: 600; font-size: 0.88rem; }
+.error-msg   { background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.88rem; }
+
+.mactions { display: flex; gap: 10px; justify-content: flex-end; }
+.mbtn-cancel {
+  background: #f1f5f9; border: none;
+  padding: 10px 18px; border-radius: 8px;
+  font-weight: 600; cursor: pointer; color: #64748b;
+  transition: background 0.2s;
+}
+.mbtn-cancel:hover { background: #e2e8f0; }
+
+.mbtn-confirm {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white; border: none;
+  padding: 10px 22px; border-radius: 8px;
+  font-weight: 700; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.mbtn-confirm:hover { opacity: 0.88; }
+.mbtn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Sélection vol retour */
+.retour-hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 14px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+
+.no-retour {
+  text-align: center;
+  color: #64748b;
+  padding: 20px;
+  font-size: 0.88rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.retour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.retour-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.retour-card:hover {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+  transform: translateX(4px);
+}
+
+.rc-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.rc-route strong { font-size: 1rem; color: #0f172a; }
+.rc-route span { color: #0ea5e9; font-weight: 700; }
+
+.rc-info {
+  display: flex;
+  gap: 10px;
+  font-size: 0.72rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+.rc-prix { color: #0ea5e9; font-weight: 700; margin-left: auto; }
+
+.reset-link {
+  background: none; border: none;
+  color: #0ea5e9; font-weight: 600;
+  cursor: pointer; text-decoration: underline;
+  font-size: 0.85rem; margin-left: 6px;
+}
+
+@media (max-width: 768px) {
+  .hero-banner { padding: 36px 16px; }
+  .hero-title { font-size: 1.7rem; }
+  .glass-search { flex-direction: column; }
+  .gs-divider { display: none; }
+  .vols-grid { padding: 20px 16px; grid-template-columns: 1fr; }
+}

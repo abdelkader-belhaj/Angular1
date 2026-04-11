@@ -1,35 +1,34 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { VolService } from '../../services/vol.service';
-import { PanierService } from '../../services/panier.service';
-import { ReservationService } from '../../services/reservation.service';
-import { AuthService } from '../../services/auth.service';
-import { Vol } from '../../models/vol.model';
+import { ActivatedRoute, Router } from '@angular/router';
+import { VolService } from '../services/vol.service';
+import { PanierService } from '../services/panier.service';
+import { ReservationService } from '../services/reservation.service';
+import { AuthService } from '../services/auth.service';
+import { Vol } from '../models/vol.model';
 
 @Component({
-  selector: 'app-hero-section',
-  templateUrl: './hero-section.component.html',
-  styleUrl: './hero-section.component.css'
+  selector: 'app-vols-list',
+  templateUrl: './vols-list.component.html',
+  styleUrls: ['./vols-list.component.css']
 })
-export class HeroSectionComponent implements OnInit {
+export class VolsListComponent implements OnInit {
 
-  // ── Filtres ──────────────────────────────────────
+  tous: Vol[] = [];   // tous les vols
+  vols: Vol[] = [];   // vols affichés (filtrés)
+  volsRetour: Vol[] = []; // vols retour filtrés
+
+  loading = true;
+  error = '';
   depart = '';
   arrivee = '';
   date = '';
+  searched = false;
 
-  // ── Vols ─────────────────────────────────────────
-  tous: Vol[] = [];        // tous les vols chargés
-  vols: Vol[] = [];        // vols affichés dans le scroller
-  volsRetour: Vol[] = [];  // vols filtrés pour retour
-  loading = true;
-
-  // ── Panier ───────────────────────────────────────
+  // Panier
   panierIds: Set<number> = new Set();
 
-  // ── Modal réservation ────────────────────────────
+  // Modal
   showModal = false;
-  // etape : 'confirm' | 'retour'
   etape: 'confirm' | 'retour' = 'confirm';
   typeBillet: 'aller_simple' | 'aller_retour' = 'aller_simple';
   nbPassagers = 1;
@@ -43,59 +42,62 @@ export class HeroSectionComponent implements OnInit {
     private volService: VolService,
     public panierService: PanierService,
     private reservationService: ReservationService,
-    public authService: AuthService,
+    private authService: AuthService,
+    private route: ActivatedRoute,
     public router: Router
   ) {}
 
   ngOnInit(): void {
-    // Sync panier
     this.panierService.panierItems$.subscribe(items => {
       this.panierIds = new Set(items.map(i => i.volAller.id));
     });
 
-    // Charger tous les vols
+    this.route.queryParams.subscribe(params => {
+      this.depart  = params['depart']  ?? '';
+      this.arrivee = params['arrivee'] ?? '';
+      this.date    = params['date']    ?? '';
+      this.chargerTous();
+    });
+  }
+
+  chargerTous(): void {
+    this.loading = true;
     this.volService.getAll().subscribe({
       next: v => {
         this.tous = v;
-        this.vols = v;
+        this.filtrer();
         this.loading = false;
       },
-      error: () => { this.loading = false; }
+      error: () => { this.error = 'Erreur de chargement'; this.loading = false; }
     });
   }
 
-  // ── FILTRES ──────────────────────────────────────
   filtrer(): void {
     if (!this.depart && !this.arrivee && !this.date) {
       this.vols = this.tous;
+      this.searched = false;
       return;
     }
+    this.searched = true;
     this.vols = this.tous.filter(v => {
-      const okDepart  = this.depart  ? v.depart.toLowerCase().includes(this.depart.toLowerCase())   : true;
-      const okArrivee = this.arrivee ? v.arrivee.toLowerCase().includes(this.arrivee.toLowerCase()) : true;
-      const okDate    = this.date    ? v.dateDepart === this.date : true;
-      return okDepart && okArrivee && okDate;
+      const okD = this.depart  ? v.depart.toLowerCase().includes(this.depart.toLowerCase())   : true;
+      const okA = this.arrivee ? v.arrivee.toLowerCase().includes(this.arrivee.toLowerCase()) : true;
+      const okDate = this.date ? v.dateDepart === this.date : true;
+      return okD && okA && okDate;
     });
   }
 
-  rechercherPage(): void {
-    // Naviguer vers la page vols avec filtres
-    this.router.navigate(['/vols'], {
-      queryParams: {
-        depart: this.depart || undefined,
-        arrivee: this.arrivee || undefined,
-        date: this.date || undefined
-      }
-    });
+  rechercher(): void {
+    this.filtrer();
   }
 
-  voirTous(): void {
-    this.router.navigate(['/vols']);
+  resetRecherche(): void {
+    this.depart = ''; this.arrivee = ''; this.date = '';
+    this.filtrer();
   }
 
-  // ── PANIER toggle ─────────────────────────────────
-  togglePanier(vol: Vol, event: Event): void {
-    event.stopPropagation();
+  // ── PANIER toggle ─────────────────────────────────────────
+  togglePanier(vol: Vol): void {
     if (!this.authService.isAuthenticated()) {
       alert('Connectez-vous pour utiliser le panier'); return;
     }
@@ -119,9 +121,8 @@ export class HeroSectionComponent implements OnInit {
     return this.panierService.items.length;
   }
 
-  // ── MODAL RÉSERVATION ─────────────────────────────
-  ouvrirReservation(vol: Vol, event: Event): void {
-    event.stopPropagation();
+  // ── MODAL : ouvrir directement sur confirm ────────────────
+  ouvrirModal(vol: Vol): void {
     if (!this.authService.isAuthenticated()) {
       alert('Connectez-vous pour réserver'); return;
     }
@@ -129,15 +130,16 @@ export class HeroSectionComponent implements OnInit {
     this.volRetour = null;
     this.typeBillet = 'aller_simple';
     this.nbPassagers = 1;
-    this.etape = 'confirm';
+    this.etape = 'confirm';       // ← directement confirm, pas type
     this.reservationSuccess = '';
     this.reservationError = '';
     this.showModal = true;
   }
 
+  // ── Ajouter vol retour ────────────────────────────────────
   choisirAllerRetour(): void {
     this.typeBillet = 'aller_retour';
-    // Filtrer vols retour : arrivee = depart du vol aller ET date >= date aller
+    // Filtrer : arrivee = depart aller ET date >= date aller ET id différent
     this.volsRetour = this.tous.filter(v =>
       v.arrivee === this.volAller?.depart &&
       v.id !== this.volAller?.id &&
@@ -148,7 +150,7 @@ export class HeroSectionComponent implements OnInit {
 
   selectionnerRetour(vol: Vol): void {
     this.volRetour = vol;
-    this.etape = 'confirm';
+    this.etape = 'confirm';  // ← retour direct vers confirm, PAS vers type
   }
 
   annulerRetour(): void {

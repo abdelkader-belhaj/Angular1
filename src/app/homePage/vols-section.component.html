@@ -1,0 +1,70 @@
+<div class="vs-wrap">
+  <!-- Barre de recherche simple -->
+  <div class="vs-search">
+    <div class="vs-field">
+      <label class="vs-lbl">DÉPART</label>
+      <input [(ngModel)]="depart" placeholder="TUN" class="vs-input" />
+    </div>
+    <div class="vs-divider">→</div>
+    <div class="vs-field">
+      <label class="vs-lbl">ARRIVÉE</label>
+      <input [(ngModel)]="arrivee" placeholder="CDG" class="vs-input" />
+    </div>
+    <div class="vs-field">
+      <label class="vs-lbl">DATE</label>
+      <input [(ngModel)]="date" type="date" class="vs-input" />
+    </div>
+    <button class="vs-btn" (click)="rechercherVols()">
+      Rechercher →
+    </button>
+    <button class="vs-btn-all" (click)="voirTous()">
+      Voir tout
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="vs-scroller" *ngIf="loading">
+    <div class="vs-card skel" *ngFor="let i of [1,2,3,4]">
+      <div class="sk"></div><div class="sk s"></div><div class="sk"></div>
+    </div>
+  </div>
+
+  <!-- Vols -->
+  <div class="vs-scroller" *ngIf="!loading">
+    <div class="vs-card" *ngFor="let vol of vols">
+      <div class="vc-top">
+        <span class="vc-badge">{{ vol.numero }}</span>
+        <span class="vc-soc">{{ vol.societeNom }}</span>
+      </div>
+      <div class="vc-route">
+        <div class="vc-city">
+          <span class="vc-code">{{ vol.depart }}</span>
+          <span class="vc-lbl">Départ</span>
+        </div>
+        <div class="vc-mid">
+          <div class="vc-line"></div>
+          <span class="vc-plane">✈</span>
+        </div>
+        <div class="vc-city">
+          <span class="vc-code">{{ vol.arrivee }}</span>
+          <span class="vc-lbl">Arrivée</span>
+        </div>
+      </div>
+      <div class="vc-infos">
+        <div class="vc-info"><span class="vi-l">Date</span><span class="vi-v">{{ vol.dateDepart | date:'dd/MM/yy' }}</span></div>
+        <div class="vc-info"><span class="vi-l">Heure</span><span class="vi-v">{{ vol.heureDepart }}</span></div>
+        <div class="vc-info"><span class="vi-l">Places</span><span class="vi-v" [class.low]="vol.places < 5">{{ vol.places }}</span></div>
+      </div>
+      <div class="vc-footer">
+        <span class="vc-prix">{{ vol.prix | currency:'TND':'symbol':'1.0-0' }}</span>
+        <button class="vc-btn" (click)="router.navigate(['/vols'])" [disabled]="vol.places === 0">
+          Réserver
+        </button>
+      </div>
+    </div>
+
+    <div class="vs-empty" *ngIf="vols.length === 0">
+      Aucun vol disponible
+    </div>
+  </div>
+</div>

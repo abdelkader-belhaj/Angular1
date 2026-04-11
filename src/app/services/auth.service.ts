@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, map, tap } from 'rxjs';
+import { PanierService } from './panier.service';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -113,14 +114,20 @@ export class AuthService {
   private readonly tokenStorageKey = 'auth_token';
   private readonly userStorageKey = 'auth_user';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly panierService: PanierService
+  ) {}
 
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => {
+          this.persistAuth(auth);
+          this.panierService.recharger();
+        })
       );
   }
 
@@ -129,7 +136,10 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => {
+          this.persistAuth(auth);
+          this.panierService.recharger();
+        })
       );
   }
 
@@ -138,7 +148,10 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register-face`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => {
+          this.persistAuth(auth);
+          this.panierService.recharger();
+        })
       );
   }
 
@@ -147,7 +160,10 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login-face`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => {
+          this.persistAuth(auth);
+          this.panierService.recharger();
+        })
       );
   }
 
@@ -218,12 +234,10 @@ export class AuthService {
   logout(): Observable<void> {
     return this.http.post<ApiResponse<null>>(`${this.authApiUrl}/logout`, {}).pipe(
       tap(() => {
-        localStorage.removeItem(this.tokenStorageKey);
-        localStorage.removeItem(this.userStorageKey);
+        this.clearLocalAuth();
       }),
       finalize(() => {
-        localStorage.removeItem(this.tokenStorageKey);
-        localStorage.removeItem(this.userStorageKey);
+        this.clearLocalAuth();
       }),
       map(() => void 0)
     );
@@ -232,6 +246,7 @@ export class AuthService {
   clearLocalAuth(): void {
     localStorage.removeItem(this.tokenStorageKey);
     localStorage.removeItem(this.userStorageKey);
+    this.panierService.vider();
   }
 
   setupTwoFactor(): Observable<TwoFactorSetupResponse> {
@@ -257,10 +272,7 @@ export class AuthService {
 
   getCurrentUser(): UserResponse | null {
     const raw = localStorage.getItem(this.userStorageKey);
-    if (!raw) {
-      return null;
-    }
-
+    if (!raw) return null;
     try {
       return JSON.parse(raw) as UserResponse;
     } catch {
@@ -273,48 +285,31 @@ export class AuthService {
   }
 
   isPendingApproval(user?: UserResponse | null): boolean {
-    if (!user?.role) {
-      return false;
-    }
-
+    if (!user?.role) return false;
     return user.role !== 'CLIENT_TOURISTE' && user.enabled === false;
   }
 
   getRouteForRole(role?: string | null): string {
     switch (role) {
-      case 'ADMIN':
-        return '/dashbord';
-      case 'CLIENT_TOURISTE':
-        return '/homePage';
-      case 'HEBERGEUR':
-        return '/hebergeur';
-      case 'TRANSPORTEUR':
-        return '/transporteur';
-      case 'AIRLINE_PARTNER':
-        return '/airline-partner';
-      case 'ORGANISATEUR':
-        return '/organisateur';
-      case 'VENDEUR_ARTI':
-        return '/vendeur-arti';
-      case 'SOCIETE':
-        return '/societe';
-      default:
-        return '/';
+      case 'ADMIN': return '/dashbord';
+      case 'CLIENT_TOURISTE': return '/homePage';
+      case 'HEBERGEUR': return '/hebergeur';
+      case 'TRANSPORTEUR': return '/transporteur';
+      case 'AIRLINE_PARTNER': return '/airline-partner';
+      case 'ORGANISATEUR': return '/organisateur';
+      case 'VENDEUR_ARTI': return '/vendeur-arti';
+      case 'SOCIETE': return '/societe';
+      default: return '/';
     }
   }
 
   private persistAuth(auth: AuthResponse): void {
-    if (!auth?.user) {
+    if (!auth?.user || !auth.token) {
       this.clearLocalAuth();
       return;
     }
 
     if (this.isPendingApproval(auth.user)) {
-      this.clearLocalAuth();
-      return;
-    }
-
-    if (!auth.token) {
       this.clearLocalAuth();
       return;
     }

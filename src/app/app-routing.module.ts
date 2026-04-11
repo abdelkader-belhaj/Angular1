@@ -17,13 +17,22 @@ import { SecurityPageComponent } from './security/security-page.component';
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
 
+// ← Chemins CORRECTS avec sous-dossiers
+import { VolsListComponent } from './homePage/vols-list.component';
+import { MesReservationsComponent } from './homePage/mes-reservations.component';
+
 const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'homePage', component: HomePageComponent, canActivate: [roleGuard], data: { roles: ['CLIENT_TOURISTE'] } },
   { path: 'waiting-approval', component: WaitingResponsePageComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
+<<<<<<< HEAD
   { path: 'profile', component: ProfilePageComponent, canActivate: [authGuard] },
   { path: 'security', component: SecurityPageComponent, canActivate: [authGuard] },
+=======
+  { path: 'vols', component: VolsListComponent },
+  { path: 'mes-reservations', component: MesReservationsComponent },
+>>>>>>> 1c9cf85 (dashbord)
   { path: 'dashbord', component: DashbordPageComponent, canActivate: [adminGuard] },
   { path: 'dashboard', component: DashbordPageComponent, canActivate: [adminGuard] },
   { path: 'dashbord/users', component: AdminUsersPageComponent, canActivate: [adminGuard] },
@@ -47,4 +56,4 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -1,0 +1,138 @@
+<div class="page-res">
+  <h1 class="page-title">🎫 Mes Réservations</h1>
+
+  <!-- Feedback -->
+  <div class="feedback"
+       *ngIf="message"
+       [class.success]="messageType==='success'"
+       [class.erreur]="messageType==='error'">
+    {{ message }}
+  </div>
+
+  <div class="loading" *ngIf="loading">Chargement...</div>
+  <div class="err-msg" *ngIf="error && !loading">{{ error }}</div>
+
+  <!-- Aucune réservation -->
+  <div class="empty" *ngIf="!loading && !error && reservations.length === 0">
+    <span>🎫</span>
+    <p>Aucune réservation pour le moment</p>
+  </div>
+
+  <!-- Liste des réservations -->
+  <div class="res-list" *ngIf="!loading && reservations.length > 0">
+    <div class="res-card"
+         *ngFor="let res of reservations"
+         [class.annulee]="res.statutReservation === 'annulee'">
+
+      <!-- Header -->
+      <div class="res-header">
+        <div>
+          <span class="ref">{{ res.reference }}</span>
+          <span class="date-res">{{ res.dateReservation | date:'dd MMM yyyy, HH:mm' }}</span>
+        </div>
+        <span class="statut" [ngClass]="getStatutClass(res)">
+          {{ getStatutLabel(res) }}
+        </span>
+      </div>
+
+      <!-- Vol Aller -->
+      <div class="vol-info">
+        <span class="vol-label">✈ Aller</span>
+        <div class="vol-route">
+          <strong>{{ res.volAller.depart }}</strong>
+          <span class="arrow">→</span>
+          <strong>{{ res.volAller.arrivee }}</strong>
+          <span class="vol-num">{{ res.volAller.numero }}</span>
+          <span class="vol-date">
+            {{ res.volAller.dateDepart | date:'dd/MM/yyyy' }} {{ res.volAller.heureDepart }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Vol Retour -->
+      <div class="vol-info" *ngIf="res.volRetour">
+        <span class="vol-label">🔁 Retour</span>
+        <div class="vol-route">
+          <strong>{{ res.volRetour!.depart }}</strong>
+          <span class="arrow">→</span>
+          <strong>{{ res.volRetour!.arrivee }}</strong>
+          <span class="vol-num">{{ res.volRetour!.numero }}</span>
+          <span class="vol-date">
+            {{ res.volRetour!.dateDepart | date:'dd/MM/yyyy' }} {{ res.volRetour!.heureDepart }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Détails -->
+      <div class="res-details">
+        <div class="detail">
+          <span class="dl">Passagers</span>
+          <span class="dv">{{ res.nbPassagers }}</span>
+        </div>
+        <div class="detail">
+          <span class="dl">Type</span>
+          <span class="dv">
+            {{ res.typeBillet === 'aller_simple' ? 'Aller simple' : 'Aller-retour' }}
+          </span>
+        </div>
+        <div class="detail">
+          <span class="dl">Prix total</span>
+          <span class="dv prix">{{ res.prixTotal | currency:'TND':'symbol':'1.0-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="res-actions">
+        <button class="btn-pay"
+                *ngIf="peutPayer(res)"
+                (click)="payer(res)"
+                [disabled]="paiementEnCours === res.id">
+          {{ paiementEnCours === res.id ? 'Paiement...' : '💳 Payer maintenant' }}
+        </button>
+
+        <button class="btn-delete"
+                *ngIf="peutSupprimer(res)"
+                (click)="ouvrirDialog(res)"
+                [disabled]="annulationEnCours === res.id">
+          {{ annulationEnCours === res.id ? 'Suppression...' : '🗑 Supprimer' }}
+        </button>
+
+        <button class="btn-annul"
+                *ngIf="peutAnnuler(res)"
+                (click)="ouvrirDialog(res)"
+                [disabled]="annulationEnCours === res.id">
+          {{ annulationEnCours === res.id ? 'Annulation...' : '❌ Annuler & Rembourser' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog de confirmation -->
+  <div class="dialog-overlay" *ngIf="reservationASupprimer" (click)="fermerDialog()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div *ngIf="typeAction === 'supprimer'">
+        <h3 class="dialog-title">🗑 Supprimer la réservation</h3>
+        <p class="dialog-msg">
+          Voulez-vous supprimer la réservation <strong>{{ reservationASupprimer.reference }}</strong> ?<br>
+          Cette action est irréversible.
+        </p>
+      </div>
+      <div *ngIf="typeAction === 'annuler'">
+        <h3 class="dialog-title">❌ Annuler & Rembourser</h3>
+        <p class="dialog-msg">
+          Voulez-vous annuler la réservation <strong>{{ reservationASupprimer.reference }}</strong> ?<br>
+          Le remboursement sera initié automatiquement.
+        </p>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="dbtn-cancel" (click)="fermerDialog()">Non, garder</button>
+        <button class="dbtn-confirm"
+                [class.delete]="typeAction === 'supprimer'"
+                (click)="confirmerAction()">
+          {{ typeAction === 'supprimer' ? 'Oui, supprimer' : 'Oui, annuler' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

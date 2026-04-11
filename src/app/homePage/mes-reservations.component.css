@@ -1,0 +1,257 @@
+.page-res {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 24px;
+}
+
+/* Feedback */
+.feedback {
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.feedback.success { background: #dcfce7; color: #166534; }
+.feedback.erreur  { background: #fee2e2; color: #dc2626; }
+
+.loading { color: #64748b; padding: 40px; text-align: center; }
+.err-msg { background: #fee2e2; color: #dc2626; padding: 16px; border-radius: 10px; margin-bottom: 16px; }
+
+/* Vide */
+.empty { text-align: center; padding: 80px 20px; color: #64748b; }
+.empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+/* Liste */
+.res-list { display: flex; flex-direction: column; gap: 16px; }
+
+/* Carte réservation */
+.res-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
+}
+.res-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+.res-card.annulee { opacity: 0.6; border-color: #fecaca; }
+
+/* Header */
+.res-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.ref { font-size: 1rem; font-weight: 800; color: #0f172a; display: block; }
+.date-res { font-size: 0.75rem; color: #94a3b8; }
+
+/* Statut badges */
+.statut { 
+  padding: 5px 12px; 
+  border-radius: 20px; 
+  font-size: 0.75rem; 
+  font-weight: 700; 
+  white-space: nowrap; 
+}
+.statut-paye      { background: #dcfce7; color: #166534; }
+.statut-attente   { background: #fef9c3; color: #92400e; }
+.statut-echec     { background: #fee2e2; color: #dc2626; }
+.statut-annule    { background: #f1f5f9; color: #64748b; }
+.statut-rembourse { background: #e0f2fe; color: #0369a1; }
+
+/* Vol info */
+.vol-info {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+.vol-label {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+.vol-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vol-route strong { font-size: 1.05rem; color: #0f172a; }
+.arrow { color: #0ea5e9; font-weight: 700; }
+.vol-num {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+.vol-date { font-size: 0.75rem; color: #64748b; margin-left: auto; }
+
+/* Détails */
+.res-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+.detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+}
+.dl { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+.dv { font-size: 0.88rem; font-weight: 700; color: #0f172a; margin-top: 2px; }
+.dv.prix { color: #0ea5e9; font-size: 1rem; }
+
+/* ====================== ACTIONS ====================== */
+.res-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.btn-pay {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-pay:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-delete {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-delete:hover:not(:disabled) { 
+  background: #fee2e2; 
+  color: #dc2626; 
+  border-color: #fecaca; 
+}
+.btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-annul {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-annul:hover:not(:disabled) { 
+  background: #fecaca; 
+  color: #b91c1c; 
+}
+.btn-annul:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Dialog */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.dialog-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 12px;
+}
+
+.dialog-msg {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin-bottom: 24px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.dbtn-cancel {
+  background: #f1f5f9;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+.dbtn-cancel:hover { background: #e2e8f0; }
+
+.dbtn-confirm {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dbtn-confirm:hover { background: #b91c1c; }
+.dbtn-confirm.delete {
+  background: #64748b;
+}
+.dbtn-confirm.delete:hover {
+  background: #475569;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .res-details { grid-template-columns: repeat(2, 1fr); }
+  .res-actions { flex-direction: column; }
+  .res-actions button { width: 100%; }
+}

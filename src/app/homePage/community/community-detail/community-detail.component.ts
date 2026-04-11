@@ -59,11 +59,14 @@ export class CommunityDetailComponent implements OnInit {
 
   // ── NOUVELLES MÉTHODES ──────────────────────────────
   openConditionsModal(): void {
-    console.log('community id:', this.community!.id);
-  console.log('type:', typeof this.community!.id);
-  console.log('hasAccepted:', this.conditionsService.hasAccepted(this.community!.id!))
-  if (this.conditionsService.hasAccepted(this.community!.id!)) {
-    this.router.navigate(['/communities', this.community?.id, 'forum']);
+  const communityId = Number(this.community!.id);
+  console.log('communityId:', communityId);
+  console.log('type:', typeof communityId);
+  console.log('localStorage:', localStorage.getItem('forum_conditions_accepted'));
+  console.log('hasAccepted:', this.conditionsService.hasAccepted(communityId));
+  
+  if (this.conditionsService.hasAccepted(communityId)) {
+    this.router.navigate(['/communities', communityId, 'forum']);
   } else {
     this.showConditionsModal = true;
   }
@@ -72,6 +75,9 @@ export class CommunityDetailComponent implements OnInit {
 
   onConditionsAccepted(): void {
   this.showConditionsModal = false;
-  this.router.navigate(['/communities', this.community?.id, 'forum']);
+  this.router.navigate(['/communities', Number(this.community?.id), 'forum']);
+}
+get communityIdAsNumber(): number {
+  return Number(this.community?.id);
 }
 }

@@ -92,10 +92,10 @@
 
   <!-- Modal conditions -->
   <app-forum-conditions-modal
-    *ngIf="showConditionsModal"
-    [communityId]="community!.id!"
-    (accepted)="onConditionsAccepted()"
-    (cancelled)="showConditionsModal = false">
-  </app-forum-conditions-modal>
+  *ngIf="showConditionsModal"
+  [communityId]="communityIdAsNumber"
+  (accepted)="onConditionsAccepted()"
+  (cancelled)="showConditionsModal = false">
+</app-forum-conditions-modal>
 
 </div>

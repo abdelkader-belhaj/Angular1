@@ -71,7 +71,7 @@ export class ForumConditionsModalComponent {
 
   onAccess(): void {
     if (!this.allAccepted) return;
-    this.forumConditionsService.markAsAccepted(this.communityId);
+   this.forumConditionsService.markAsAccepted(Number(this.communityId));
     this.accepted.emit();
   }
 

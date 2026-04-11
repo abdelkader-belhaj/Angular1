@@ -1,1121 +1,766 @@
 <app-navbar></app-navbar>
 
-<div class="forum-page bg-gradient-to-br from-blue-50 via-slate-50/30 to-blue-50/20 min-h-screen pt-20 px-6 lg:px-12 relative overflow-hidden">
-  <!-- Professional Background Pattern -->
-  <div class="absolute inset-0 opacity-5">
-    <div class="absolute top-20 left-10 w-32 h-32 border-2 border-blue-900 rounded-full animate-pulse"></div>
-    <div class="absolute top-40 right-20 w-24 h-24 border-2 border-blue-800 rounded-full animate-pulse delay-1000"></div>
-    <div class="absolute bottom-40 left-1/4 w-20 h-20 border-2 border-slate-700 rounded-full animate-pulse delay-2000"></div>
-    <div class="absolute bottom-20 right-1/3 w-16 h-16 border-2 border-blue-700 rounded-full animate-pulse delay-3000"></div>
-  </div>
+<div class="forum-page min-h-screen pt-20 px-6 lg:px-12 relative overflow-hidden">
+
+  <!-- Animated background orbs -->
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
 
   <div class="mx-auto max-w-7xl relative z-10">
 
-    <!-- Header -->
-    <div class="mb-12 rounded-[40px] bg-gradient-to-r from-blue-900 via-blue-800 to-slate-800 p-8 text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden">
-      <div class="absolute inset-0 opacity-10">
-        <div class="absolute top-4 left-4 w-8 h-8 border border-white rounded-full animate-bounce"></div>
-        <div class="absolute top-8 right-8 w-6 h-6 border border-white rounded-full animate-bounce delay-500"></div>
-        <div class="absolute bottom-6 left-1/3 w-4 h-4 border border-white rounded-full animate-bounce delay-1000"></div>
-      </div>
+    <!-- ═══════════════════════════════════════════════════════ HEADER -->
+    <div class="forum-header mb-10">
+      <div class="header-inner">
+        <!-- Decorative grid lines -->
+        <div class="header-grid"></div>
 
-      <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between relative z-10">
-        <div class="animate-fade-in">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="rounded-2xl bg-white/20 p-3 backdrop-blur-sm border border-white/30 shadow-lg">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between relative z-10">
+          <div class="animate-fade-in">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="header-icon-wrap">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="header-eyebrow">Forum Communautaire · TunisiaTour</p>
+                <h1 class="header-title">{{ community?.name }}</h1>
+              </div>
             </div>
-            <div>
-              <p class="text-sm uppercase tracking-[0.4em] text-blue-200 font-medium">Forum Communautaire Professionnel</p>
-              <h1 class="text-3xl font-black text-white drop-shadow-lg">{{ community?.name }}</h1>
+            <p class="header-desc">{{ community?.description }}</p>
+            <div class="header-quote">
+              <span class="quote-mark">"</span>
+              Excellence et collaboration pour une communauté prospère.
+              <span class="quote-mark">"</span>
             </div>
           </div>
-          <p class="text-blue-100 leading-relaxed max-w-2xl text-lg">{{ community?.description }}</p>
-          <div class="mt-4 p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">
-            <p class="text-blue-200 text-sm italic">"Excellence et collaboration pour une communauté prospère."</p>
-          </div>
-        </div>
 
-        <div class="flex flex-col gap-4 sm:flex-row animate-slide-in-right">
-          <button *ngIf="!showCreateForm && currentUser" (click)="toggleCreateForm()"
-            class="group inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-6 py-4 text-sm font-bold text-blue-900 shadow-xl shadow-black/10 hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Nouveau Sujet
-          </button>
-          <div class="rounded-3xl bg-white/20 backdrop-blur-sm px-6 py-4 text-center border border-white/30 shadow-lg hover:bg-white/30 transition-all duration-300">
-            <p class="text-xs uppercase tracking-[0.35em] text-blue-200 font-medium">Sujets Actifs</p>
-            <p class="text-2xl font-black text-white drop-shadow-lg">{{ forums.length }}</p>
+          <div class="flex flex-col gap-3 sm:flex-row items-start sm:items-center animate-slide-in-right">
+            <button *ngIf="!showCreateForm && currentUser" (click)="toggleCreateForm()" class="btn-nouveau-sujet">
+              <span class="btn-nouveau-inner">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nouveau Sujet
+              </span>
+              <span class="btn-nouveau-shine"></span>
+            </button>
+            <div class="header-stat-pill">
+              <span class="stat-label">Sujets actifs</span>
+              <span class="stat-value">{{ forums.length }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- Bouton partager position -->
-<button *ngIf="currentUser" (click)="openLocationShare()"
-  style="display:inline-flex;align-items:center;gap:6px;
-         padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;
-         background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4;cursor:pointer">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" stroke-width="2">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-    <circle cx="12" cy="10" r="3"/>
-  </svg>
-  Partager ma position
-</button>
-
-<!-- ─── BARRE STORIES DE POSITIONS ─────────────────────────────────── -->
-<div *ngIf="activeLocationShares.length > 0"
-  style="background:var(--color-background-primary);
-         border-radius:20px;border:0.5px solid var(--color-border-tertiary);
-         margin-bottom:20px;overflow:hidden">
-
-  <!-- En-tête -->
-  <div style="padding:10px 16px;display:flex;align-items:center;
-              justify-content:space-between;
-              border-bottom:0.5px solid var(--color-border-tertiary)">
-    <span style="font-size:13px;font-weight:500;
-                 color:var(--color-text-primary);
-                 display:flex;align-items:center;gap:6px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-           stroke="#1D9E75" stroke-width="2">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      Positions en direct
+    <!-- SEARCH BAR -->
+<div class="search-wrap mb-8">
+  <div class="search-bar" >
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-input"
+           [(ngModel)]="searchQuery"
+           (ngModelChange)="onSearchChange()"
+           placeholder="Rechercher un sujet, un auteur..."/>
+    <span *ngIf="searchQuery.trim()" class="search-count">
+      {{ filteredForums.length }} résultat{{ filteredForums.length > 1 ? 's' : '' }}
     </span>
-    <span style="font-size:11px;background:#E1F5EE;color:#085041;
-                 padding:2px 8px;border-radius:20px;border:0.5px solid #9FE1CB">
-      {{ activeLocationShares.length }} actif{{ activeLocationShares.length > 1 ? 's' : '' }}
-    </span>
-  </div>
-
-  <!-- Stories scrollables -->
-  <div style="display:flex;gap:14px;padding:14px 16px;
-              overflow-x:auto;scrollbar-width:none">
-    <div *ngFor="let share of activeLocationShares; let i = index"
-         (click)="openLocationMap(share)"
-         style="display:flex;flex-direction:column;align-items:center;
-                gap:6px;cursor:pointer;flex-shrink:0">
-
-      <!-- Ring animé avec progression -->
-      <div [style.background]="'conic-gradient(#1D9E75 '+getSharePercent(share)+'%, #D3D1C7 0)'"
-           style="width:62px;height:62px;border-radius:50%;padding:2.5px;position:relative">
-
-        <div [style.background]="shareAvatarColors[i % shareAvatarColors.length]"
-             style="width:100%;height:100%;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:20px;font-weight:500;position:relative;
-                    border:2px solid var(--color-background-primary)">
-
-          <!-- Initiale -->
-          <span [style.color]="shareTextColors[i % shareTextColors.length]">
-            {{ share.username.charAt(0).toUpperCase() }}
-          </span>
-
-          <!-- Pulse ring -->
-          <div style="position:absolute;inset:-6px;border-radius:50%;
-                      border:2px solid #1D9E75;
-                      animation:pulseRing 2s ease-out infinite;
-                      pointer-events:none"></div>
-        </div>
-
-        <!-- Badge GPS -->
-        <div style="position:absolute;bottom:-2px;right:-2px;
-                    width:18px;height:18px;border-radius:50%;
-                    background:#1D9E75;
-                    border:2px solid var(--color-background-primary);
-                    display:flex;align-items:center;justify-content:center">
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-               stroke="white" stroke-width="3">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          </svg>
-        </div>
-      </div>
-
-      <span style="font-size:11px;color:var(--color-text-secondary);
-                   max-width:64px;text-align:center;
-                   overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        {{ share.username }}
-      </span>
-      <span style="font-size:10px;color:#1D9E75;font-weight:500">
-        {{ getShareRemainingLabel(share) }}
-      </span>
-    </div>
-  </div>
-</div>
-
-<!-- ─── MODAL CARTE ─────────────────────────────────────────────────── -->
-<div *ngIf="locationMapOpen"
-  style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);
-         display:flex;align-items:center;justify-content:center;padding:20px"
-  (click)="closeLocationMap($event)">
-
-  <div style="background:var(--color-background-primary);
-              border-radius:24px;width:100%;max-width:480px;
-              max-height:90vh;overflow-y:auto;
-              animation:slideUp 0.3s cubic-bezier(.32,1.2,.65,1)"
-       (click)="$event.stopPropagation()">
-
-    <!-- Handle -->
-    <div style="width:36px;height:4px;background:var(--color-border-tertiary);
-                border-radius:2px;margin:12px auto 0"></div>
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;
-                border-bottom:0.5px solid var(--color-border-tertiary)">
-      <div [style.background]="shareAvatarColors[0]"
-           style="width:44px;height:44px;border-radius:50%;
-                  display:flex;align-items:center;justify-content:center;
-                  font-size:16px;font-weight:500;flex-shrink:0;
-                  border:2px solid var(--color-border-tertiary)">
-        <span [style.color]="shareTextColors[0]">
-          {{ selectedShare?.username?.charAt(0)?.toUpperCase() }}
-        </span>
-      </div>
-      <div style="flex:1">
-        <p style="font-size:15px;font-weight:500;
-                  color:var(--color-text-primary);margin:0 0 2px">
-          {{ selectedShare?.username }}
-        </p>
-        <span style="font-size:12px;color:var(--color-text-secondary)">
-          Partage pendant {{ selectedShare?.minutes }} min
-        </span>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px;
-                  background:#E1F5EE;border:0.5px solid #9FE1CB;
-                  padding:5px 10px;border-radius:20px">
-        <div style="width:6px;height:6px;border-radius:50%;
-                    background:#1D9E75;animation:pulseDot 1.5s infinite"></div>
-        <span style="font-size:11px;color:#085041;font-weight:500">
-          {{ locationMapTimer }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Carte Leaflet -->
-    <div style="height:380px;width:100%;position:relative;overflow:hidden">
-  <div [id]="'map-' + selectedShare?.userId"
-       style="height:100%;width:100%">
-  </div>
-</div>
-
-    <!-- Infos -->
-    <div style="padding:16px 20px 24px">
-
-  <div style="display:flex;gap:10px;margin-bottom:14px">
-    <div style="flex:1;background:var(--color-background-secondary);
-                border-radius:12px;padding:10px 12px;
-                border:0.5px solid var(--color-border-tertiary)">
-      <div style="font-size:10px;text-transform:uppercase;
-                  letter-spacing:0.05em;color:var(--color-text-tertiary)">Lat</div>
-      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
-        {{ selectedShare?.lat?.toFixed(4) }}°N
-      </div>
-    </div>
-    <div style="flex:1;background:var(--color-background-secondary);
-                border-radius:12px;padding:10px 12px;
-                border:0.5px solid var(--color-border-tertiary)">
-      <div style="font-size:10px;text-transform:uppercase;
-                  letter-spacing:0.05em;color:var(--color-text-tertiary)">Lng</div>
-      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
-        {{ selectedShare?.lng?.toFixed(4) }}°E
-      </div>
-    </div>
-    <div style="flex:1;background:#E1F5EE;border-radius:12px;padding:10px 12px;
-                border:0.5px solid #9FE1CB">
-      <div style="font-size:10px;text-transform:uppercase;
-                  letter-spacing:0.05em;color:#085041">Expire</div>
-      <div style="font-size:13px;font-weight:500;color:#0F6E56">
-        {{ locationMapTimer }}
-      </div>
-    </div>
-  </div>
-
-      <!-- Barre progression -->
-      <div style="margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;
-                font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">
-      <span>Durée restante</span>
-      <span>{{ selectedShare ? getSharePercent(selectedShare) : 0 }}%</span>
-    </div>
-    <div style="height:4px;background:var(--color-border-tertiary);
-                border-radius:2px;overflow:hidden">
-      <div [style.width]="(selectedShare ? getSharePercent(selectedShare) : 0) + '%'"
-           [style.background]="(selectedShare ? getSharePercent(selectedShare) : 100) > 30 ? '#1D9E75' : '#E24B4A'"
-           style="height:100%;border-radius:2px;transition:width 1s linear"></div>
-    </div>
-  </div>
-
-
-     <!-- Boutons -->
-      <div style="display:flex;gap:10px">
-        <a *ngIf="selectedShare"
-           [href]="'https://www.google.com/maps?q=' + selectedShare.lat + ',' + selectedShare.lng"
-           target="_blank"
-           style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-                  padding:13px;border-radius:30px;font-size:14px;font-weight:500;
-                  background:#185FA5;color:white;text-decoration:none;cursor:pointer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Voir sur Maps
-        </a>
-        <button (click)="closeLocationMap()"
-          style="flex:1;padding:13px;border-radius:30px;
-                 background:var(--color-background-secondary);
-                 border:0.5px solid var(--color-border-tertiary);
-                 color:var(--color-text-secondary);font-size:14px;cursor:pointer">
-          Fermer
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Panel IA de partage de position -->
-<div *ngIf="locationShareOpen"
-  style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);
-         display:flex;align-items:flex-end;justify-content:center"
-  (click)="closeLocationShare($event)">
-
-  <div style="background:var(--color-background-primary);border-radius:20px 20px 0 0;
-              width:100%;max-width:480px;padding:0 0 32px;animation:slideUp 0.3s ease">
-
-    <!-- Handle -->
-    <div style="width:36px;height:4px;background:var(--color-border-tertiary);
-                border-radius:2px;margin:12px auto 20px"></div>
-
-    <!-- Loading IA -->
-    <div *ngIf="locationAiLoading"
-      style="padding:40px 20px;text-align:center">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;
-                  color:var(--color-text-secondary);font-size:14px">
-        <svg style="width:16px;height:16px;animation:spin 1s linear infinite"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        Génération par l'IA...
-      </div>
-    </div>
-
-    <!-- Contenu généré par l'IA -->
-    <div *ngIf="!locationAiLoading && locationAiData">
-
-      <!-- Avatar + message IA -->
-      <div style="text-align:center;padding:0 20px 20px">
-        <div style="width:56px;height:56px;border-radius:50%;background:#E6F1FB;
-                    border:2px solid #B5D4F4;display:flex;align-items:center;
-                    justify-content:center;font-size:20px;font-weight:500;
-                    color:#0C447C;margin:0 auto 12px">
-          {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
-        </div>
-        <p style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px">
-          Partager ma position
-        </p>
-        <p style="font-size:13px;color:var(--color-text-secondary);margin:0">
-          {{ locationAiData.message }}
-        </p>
-      </div>
-
-      <!-- Options générées par l'IA -->
-      <div style="display:flex;flex-direction:column;gap:10px;padding:0 20px;margin-bottom:16px">
-        <div *ngFor="let opt of locationAiData.options; let i = index"
-          (click)="selectLocationDuration(opt.minutes)"
-          [style.border]="selectedLocationMinutes === opt.minutes ? '1.5px solid #378ADD' : '0.5px solid var(--color-border-tertiary)'"
-          [style.background]="selectedLocationMinutes === opt.minutes ? '#E6F1FB' : 'var(--color-background-secondary)'"
-          style="display:flex;align-items:center;gap:14px;padding:14px 16px;
-                 border-radius:14px;cursor:pointer;transition:all 0.15s">
-
-          <!-- Icône selon index -->
-          <div [style.background]="i===0?'#FAEEDA':i===1?'#E6F1FB':'#E1F5EE'"
-            style="width:40px;height:40px;border-radius:50%;display:flex;
-                   align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              [attr.stroke]="i===0?'#BA7517':i===1?'#185FA5':'#0F6E56'" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-
-          <div style="flex:1">
-            <p style="margin:0;font-size:15px;font-weight:500;color:var(--color-text-primary)">
-              {{ opt.label }}
-            </p>
-            <span style="font-size:12px;color:var(--color-text-secondary)">
-              {{ opt.description }}
-            </span>
-          </div>
-
-          <!-- Check -->
-          <div [style.background]="selectedLocationMinutes===opt.minutes?'#378ADD':'transparent'"
-            [style.borderColor]="selectedLocationMinutes===opt.minutes?'#378ADD':'var(--color-border-secondary)'"
-            style="width:20px;height:20px;border-radius:50%;border:1.5px solid;
-                   display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg *ngIf="selectedLocationMinutes===opt.minutes"
-              width="12" height="12" viewBox="0 0 24 24"
-              fill="none" stroke="white" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Timer actif -->
-      <div *ngIf="isLocationSharing"
-        style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:14px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;
-                    animation:pulseDot 1.5s infinite"></div>
-        <span style="font-size:13px;font-weight:500;color:#1D9E75">
-          En direct · {{ locationRemainingTime }}
-        </span>
-      </div>
-
-      <!-- Boutons -->
-      <button (click)="isLocationSharing ? stopLocationShare() : startLocationShare()"
-        [style.background]="isLocationSharing ? '#A32D2D' : '#185FA5'"
-        [disabled]="locationGpsLoading"
-        style="display:block;width:calc(100% - 40px);margin:0 20px;padding:14px;
-               border-radius:30px;border:none;font-size:15px;font-weight:500;
-               color:white;cursor:pointer;transition:all 0.15s">
-        <span *ngIf="locationGpsLoading">Localisation en cours...</span>
-        <span *ngIf="!locationGpsLoading && !isLocationSharing">Partager ma position</span>
-        <span *ngIf="!locationGpsLoading && isLocationSharing">Arrêter le partage</span>
-      </button>
-      <a *ngIf="isLocationSharing && !!locationEndTime"
-         [href]="getGoogleMapsUrl()"
-         target="_blank"
-         style="display:flex;align-items:center;justify-content:center;gap:8px;
-                width:calc(100% - 40px);margin:10px 20px 0;padding:14px;
-                border-radius:30px;background:#E6F1FB;color:#185FA5;
-                border:0.5px solid #B5D4F4;font-size:15px;font-weight:500;
-                text-decoration:none;cursor:pointer;transition:all 0.15s">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
-        </svg>
-        Voir ma position sur Maps
-      </a>
-
-      <!-- ✅ AJOUTEZ CE BOUTON ANNULER -->
-      <button (click)="closeLocationShare()"
-        style="display:block;width:calc(100% - 40px);margin:10px 20px 0;padding:14px;
-               border-radius:30px;background:var(--color-background-secondary);
-               color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);
-               font-size:15px;cursor:pointer">
-        Annuler
-      </button>
-
-    </div>
-  </div>
-</div>
-      
-  
-
-    <!-- Community Rules Reminder -->
-    <div class="mb-8 rounded-[40px] bg-gradient-to-r from-slate-50 to-blue-50/30 border border-slate-200/50 p-6 shadow-lg backdrop-blur-sm">
-      <div class="flex items-start gap-4">
-        <div class="rounded-2xl bg-blue-100 p-3 flex-shrink-0">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-        <div class="flex-1">
-          <h3 class="text-lg font-bold text-slate-900 mb-2">Rappel des règles communautaires</h3>
-          <div class="grid gap-2 text-sm text-slate-700 md:grid-cols-2">
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Rédigez avec respect et courtoisie</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Respectez les opinions d'autrui</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Contribuez positivement aux discussions</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Modération automatique active</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Messages -->
-    <div *ngIf="infoMessage || errorMessage" class="mb-8 space-y-4">
-      <div *ngIf="infoMessage" class="rounded-3xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 p-6 text-sm text-emerald-900 shadow-xl border-l-4 border-l-emerald-500 animate-slide-in-left">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-emerald-100 p-2">
-            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <p class="font-semibold">{{ infoMessage }}</p>
-            <p class="text-xs text-emerald-700 mt-1">Connectez-vous pour participer à la communauté</p>
-          </div>
-          <button (click)="openLoginDialog()"
-            class="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 hover:scale-105 transition-all duration-300">
-            🔐 Se connecter
-          </button>
-        </div>
-      </div>
-      <div *ngIf="errorMessage" class="rounded-3xl bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 p-6 text-sm text-red-900 shadow-xl border-l-4 border-l-red-500 animate-shake">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-red-100 p-2">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <p class="font-semibold">{{ errorMessage }}</p>
-        </div>
-      </div>
-    </div>
-
-   <!-- Create/Edit Form -->
-<div *ngIf="showCreateForm" class="mb-12 rounded-[32px] bg-gradient-to-br from-white via-blue-50/30 to-slate-50/20 border border-blue-200 p-8 shadow-2xl shadow-blue-200/30 animate-fade-in-up">
-  <div class="mb-6 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-3 shadow-lg">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-        </svg>
-      </div>
-      <h2 class="text-2xl font-bold text-blue-900">
-        {{ editingForum ? '✏️ Modifier le sujet' : '✨ Créer un nouveau sujet' }}
-      </h2>
-    </div>
-    <button (click)="cancelEdit()"
-      class="rounded-2xl p-3 text-amber-600 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 hover:rotate-90">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    <button *ngIf="searchQuery.trim()" (click)="clearSearch()" class="search-clear">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5">
+        <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
     </button>
   </div>
-
-  <form class="space-y-6" (ngSubmit)="submitForum()">
-
-    <!-- Titre -->
-    <div class="animate-slide-in-left">
-      <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-        </svg>
-        Titre du sujet <span class="text-red-500">*</span>
-      </label>
-      <input [(ngModel)]="forumTitle" name="forumTitle" type="text" (input)="capitalizeTitle()"
-        placeholder="Quel est le sujet de votre discussion ? 🇹🇳"
-        class="w-full rounded-2xl border-2 border-amber-200 bg-gradient-to-r from-white to-amber-50/50 px-6 py-4 text-sm text-amber-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all duration-300 hover:border-amber-400 placeholder:text-amber-400"/>
-    </div>
-
-    <!-- Contenu -->
-    <div class="animate-slide-in-right delay-200">
-      <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-        </svg>
-        Description du sujet <span class="text-red-500">*</span>
-      </label>
-      <textarea [(ngModel)]="forumContent" name="forumContent" rows="6"
-        placeholder="Partagez vos expériences et idées... 💼🤝"
-        class="w-full rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-white to-blue-50/50 px-6 py-4 text-sm text-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 hover:border-blue-400 placeholder:text-blue-400 resize-none">
-      </textarea>
-    </div>
-
-    <!-- ✨ BOUTON CORRECTION IA -->
-    <div class="animate-fade-in delay-300">
-      <button type="button" (click)="correctWithAi()"
-        [disabled]="aiCorrecting || !forumTitle.trim() || !forumContent.trim()"
-        style="display:inline-flex;align-items:center;gap:8px;
-               padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;
-               cursor:pointer;border:1.5px solid #7C3AED;
-               background:linear-gradient(135deg,#EDE9FE,#F5F3FF);
-               color:#5B21B6;transition:all 0.2s;
-               box-shadow:0 2px 8px rgba(124,58,237,0.15)"
-        [style.opacity]="aiCorrecting || !forumTitle.trim() || !forumContent.trim() ? '0.5' : '1'">
-        <!-- Spinner IA -->
-        <svg *ngIf="aiCorrecting" class="animate-spin" style="width:16px;height:16px"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        <!-- Icône IA -->
-        <svg *ngIf="!aiCorrecting" style="width:16px;height:16px" fill="none"
-          stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-        </svg>
-        {{ aiCorrecting ? 'Correction en cours...' : '✨ Corriger avec l\'IA' }}
-      </button>
-      <span style="font-size:11px;color:#7C3AED;margin-left:10px;opacity:0.7">
-        Grammaire, orthographe et reformulation automatique
-      </span>
-    </div>
-
-    <!-- ✅ PREVIEW DE LA CORRECTION -->
-    <div *ngIf="aiCorrectionResult" class="animate-fade-in-up"
-      style="border-radius:16px;overflow:hidden;border:1.5px solid #7C3AED;
-             box-shadow:0 4px 20px rgba(124,58,237,0.12)">
-
-      <!-- En-tête -->
-      <div style="background:linear-gradient(135deg,#7C3AED,#6D28D9);
-                  padding:12px 18px;display:flex;align-items:center;gap:8px">
-        <svg style="width:16px;height:16px;color:white" fill="none"
-          stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span style="color:white;font-size:13px;font-weight:600">
-          Suggestion de correction par l'IA
-        </span>
-        <span style="margin-left:auto;font-size:10px;color:#DDD6FE;
-                     background:rgba(255,255,255,0.15);padding:2px 8px;
-                     border-radius:20px;border:0.5px solid rgba(255,255,255,0.3)">
-          Claude AI
-        </span>
-      </div>
-
-      <!-- Contenu corrigé -->
-      <div style="padding:16px 18px;background:#FAFAFF">
-
-        <!-- Titre corrigé -->
-        <div style="margin-bottom:14px">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;
-                      color:#7C3AED;font-weight:600;margin-bottom:6px;
-                      display:flex;align-items:center;gap:5px">
-            <svg style="width:11px;height:11px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-            </svg>
-            Titre corrigé
-          </div>
-          <p style="font-size:14px;color:#1e293b;background:white;
-                    padding:10px 14px;border-radius:10px;
-                    border:0.5px solid #DDD6FE;line-height:1.6">
-            {{ aiCorrectionResult.correctedTitle }}
-          </p>
-        </div>
-
-        <!-- Contenu corrigé -->
-        <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;
-                      color:#7C3AED;font-weight:600;margin-bottom:6px;
-                      display:flex;align-items:center;gap:5px">
-            <svg style="width:11px;height:11px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h12"/>
-            </svg>
-            Contenu reformulé
-          </div>
-          <p style="font-size:13px;color:#475569;background:white;
-                    padding:10px 14px;border-radius:10px;
-                    border:0.5px solid #DDD6FE;line-height:1.7;
-                    white-space:pre-wrap">
-            {{ aiCorrectionResult.correctedContent }}
-          </p>
-        </div>
-
-        <!-- Boutons Accepter / Refuser -->
-        <div style="display:flex;gap:10px;margin-top:14px">
-          <button type="button" (click)="acceptAiCorrection()"
-            style="display:inline-flex;align-items:center;gap:6px;
-                   padding:9px 20px;border-radius:20px;font-size:13px;
-                   font-weight:600;cursor:pointer;background:#7C3AED;
-                   color:white;border:none;transition:all 0.2s;
-                   box-shadow:0 2px 8px rgba(124,58,237,0.3)">
-            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            Appliquer la correction
-          </button>
-          <button type="button" (click)="dismissAiCorrection()"
-            style="display:inline-flex;align-items:center;gap:6px;
-                   padding:9px 20px;border-radius:20px;font-size:13px;
-                   font-weight:500;cursor:pointer;
-                   background:white;color:#7C3AED;
-                   border:1.5px solid #DDD6FE;transition:all 0.2s">
-            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-            Garder l'original
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Boutons submit -->
-    <div class="flex gap-4 pt-4 animate-fade-in delay-400">
-      <button type="submit" [disabled]="loading"
-        class="flex-1 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-600/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-        <span *ngIf="!loading" class="flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-          </svg>
-          {{ editingForum ? 'Modifier le sujet' : 'Publier le sujet' }}
-        </span>
-        <span *ngIf="loading" class="flex items-center justify-center gap-2">
-          <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          Publication en cours...
-        </span>
-      </button>
-      <button (click)="cancelEdit()" type="button"
-        class="rounded-2xl border-2 border-blue-300 bg-white px-6 py-4 text-sm font-semibold text-blue-700 shadow-lg hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 hover:scale-105">
-        Annuler
-      </button>
-    </div>
-  </form>
 </div>
-    <!-- Forums List -->
-    <div class="space-y-8">
 
-      <!-- Empty State -->
-      <div *ngIf="forums.length === 0 && !showCreateForm" class="rounded-[40px] border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 p-16 text-center animate-fade-in">
-        <div class="mx-auto max-w-lg">
-          <div class="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 to-slate-200 flex items-center justify-center mb-8 shadow-2xl shadow-blue-200/50">
-            <svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold text-blue-900 mb-4">Aucun sujet pour le moment</h3>
-          <p class="text-blue-700 mb-8 text-lg leading-relaxed">Soyez le premier à lancer une discussion dans cette communauté.</p>
-          <button (click)="toggleCreateForm()"
-            class="inline-flex items-center justify-center gap-3 rounded-3xl bg-gradient-to-r from-blue-600 to-slate-600 px-8 py-4 text-lg font-bold text-white shadow-2xl shadow-blue-600/30 hover:scale-105 transition-all duration-300 animate-pulse">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Créer le premier sujet
-          </button>
+    <!-- ═══════════════════════════════════════════════════ LOCATION ZONE -->
+    <div class="location-zone mb-8">
+
+      <!-- Bouton Partager -->
+      <button *ngIf="currentUser" (click)="openLocationShare()" class="btn-share-location">
+        <span class="btn-share-ping"></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        Partager ma position
+      </button>
+
+      <!-- Stories positions en direct -->
+      <div *ngIf="activeLocationShares.length > 0" class="stories-bar">
+        <div class="stories-header">
+          <span class="stories-title">
+            <span class="live-dot"></span>
+            Positions en direct
+          </span>
+          <span class="stories-count">
+            {{ activeLocationShares.length }} actif{{ activeLocationShares.length > 1 ? 's' : '' }}
+          </span>
         </div>
-      </div>
 
-      <!-- Forum Cards -->
-      <div *ngFor="let forum of forums; let i = index"
-     class="forum-card"
-     [style.animation-delay]="i * 80 + 'ms'"
-     style="background:var(--color-background-primary);
-            border:0.5px solid #e2e8f0;
-            border-radius:20px;overflow:hidden;">
-
-  <!-- Barre top ambre/corail -->
-  <div style="height:3px;background:linear-gradient(90deg,#D85A30,#BA7517,#D85A30)"></div>
-
-  <div style="padding:20px 24px">
-    <div style="display:flex;gap:16px;align-items:flex-start">
-
-      <!-- Avatar -->
-      <div style="width:52px;height:52px;border-radius:14px;background:#FAEEDA;
-                  display:flex;align-items:center;justify-content:center;
-                  font-size:20px;font-weight:500;color:#633806;flex-shrink:0;
-                  border:2px solid #FAC775">
-        {{ (forum.user?.username?.charAt(0) || '')?.toUpperCase() }}
-      </div>
-
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;
-                    gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:0">
-            <h3 style="font-size:18px;font-weight:500;color:var(--color-text-primary);
-                       margin-bottom:6px">{{ forum.title }}</h3>
-            <p style="font-size:14px;color:var(--color-text-secondary);
-                      line-height:1.7;margin-bottom:14px">{{ forum.content }}</p>
-
-            <!-- Meta pills -->
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              <span style="display:flex;align-items:center;gap:5px;font-size:12px;
-                           padding:4px 10px;border-radius:20px;
-                           background:#FAEEDA;color:#633806;border:0.5px solid #FAC775">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                {{ forum.user?.username }}
-              </span>
-              <span style="display:flex;align-items:center;gap:5px;font-size:12px;
-                           padding:4px 10px;border-radius:20px;
-                           background:#E1F5EE;color:#085041;border:0.5px solid #9FE1CB">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                {{ forum.createdAt | date:'short' }}
-              </span>
-              <span style="display:flex;align-items:center;gap:5px;font-size:12px;
-                           padding:4px 10px;border-radius:20px;
-                           background:#EEEDFE;color:#3C3489;border:0.5px solid #CECBF6">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                {{ forum.views || 0 }} vues
-              </span>
-            </div>
-          </div>
-
-          <!-- Droite : rating + reactions + actions -->
-          <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end">
-
-            <!-- Rating -->
-            <div style="display:flex;align-items:center;gap:8px;background:#FAEEDA;
-                        border:0.5px solid #FAC775;border-radius:12px;padding:8px 14px">
-              <div style="display:flex;gap:2px">
-                <svg *ngFor="let star of [1,2,3,4,5]"
-                     [style.color]="star <= getAverageRating(forum.id!) ? '#BA7517' : '#FAC775'"
-                     style="width:16px;height:16px" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <div class="stories-scroll">
+          <div *ngFor="let share of activeLocationShares; let i = index"
+               (click)="openLocationMap(share)" class="story-item">
+            <div class="story-ring"
+                 [style.background]="'conic-gradient(#1D9E75 '+getSharePercent(share)+'%, rgba(209,213,219,0.3) 0)'">
+              <div class="story-avatar"
+                   [style.background]="shareAvatarColors[i % shareAvatarColors.length]">
+                <span [style.color]="shareTextColors[i % shareTextColors.length]">
+                  {{ share.username.charAt(0).toUpperCase() }}
+                </span>
+                <div class="story-pulse-ring"></div>
+              </div>
+              <div class="story-gps-badge">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                 </svg>
               </div>
-              <span style="font-size:14px;font-weight:500;color:#633806">
-                {{ getAverageRating(forum.id!) }}
-              </span>
-              <span style="font-size:11px;color:#854F0B">
-                ({{ getReviews(forum.id!).length }})
-              </span>
             </div>
-
-            <!-- Like/Dislike -->
-            <div style="display:flex;gap:6px">
-              <button (click)="addReaction(forum.id!, 'LIKE')"
-                      [style.background]="getUserReaction(forum.id!)?.type === 'LIKE' ? '#9FE1CB' : '#E1F5EE'"
-                      style="display:inline-flex;align-items:center;gap:5px;
-                             padding:7px 14px;border-radius:20px;font-size:13px;
-                             font-weight:500;cursor:pointer;border:0.5px solid #9FE1CB;
-                             color:#085041;transition:all 0.15s">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-                </svg>
-                {{ getLikeCount(forum.id!) }}
-              </button>
-              <button (click)="addReaction(forum.id!, 'DISLIKE')"
-                      [style.background]="getUserReaction(forum.id!)?.type === 'DISLIKE' ? '#F09595' : '#FCEBEB'"
-                      style="display:inline-flex;align-items:center;gap:5px;
-                             padding:7px 14px;border-radius:20px;font-size:13px;
-                             font-weight:500;cursor:pointer;border:0.5px solid #F7C1C1;
-                             color:#791F1F;transition:all 0.15s">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
-                </svg>
-                {{ getDislikeCount(forum.id!) }}
-              </button>
-            </div>
-
-            <!-- Edit/Delete -->
-            <div *ngIf="currentUser && forum.user?.id === currentUser.id"
-                 style="display:flex;gap:6px">
-              <button (click)="startEdit(forum)"
-                      style="display:inline-flex;align-items:center;gap:5px;
-                             padding:7px 14px;border-radius:20px;font-size:13px;
-                             font-weight:500;cursor:pointer;
-                             background:#E6F1FB;color:#0C447C;
-                             border:0.5px solid #B5D4F4;transition:all 0.15s">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                Modifier
-              </button>
-              <button (click)="deleteForum(forum)"
-                      style="display:inline-flex;align-items:center;gap:5px;
-                             padding:7px 14px;border-radius:20px;font-size:13px;
-                             font-weight:500;cursor:pointer;
-                             background:#FCEBEB;color:#791F1F;
-                             border:0.5px solid #F7C1C1;transition:all 0.15s">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                </svg>
-                Supprimer
-              </button>
-            </div>
+            <span class="story-name">{{ share.username }}</span>
+            <span class="story-time">{{ getShareRemainingLabel(share) }}</span>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- AI Block -->
-  <div *ngIf="isAiLoading(forum.id!) || getAiSummary(forum.id!) || getAiSuggestions(forum.id!).length > 0"
-       style="border-top:0.5px solid #e2e8f0;padding:16px 24px">
-    <div style="background:var(--color-background-secondary);border-radius:14px;padding:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#D85A30"></div>
-        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
-          Résultats trouvés sur le web
-        </span>
-        <span style="margin-left:auto;font-size:11px;color:#712B13;
-                     background:#FAECE7;border:0.5px solid #F5C4B3;
-                     padding:2px 8px;border-radius:20px">IA + Web</span>
-      </div>
+    <!-- ═════════════════════════════════════════════════ MODAL CARTE -->
+    <div *ngIf="locationMapOpen" class="modal-overlay" (click)="closeLocationMap($event)">
+      <div class="map-modal" (click)="$event.stopPropagation()">
 
-      <!-- Loading -->
-      <div *ngIf="isAiLoading(forum.id!)"
-           style="display:flex;align-items:center;gap:6px;padding:4px 0">
-        <span style="width:6px;height:6px;border-radius:50%;background:#D85A30;
-                     display:inline-block;animation:blink 1.2s infinite 0s"></span>
-        <span style="width:6px;height:6px;border-radius:50%;background:#D85A30;
-                     display:inline-block;animation:blink 1.2s infinite 0.2s"></span>
-        <span style="width:6px;height:6px;border-radius:50%;background:#D85A30;
-                     display:inline-block;animation:blink 1.2s infinite 0.4s"></span>
-        <span style="font-size:13px;color:var(--color-text-tertiary)">
-          Recherche en cours...
-        </span>
-      </div>
+        <div class="modal-handle"></div>
 
-      <!-- Résumé -->
-      <p *ngIf="!isAiLoading(forum.id!) && getAiSummary(forum.id!)"
-         style="font-size:13px;color:var(--color-text-secondary);line-height:1.7;
-                padding:10px 14px;background:var(--color-background-primary);
-                border-left:2px solid #D85A30;border-radius:0 8px 8px 0;
-                margin-bottom:12px">
-        {{ getAiSummary(forum.id!) }}
-      </p>
+        <!-- Header modal -->
+        <div class="map-modal-header">
+          <div class="map-modal-avatar"
+               [style.background]="shareAvatarColors[0]">
+            <span [style.color]="shareTextColors[0]">
+              {{ selectedShare?.username?.charAt(0)?.toUpperCase() }}
+            </span>
+          </div>
+          <div class="flex-1">
+            <p class="map-modal-username">{{ selectedShare?.username }}</p>
+            <span class="map-modal-sub">Partage pendant {{ selectedShare?.minutes }} min</span>
+          </div>
+          <div class="map-live-badge">
+            <div class="map-live-dot"></div>
+            <span>{{ locationMapTimer }}</span>
+          </div>
+        </div>
 
-      <!-- Sources -->
-      <div *ngIf="getAiSources(forum.id!).length > 0 && !isAiLoading(forum.id!)"
-           style="margin-bottom:10px">
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;
-                     color:var(--color-text-tertiary);font-weight:500">Sources</span>
-        <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">
-          <a *ngFor="let source of getAiSources(forum.id!)"
-             [href]="source" target="_blank"
-             style="display:inline-flex;align-items:center;gap:4px;font-size:11px;
-                    color:#185FA5;background:#E6F1FB;border:0.5px solid #B5D4F4;
-                    padding:3px 8px;border-radius:20px;text-decoration:none">
-            {{ source | slice:8:30 }}...
+        <!-- Carte Leaflet -->
+        <div style="height:340px;width:100%;position:relative;overflow:hidden;">
+          <div [id]="'map-' + selectedShare?.userId" style="height:100%;width:100%;"></div>
+        </div>
+
+        <!-- Infos coords -->
+        <div class="map-modal-body">
+          <div class="coords-row">
+            <div class="coord-chip">
+              <span class="coord-label">LAT</span>
+              <span class="coord-val">{{ selectedShare?.lat?.toFixed(4) }}°N</span>
+            </div>
+            <div class="coord-chip">
+              <span class="coord-label">LNG</span>
+              <span class="coord-val">{{ selectedShare?.lng?.toFixed(4) }}°E</span>
+            </div>
+            <div class="coord-chip coord-chip-green">
+              <span class="coord-label">EXPIRE</span>
+              <span class="coord-val">{{ locationMapTimer }}</span>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div class="progress-wrap">
+            <div class="progress-labels">
+              <span>Durée restante</span>
+              <span>{{ selectedShare ? getSharePercent(selectedShare) : 0 }}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill"
+                   [style.width]="(selectedShare ? getSharePercent(selectedShare) : 0) + '%'"
+                   [style.background]="(selectedShare ? getSharePercent(selectedShare) : 100) > 30 ? '#1D9E75' : '#E24B4A'">
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton unique Maps -->
+          <a *ngIf="selectedShare"
+             [href]="'https://www.google.com/maps?q=' + selectedShare.lat + ',' + selectedShare.lng"
+             target="_blank" class="btn-maps-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Voir sur Maps
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+            </svg>
           </a>
         </div>
       </div>
+    </div>
 
-      <!-- Suggestions -->
-      <div *ngIf="getAiSuggestions(forum.id!).length > 0 && !isAiLoading(forum.id!)">
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;
-                     color:var(--color-text-tertiary);font-weight:500">Questions suggérées</span>
-        <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:5px">
-          <button *ngFor="let q of getAiSuggestions(forum.id!)"
-                  (click)="onAiQuestionClick(q, forum.id!)"
-                  style="display:inline-flex;align-items:center;gap:5px;font-size:12px;
-                         color:var(--color-text-primary);background:var(--color-background-primary);
-                         border:0.5px solid #e2e8f0;padding:6px 12px;border-radius:20px;
-                         cursor:pointer;transition:all 0.15s"
-                  onmouseover="this.style.background='#D85A30';this.style.color='#fff';this.style.borderColor='#D85A30'"
-                  onmouseout="this.style.background='var(--color-background-primary)';this.style.color='var(--color-text-primary)';this.style.borderColor='#e2e8f0'">
-            {{ q }}
-          </button>
+    <!-- ═══════════════════════════════════════ PANEL IA PARTAGE POSITION -->
+    <div *ngIf="locationShareOpen" class="modal-overlay modal-overlay-bottom" (click)="closeLocationShare($event)">
+      <div class="share-panel" (click)="$event.stopPropagation()">
+        <div class="modal-handle"></div>
+
+        <!-- Loading IA -->
+        <div *ngIf="locationAiLoading" class="ai-loading-state">
+          <div class="ai-spinner"></div>
+          <span>Génération par l'IA...</span>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Comments -->
-  <div [attr.data-forum-id]="forum.id"
-       style="border-top:0.5px solid #e2e8f0;padding:16px 24px">
-    <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);
-                margin-bottom:12px;display:flex;align-items:center;gap:6px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      Commentaires ({{ getComments(forum.id!).length }})
-    </div>
-
-    <div *ngIf="currentUser" style="margin-bottom:14px">
-      <textarea #commentInput rows="2"
-        placeholder="Partagez votre avis sur ce sujet..."
-        style="width:100%;border:0.5px solid #e2e8f0;border-radius:10px;
-               padding:10px 14px;font-size:13px;color:var(--color-text-primary);
-               background:var(--color-background-primary);resize:none;
-               line-height:1.6;outline:none;transition:border 0.15s"
-        (focus)="commentInput.style.borderColor='#D85A30'"
-(blur)="commentInput.style.borderColor='#e2e8f0'"
-        (input)="errorMessage = ''">
-      </textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-size:11px;color:var(--color-text-tertiary)">
-          {{ commentInput.value.length }} / 1000
-        </span>
-        <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
-                [disabled]="commentInput.value.trim().length < 5"
-                style="display:inline-flex;align-items:center;gap:6px;
-                       padding:8px 18px;border-radius:20px;font-size:13px;
-                       font-weight:500;cursor:pointer;background:#D85A30;
-                       color:#fff;border:none;transition:all 0.15s">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-          Commenter
-        </button>
-      </div>
-    </div>
-
-    <!-- Liste commentaires -->
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div *ngFor="let comment of getComments(forum.id!)"
-           style="background:var(--color-background-primary);
-                  border:0.5px solid #e2e8f0;border-radius:12px;padding:12px 14px">
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <div style="width:36px;height:36px;border-radius:10px;background:#FAECE7;
-                      display:flex;align-items:center;justify-content:center;
-                      font-size:14px;font-weight:500;color:#712B13;flex-shrink:0">
-            {{ (comment.user?.username?.charAt(0) || '')?.toUpperCase() }}
-          </div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-              <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
-                {{ comment.user?.username }}
-              </span>
-              <span style="font-size:11px;color:var(--color-text-tertiary)">
-                {{ comment.createdAt | date:'short' }}
-              </span>
-              <span *ngIf="comment.aiStatus === 'APPROVED'"
-                    style="font-size:10px;background:#E1F5EE;color:#085041;
-                           border:0.5px solid #9FE1CB;padding:2px 7px;border-radius:20px">
-                Validé
-              </span>
-              <span *ngIf="comment.aiStatus === 'PENDING'"
-                    style="font-size:10px;background:#FAEEDA;color:#633806;
-                           border:0.5px solid #FAC775;padding:2px 7px;border-radius:20px">
-                En attente
-              </span>
-              <span *ngIf="comment.flaggedByAI"
-                    style="font-size:10px;background:#FCEBEB;color:#791F1F;
-                           border:0.5px solid #F7C1C1;padding:2px 7px;border-radius:20px">
-                Signalé
-              </span>
+        <!-- Contenu IA -->
+        <div *ngIf="!locationAiLoading && locationAiData">
+          <div class="share-panel-top">
+            <div class="share-panel-avatar">
+              {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
             </div>
-            <p style="font-size:13px;color:var(--color-text-secondary);line-height:1.6">
-              {{ comment.content }}
-            </p>
+            <p class="share-panel-title">Partager ma position</p>
+            <p class="share-panel-sub">{{ locationAiData.message }}</p>
           </div>
-          <button *ngIf="currentUser && comment.user?.id === currentUser.id"
-                  (click)="deleteComment(comment.id!)"
-                  style="padding:5px;border:none;background:transparent;
-                         cursor:pointer;color:var(--color-text-tertiary);
-                         border-radius:6px;transition:all 0.15s"
-                  onmouseover="this.style.color='#A32D2D';this.style.background='#FCEBEB'"
-                  onmouseout="this.style.color='var(--color-text-tertiary)';this.style.background='transparent'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            </svg>
-          </button>
+
+          <!-- Options durée -->
+          <div class="duration-list">
+            <div *ngFor="let opt of locationAiData.options; let i = index"
+                 (click)="selectLocationDuration(opt.minutes)"
+                 class="duration-option"
+                 [class.duration-active]="selectedLocationMinutes === opt.minutes">
+              <div class="duration-icon"
+                   [style.background]="i===0?'#FAEEDA':i===1?'#E6F1FB':'#E1F5EE'">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                     [attr.stroke]="i===0?'#BA7517':i===1?'#185FA5':'#0F6E56'" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="duration-label">{{ opt.label }}</p>
+                <span class="duration-desc">{{ opt.description }}</span>
+              </div>
+              <div class="duration-check" [class.duration-check-active]="selectedLocationMinutes===opt.minutes">
+                <svg *ngIf="selectedLocationMinutes===opt.minutes" width="11" height="11"
+                     viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timer actif -->
+          <div *ngIf="isLocationSharing" class="live-timer-bar">
+            <div class="live-timer-dot"></div>
+            <span>En direct · {{ locationRemainingTime }}</span>
+          </div>
+
+          <!-- Bouton principal -->
+          <div class="share-panel-actions">
+            <button (click)="isLocationSharing ? stopLocationShare() : startLocationShare()"
+                    [disabled]="locationGpsLoading"
+                    class="btn-share-main"
+                    [class.btn-share-stop]="isLocationSharing">
+              <span *ngIf="locationGpsLoading" class="btn-loading-inner">
+                <span class="btn-spinner"></span>
+                Localisation en cours...
+              </span>
+              <span *ngIf="!locationGpsLoading && !isLocationSharing" class="btn-loading-inner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                Partager ma position
+              </span>
+              <span *ngIf="!locationGpsLoading && isLocationSharing" class="btn-loading-inner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="6" width="12" height="12" rx="2"/>
+                </svg>
+                Arrêter le partage
+              </span>
+            </button>
+
+            <a *ngIf="isLocationSharing && !!locationEndTime"
+               [href]="getGoogleMapsUrl()" target="_blank" class="btn-maps-outline">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              Voir ma position sur Maps
+            </a>
+
+            <button (click)="closeLocationShare()" class="btn-cancel">Annuler</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Reviews -->
-  <div style="border-top:0.5px solid #e2e8f0;padding:16px 24px">
-    <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);
-                margin-bottom:12px;display:flex;align-items:center;gap:6px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-      </svg>
-      Avis ({{ getReviews(forum.id!).length }})
-    </div>
-
-    <div style="background:var(--color-background-secondary);border-radius:12px;padding:14px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-size:12px;color:var(--color-text-secondary)">Votre note :</span>
-        <div style="display:flex;gap:3px">
-          <button *ngFor="let star of [1,2,3,4,5]"
-                  (click)="addReview(forum.id!, star)"
-                  [style.color]="isStarSelected(star, forum.id!) ? '#BA7517' : '#e2e8f0'"
-                  style="width:22px;height:22px;background:transparent;
-                         border:none;cursor:pointer;transition:all 0.15s;padding:0">
-            <svg fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-          </button>
+    <!-- ══════════════════════════════════════════════ COMMUNITY RULES -->
+    <div class="rules-card mb-8">
+      <div class="rules-icon-wrap">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h3 class="rules-title">Rappel des règles communautaires</h3>
+        <div class="rules-grid">
+          <div class="rule-item" *ngFor="let rule of [
+            'Rédigez avec respect et courtoisie',
+            'Respectez les opinions d\'autrui',
+            'Contribuez positivement aux discussions',
+            'Modération automatique active'
+          ]">
+            <span class="rule-check">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </span>
+            {{ rule }}
+          </div>
         </div>
       </div>
-      <textarea #reviewInput rows="2"
-        placeholder="Votre avis sur ce sujet..."
-        style="width:100%;border:0.5px solid #e2e8f0;border-radius:10px;
-               padding:10px 14px;font-size:13px;color:var(--color-text-primary);
-               background:var(--color-background-primary);resize:none;
-               line-height:1.6;outline:none"></textarea>
-      <div style="display:flex;justify-content:flex-end;margin-top:8px">
-        <button (click)="clearReviewInput(reviewInput, forum.id!)"
-                style="display:inline-flex;align-items:center;gap:6px;
-                       padding:8px 18px;border-radius:20px;font-size:13px;
-                       font-weight:500;cursor:pointer;background:#D85A30;
-                       color:#fff;border:none;transition:all 0.15s">
-          Donner mon avis
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════ MESSAGES -->
+    <div *ngIf="infoMessage || errorMessage" class="mb-8 space-y-3">
+      <div *ngIf="infoMessage" class="msg-info animate-slide-in-left">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1">
+          <p class="font-medium">{{ infoMessage }}</p>
+          <p class="text-xs opacity-75 mt-0.5">Connectez-vous pour participer à la communauté</p>
+        </div>
+        <button (click)="openLoginDialog()" class="btn-login-inline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          Se connecter
         </button>
       </div>
+      <div *ngIf="errorMessage" class="msg-error animate-shake">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="font-medium">{{ errorMessage }}</p>
+      </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div *ngFor="let review of getReviews(forum.id!)"
-           style="background:var(--color-background-primary);
-                  border:0.5px solid #e2e8f0;border-radius:12px;padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <div style="width:32px;height:32px;border-radius:8px;background:#FAEEDA;
-                      display:flex;align-items:center;justify-content:center;
-                      font-size:13px;font-weight:500;color:#633806">
-            {{ (review.user?.username?.charAt(0) || '')?.toUpperCase() }}
-          </div>
-          <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">
-            {{ review.user?.username }}
-          </span>
-          <div style="display:flex;gap:2px">
-            <svg *ngFor="let star of [1,2,3,4,5]"
-                 [style.color]="star <= (review.rating || 0) ? '#BA7517' : '#e2e8f0'"
-                 style="width:13px;height:13px" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-          </div>
-          <span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">
-            {{ review.createdAt | date:'short' }}
-          </span>
+    <!-- ══════════════════════════════════════════════════ CREATE FORM -->
+    <div *ngIf="showCreateForm" class="create-form-card mb-10 animate-fade-in-up">
+      <div class="create-form-header">
+        <div class="create-form-icon">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
         </div>
-        <p style="font-size:13px;color:var(--color-text-secondary);line-height:1.6">
-          {{ review.comment }}
-        </p>
+        <h2 class="create-form-title">
+          {{ editingForum ? 'Modifier le sujet' : 'Créer un nouveau sujet' }}
+        </h2>
+        <button (click)="cancelEdit()" class="create-form-close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
+
+      <form class="create-form-body" (ngSubmit)="submitForum()">
+
+        <!-- Titre -->
+        <div class="form-field animate-slide-in-left">
+          <label class="form-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Titre du sujet <span class="text-red-400">*</span>
+          </label>
+          <input [(ngModel)]="forumTitle" name="forumTitle" type="text" (input)="capitalizeTitle()"
+                 placeholder="Quel est le sujet de votre discussion ? 🇹🇳"
+                 class="form-input"/>
+        </div>
+
+        <!-- Contenu -->
+        <div class="form-field animate-slide-in-right delay-200">
+          <label class="form-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16M4 12h16M4 18h12"/>
+            </svg>
+            Description du sujet <span class="text-red-400">*</span>
+          </label>
+          <textarea [(ngModel)]="forumContent" name="forumContent" rows="5"
+                    placeholder="Partagez vos expériences et idées... 💼🤝"
+                    class="form-textarea"></textarea>
+        </div>
+
+        <!-- Bouton correction IA -->
+        <div class="animate-fade-in delay-300">
+          <button type="button" (click)="correctWithAi()"
+                  [disabled]="aiCorrecting || !forumTitle.trim() || !forumContent.trim()"
+                  class="btn-ai-correct"
+                  [class.btn-ai-loading]="aiCorrecting">
+            <svg *ngIf="aiCorrecting" class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <svg *ngIf="!aiCorrecting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            {{ aiCorrecting ? 'Correction en cours...' : '✦ Corriger avec l\'IA' }}
+          </button>
+          <span class="ai-hint">Grammaire, orthographe et reformulation</span>
+        </div>
+
+        <!-- Preview correction IA -->
+        <div *ngIf="aiCorrectionResult" class="ai-correction-card animate-fade-in-up">
+          <div class="ai-correction-header">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Suggestion IA
+            <span class="ai-badge">Claude AI</span>
+          </div>
+          <div class="ai-correction-body">
+            <div class="ai-field-group">
+              <span class="ai-field-label">Titre corrigé</span>
+              <p class="ai-field-val">{{ aiCorrectionResult.correctedTitle }}</p>
+            </div>
+            <div class="ai-field-group">
+              <span class="ai-field-label">Contenu reformulé</span>
+              <p class="ai-field-val" style="white-space:pre-wrap">{{ aiCorrectionResult.correctedContent }}</p>
+            </div>
+            <div class="ai-correction-actions">
+              <button type="button" (click)="acceptAiCorrection()" class="btn-ai-accept">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                Appliquer
+              </button>
+              <button type="button" (click)="dismissAiCorrection()" class="btn-ai-dismiss">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Garder l'original
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-submit-row animate-fade-in delay-400">
+          <button type="submit" [disabled]="loading" class="btn-submit">
+            <span *ngIf="!loading" class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+              {{ editingForum ? 'Modifier le sujet' : 'Publier le sujet' }}
+            </span>
+            <span *ngIf="loading" class="flex items-center gap-2">
+              <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Publication en cours...
+            </span>
+          </button>
+          <button (click)="cancelEdit()" type="button" class="btn-cancel-form">Annuler</button>
+        </div>
+      </form>
     </div>
-  </div>
 
+    <!-- ═══════════════════════════════════════════════ FORUMS LIST -->
+    <div class="space-y-6">
 
+      <!-- Empty state -->
+      <div *ngIf="forums.length === 0 && !showCreateForm" class="empty-state animate-fade-in">
+        <div class="empty-icon-wrap">
+          <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <h3 class="empty-title">Aucun sujet pour le moment</h3>
+        <p class="empty-sub">Soyez le premier à lancer une discussion dans cette communauté.</p>
+        <button (click)="toggleCreateForm()" class="btn-first-topic">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Créer le premier sujet
+        </button>
       </div>
+
+      <!-- Forum Cards -->
+      <div *ngFor="let forum of filteredForums; let i = index"
+
+           class="forum-card"
+           [style.animation-delay]="i * 80 + 'ms'">
+
+        <!-- Top accent bar -->
+        <div class="forum-accent-bar"></div>
+
+        <div class="forum-card-body">
+          <div class="flex gap-4 items-flex-start">
+
+            <!-- Avatar -->
+            <div class="forum-avatar">
+              {{ (forum.user?.username?.charAt(0) || '')?.toUpperCase() }}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-flex-start justify-between gap-3 flex-wrap">
+
+                <!-- Contenu gauche -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="forum-title">{{ forum.title }}</h3>
+                  <p class="forum-content-text">{{ forum.content }}</p>
+
+                  <!-- Meta pills -->
+                  <div class="meta-pills">
+                    <span class="meta-pill meta-pill-amber">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      {{ forum.user?.username }}
+                    </span>
+                    <span class="meta-pill meta-pill-teal">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      {{ forum.createdAt | date:'short' }}
+                    </span>
+                    <span class="meta-pill meta-pill-purple">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      {{ forum.views || 0 }} vues
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Droite actions -->
+                <div class="forum-actions-col">
+
+                  <!-- Rating -->
+                  <div class="rating-chip">
+                    <div class="stars-row">
+                      <svg *ngFor="let star of [1,2,3,4,5]"
+                           [style.color]="star <= getAverageRating(forum.id!) ? '#BA7517' : '#e2e8f0'"
+                           class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <span class="rating-score">{{ getAverageRating(forum.id!) }}</span>
+                    <span class="rating-count">({{ getReviews(forum.id!).length }})</span>
+                  </div>
+
+                  <!-- Like/Dislike -->
+                  <div class="reaction-row">
+                    <button (click)="addReaction(forum.id!, 'LIKE')"
+                            class="btn-reaction btn-like"
+                            [class.btn-reaction-active-like]="getUserReaction(forum.id!)?.type === 'LIKE'">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                      </svg>
+                      {{ getLikeCount(forum.id!) }}
+                    </button>
+                    <button (click)="addReaction(forum.id!, 'DISLIKE')"
+                            class="btn-reaction btn-dislike"
+                            [class.btn-reaction-active-dislike]="getUserReaction(forum.id!)?.type === 'DISLIKE'">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+                      </svg>
+                      {{ getDislikeCount(forum.id!) }}
+                    </button>
+                  </div>
+
+                  <!-- Edit/Delete -->
+                  <div *ngIf="currentUser && forum.user?.id === currentUser.id" class="edit-row">
+                    <button (click)="startEdit(forum)" class="btn-edit">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Modifier
+                    </button>
+                    <button (click)="deleteForum(forum)" class="btn-delete">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      </svg>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Block -->
+        <div *ngIf="isAiLoading(forum.id!) || getAiSummary(forum.id!) || getAiSuggestions(forum.id!).length > 0"
+             class="forum-ai-block">
+          <div class="ai-block-header">
+            <span class="ai-block-dot"></span>
+            <span class="ai-block-title">Résultats trouvés sur le web</span>
+            <span class="ai-block-badge">IA + Web</span>
+          </div>
+
+          <div *ngIf="isAiLoading(forum.id!)" class="ai-loading-dots">
+            <span></span><span></span><span></span>
+            <span class="ai-loading-text">Recherche en cours...</span>
+          </div>
+
+          <p *ngIf="!isAiLoading(forum.id!) && getAiSummary(forum.id!)" class="ai-summary">
+            {{ getAiSummary(forum.id!) }}
+          </p>
+
+          <div *ngIf="getAiSources(forum.id!).length > 0 && !isAiLoading(forum.id!)" class="ai-sources">
+            <span class="ai-section-label">Sources</span>
+            <div class="ai-sources-list">
+              <a *ngFor="let source of getAiSources(forum.id!)" [href]="source" target="_blank" class="ai-source-link">
+                {{ source | slice:8:30 }}...
+              </a>
+            </div>
+          </div>
+
+          <div *ngIf="getAiSuggestions(forum.id!).length > 0 && !isAiLoading(forum.id!)" class="ai-suggestions">
+            <span class="ai-section-label">Questions suggérées</span>
+            <div class="ai-suggestions-list">
+              <button *ngFor="let q of getAiSuggestions(forum.id!)"
+                      (click)="onAiQuestionClick(q, forum.id!)"
+                      class="btn-suggestion">{{ q }}</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        <div [attr.data-forum-id]="forum.id" class="forum-section">
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Commentaires ({{ getComments(forum.id!).length }})
+          </div>
+
+          <div *ngIf="currentUser" class="comment-input-area">
+            <textarea #commentInput rows="2"
+                      placeholder="Partagez votre avis sur ce sujet..."
+                      class="comment-textarea"
+                      (focus)="commentInput.style.borderColor='#D85A30'"
+                      (blur)="commentInput.style.borderColor='rgba(226,232,240,0.8)'"
+                      (input)="errorMessage = ''"></textarea>
+            <div class="comment-input-footer">
+              <span class="comment-count">{{ commentInput.value.length }} / 1000</span>
+              <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
+                      [disabled]="commentInput.value.trim().length < 5"
+                      class="btn-comment">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Commenter
+              </button>
+            </div>
+          </div>
+
+          <div class="comments-list">
+            <div *ngFor="let comment of getComments(forum.id!)" class="comment-item">
+              <div class="comment-avatar">
+                {{ (comment.user?.username?.charAt(0) || '')?.toUpperCase() }}
+              </div>
+              <div class="flex-1">
+                <div class="comment-meta">
+                  <span class="comment-author">{{ comment.user?.username }}</span>
+                  <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
+                  <span *ngIf="comment.aiStatus === 'APPROVED'" class="status-badge status-approved">Validé</span>
+                  <span *ngIf="comment.aiStatus === 'PENDING'" class="status-badge status-pending">En attente</span>
+                  <span *ngIf="comment.flaggedByAI" class="status-badge status-flagged">Signalé</span>
+                </div>
+                <p class="comment-text">{{ comment.content }}</p>
+              </div>
+              <button *ngIf="currentUser && comment.user?.id === currentUser.id"
+                      (click)="deleteComment(comment.id!)"
+                      class="btn-delete-comment">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews -->
+        <div class="forum-section">
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Avis ({{ getReviews(forum.id!).length }})
+          </div>
+
+          <div class="review-input-area">
+            <div class="review-stars-row">
+              <span class="review-stars-label">Votre note :</span>
+              <div class="stars-input">
+                <button *ngFor="let star of [1,2,3,4,5]"
+                        (click)="addReview(forum.id!, star)"
+                        [style.color]="isStarSelected(star, forum.id!) ? '#BA7517' : '#e2e8f0'"
+                        class="star-btn">
+                  <svg fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <textarea #reviewInput rows="2" placeholder="Votre avis sur ce sujet..." class="comment-textarea"></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:8px">
+              <button (click)="clearReviewInput(reviewInput, forum.id!)" class="btn-comment">
+                Donner mon avis
+              </button>
+            </div>
+          </div>
+
+          <div class="reviews-list">
+            <div *ngFor="let review of getReviews(forum.id!)" class="review-item">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="review-avatar">
+                  {{ (review.user?.username?.charAt(0) || '')?.toUpperCase() }}
+                </div>
+                <span class="comment-author">{{ review.user?.username }}</span>
+                <div class="stars-row">
+                  <svg *ngFor="let star of [1,2,3,4,5]"
+                       [style.color]="star <= (review.rating || 0) ? '#BA7517' : '#e2e8f0'"
+                       class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+                <span class="comment-date" style="margin-left:auto">{{ review.createdAt | date:'short' }}</span>
+              </div>
+              <p class="comment-text">{{ review.comment }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end forum card -->
     </div>
   </div>
 </div>
 
 <!-- Login Dialog -->
-<app-login-dialog
-  *ngIf="isLoginDialogOpen"
-  (closeDialog)="closeLoginDialog()">
-</app-login-dialog>
+<app-login-dialog *ngIf="isLoginDialogOpen" (closeDialog)="closeLoginDialog()"></app-login-dialog>
+<app-forum-conditions-modal
+  *ngIf="showConditionsModal"
+  [communityId]="community?.id!"
+  (accepted)="onConditionsAccepted()"
+  (cancelled)="onConditionsCancelled()">
+</app-forum-conditions-modal>

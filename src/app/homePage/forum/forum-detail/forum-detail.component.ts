@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { ForumService } from '../../../services/forum.service';
@@ -10,12 +10,16 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ModerationService } from '../../../services/ModerationService';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import * as L from 'leaflet';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ForumConditionsService } from '../../../services/forum-conditions.service';
+
+
 @Component({
   selector: 'app-forum-detail',
   templateUrl: './forum-detail.component.html',
   styleUrls: ['./forum-detail.component.css']
 })
-export class ForumDetailComponent implements OnInit {
+export class ForumDetailComponent implements OnInit, OnDestroy {
 
   community?: Community;
   forums: Forum[] = [];
@@ -47,7 +51,9 @@ export class ForumDetailComponent implements OnInit {
     private authService: AuthService,
     private http: HttpClient,
     private moderationService: ModerationService ,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+  private forumConditionsService: ForumConditionsService  
+    
     
   ) {}
 
@@ -60,6 +66,7 @@ export class ForumDetailComponent implements OnInit {
     }
 
     this.loadData();
+    this.startLocationPolling();
   }
 
   // ─── CHARGEMENT ──────────────────────────────────────────────────────────────
@@ -76,30 +83,19 @@ export class ForumDetailComponent implements OnInit {
 
       this.community = community;
 
-     if (!this.isMember()) {
-  this.errorMessage = 'Accès refusé. Vous devez être membre de cette communauté.';
-  return;
-}
+      if (!this.isMember()) {
+        this.errorMessage = 'Accès refusé. Vous devez être membre de cette communauté.';
+        return;
+      }
 
-      // ✅ Utilise HttpHeaders correctement
-      const token = localStorage.getItem('auth_token');
-      const headers = new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      });
+      // ✅ Utiliser communityId (number garanti) au lieu de this.community?.id
+      if (!this.forumConditionsService.hasAccepted(communityId)) {
+        this.pendingCommunityId = communityId; // ← stocker l'id en attente
+        this.showConditionsModal = true;
+        return;
+      }
 
-      this.http.get<Forum[]>(
-        `http://localhost:8080/api/forums/community/${communityId}`,
-        { headers }
-      ).subscribe({
-        next: (forums) => {
-          this.forums = forums;
-          this.forums.forEach(f => this.loadInteractionsForForum(f.id!));
-        },
-        error: () => {
-          this.errorMessage = 'Erreur lors du chargement des forums.';
-        }
-      });
+      this.loadForums(communityId);
     },
     error: () => {
       this.errorMessage = 'Erreur lors du chargement de la communauté.';
@@ -233,6 +229,7 @@ export class ForumDetailComponent implements OnInit {
           this.infoMessage = 'Sujet créé avec succès.';
           // Ajouter localement en tête de liste
           this.forums = [createdForum, ...this.forums];
+          this.onSearchChange();
 
           // Initialiser les interactions pour le nouveau forum
           this.reactionsMap.set(createdForum.id!, []);
@@ -267,6 +264,7 @@ export class ForumDetailComponent implements OnInit {
         this.infoMessage = 'Sujet supprimé avec succès.';
         // Supprimer localement
         this.forums = this.forums.filter(f => f.id !== forumId);
+        this.onSearchChange();
         this.reactionsMap.delete(forumId);
         this.commentsMap.delete(forumId);
         this.reviewsMap.delete(forumId);
@@ -654,33 +652,26 @@ startLocationShare(): void {
     (pos) => {
       this.locationGpsLoading = false;
       this.isLocationSharing  = true;
-      this.currentCoords = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
-      this.locationEndTime    = Date.now() + this.selectedLocationMinutes * 60 * 1000;
+      this.currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      this.locationEndTime = Date.now() + this.selectedLocationMinutes * 60 * 1000;
 
       this.updateLocationTimer();
       this.locationTimerInterval = setInterval(() => this.updateLocationTimer(), 1000);
 
-      // Sauvegarder dans localStorage
-      localStorage.setItem('activeLocationShare', JSON.stringify({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        expiresAt: new Date(this.locationEndTime),
-        username: this.currentUser?.username
-      }));
-
-      // ← LIGNE MANQUANTE — alimente la barre stories
-      this.addLocationShare({
-        userId:   this.currentUser!.id,
-        username: this.currentUser!.username,
-        lat:      pos.coords.latitude,
-        lng:      pos.coords.longitude,
-        minutes:  this.selectedLocationMinutes
-      });
-
-      console.log('Stories actives:', this.activeLocationShares); // debug
+      // ✅ Envoyer au backend
+      const token = localStorage.getItem('auth_token') || '';
+      this.http.post(
+        'http://localhost:8080/api/ai/location-share',
+        {
+          userId:      String(this.currentUser!.id),
+          username:    this.currentUser!.username,
+          communityId: String(this.community!.id),
+          lat:         pos.coords.latitude,
+          lng:         pos.coords.longitude,
+          minutes:     this.selectedLocationMinutes
+        },
+        { headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` }) }
+      ).subscribe();
     },
     () => {
       this.locationGpsLoading = false;
@@ -692,8 +683,18 @@ startLocationShare(): void {
 stopLocationShare(): void {
   this.isLocationSharing = false;
   if (this.locationTimerInterval) clearInterval(this.locationTimerInterval);
-  localStorage.removeItem('activeLocationShare');
+  if (this.locationPollingInterval) clearInterval(this.locationPollingInterval);
   this.locationRemainingTime = '';
+
+  // ✅ Supprimer du backend
+  const token = localStorage.getItem('auth_token') || '';
+  this.http.delete(
+    `http://localhost:8080/api/ai/location-share/${this.currentUser!.id}`,
+    {
+      params:  { communityId: String(this.community!.id) },
+      headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` })
+    }
+  ).subscribe();
 }
 
 private updateLocationTimer(): void {
@@ -864,5 +865,87 @@ private currentCoords?: { lat: number; lng: number };
 getGoogleMapsUrl(): string {
   if (!this.currentCoords) return '#';
   return `https://www.google.com/maps?q=${this.currentCoords.lat},${this.currentCoords.lng}`;
+}
+private locationPollingInterval?: ReturnType<typeof setInterval>;
+
+private startLocationPolling(): void {
+  this.fetchActiveShares();
+  this.locationPollingInterval = setInterval(() => this.fetchActiveShares(), 5000);
+}
+
+private fetchActiveShares(): void {
+  if (!this.community?.id) return;
+  const token = localStorage.getItem('auth_token') || '';
+  this.http.get<any[]>(
+    `http://localhost:8080/api/ai/location-share/community/${this.community.id}`,
+    { headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` }) }
+  ).subscribe({
+    next: (shares) => {
+      this.activeLocationShares = shares.map(s => ({
+        userId:    s.userId,
+        username:  s.username,
+        lat:       s.lat,
+        lng:       s.lng,
+        minutes:   s.minutes,
+        startedAt: new Date(s.startedAt).getTime()
+      }));
+    },
+    error: (e) => console.error('Erreur polling:', e)
+  });
+}
+
+ngOnDestroy(): void {
+  if (this.locationPollingInterval) clearInterval(this.locationPollingInterval);
+  if (this.locationTimerInterval)   clearInterval(this.locationTimerInterval);
+  if (this.mapTimerInterval)        clearInterval(this.mapTimerInterval);
+}
+searchQuery = '';
+filteredForums: Forum[] = [];
+
+onSearchChange(): void {
+  const q = this.searchQuery.trim().toLowerCase();
+  if (!q) { this.filteredForums = [...this.forums]; return; }
+  this.filteredForums = this.forums.filter(f =>
+    f.title?.toLowerCase().includes(q)   ||
+    f.content?.toLowerCase().includes(q) ||
+    f.user?.username?.toLowerCase().includes(q)
+  );
+}
+
+clearSearch(): void {
+  this.searchQuery = '';
+  this.filteredForums = [...this.forums];
+}
+showConditionsModal = false;
+pendingCommunityId: number = 0;
+onConditionsAccepted(): void {
+  this.showConditionsModal = false;
+  // ✅ Utiliser pendingCommunityId au lieu de route.snapshot
+  this.loadForums(this.pendingCommunityId);
+}
+
+onConditionsCancelled(): void {
+  this.showConditionsModal = false;
+  this.router.navigate(['/communities']);
+}
+private loadForums(communityId: number): void {
+  const token = localStorage.getItem('auth_token');
+  const headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  });
+  this.http.get<Forum[]>(
+    `http://localhost:8080/api/forums/community/${communityId}`,
+    { headers }
+  ).subscribe({
+    next: (forums) => {
+      this.forums = forums;
+      this.filteredForums = [...forums];
+      this.forums.forEach(f => this.loadInteractionsForForum(f.id!));
+    },
+    error: () => {
+      this.errorMessage = 'Erreur lors du chargement des forums.';
+    }
+  });
 }
 }

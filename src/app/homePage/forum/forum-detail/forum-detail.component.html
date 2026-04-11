@@ -125,73 +125,206 @@
       </div>
     </div>
 
-    <!-- Create/Edit Form -->
-    <div *ngIf="showCreateForm" class="mb-12 rounded-[32px] bg-gradient-to-br from-white via-blue-50/30 to-slate-50/20 border border-blue-200 p-8 shadow-2xl shadow-blue-200/30 animate-fade-in-up">
-      <div class="mb-6 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-3 shadow-lg">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-          </div>
-          <h2 class="text-2xl font-bold text-blue-900">{{ editingForum ? '✏️ Modifier le sujet' : '✨ Créer un nouveau sujet' }}</h2>
-        </div>
-        <button (click)="cancelEdit()" class="rounded-2xl p-3 text-amber-600 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 hover:rotate-90">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
+   <!-- Create/Edit Form -->
+<div *ngIf="showCreateForm" class="mb-12 rounded-[32px] bg-gradient-to-br from-white via-blue-50/30 to-slate-50/20 border border-blue-200 p-8 shadow-2xl shadow-blue-200/30 animate-fade-in-up">
+  <div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-3 shadow-lg">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
       </div>
+      <h2 class="text-2xl font-bold text-blue-900">
+        {{ editingForum ? '✏️ Modifier le sujet' : '✨ Créer un nouveau sujet' }}
+      </h2>
+    </div>
+    <button (click)="cancelEdit()"
+      class="rounded-2xl p-3 text-amber-600 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 hover:rotate-90">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
 
-      <form class="space-y-6" (ngSubmit)="submitForum()">
-        <div class="animate-slide-in-left">
-          <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            </svg>
-            Titre du sujet <span class="text-red-500">*</span>
-          </label>
-          <input [(ngModel)]="forumTitle" name="forumTitle" type="text" (input)="capitalizeTitle()"
-            placeholder="Quel est le sujet de votre discussion ? 🇹🇳"
-            class="w-full rounded-2xl border-2 border-amber-200 bg-gradient-to-r from-white to-amber-50/50 px-6 py-4 text-sm text-amber-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all duration-300 hover:border-amber-400 placeholder:text-amber-400" />
-        </div>
+  <form class="space-y-6" (ngSubmit)="submitForum()">
 
-        <div class="animate-slide-in-right delay-200">
-          <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-            </svg>
-            Description du sujet <span class="text-red-500">*</span>
-          </label>
-          <textarea [(ngModel)]="forumContent" name="forumContent" rows="6"
-            placeholder="Partagez vos expériences et idées... 💼🤝"
-            class="w-full rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-white to-blue-50/50 px-6 py-4 text-sm text-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 hover:border-blue-400 placeholder:text-blue-400 resize-none"></textarea>
-        </div>
-
-        <div class="flex gap-4 pt-4 animate-fade-in delay-400">
-          <button type="submit" [disabled]="loading"
-            class="flex-1 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-600/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-            <span *ngIf="!loading" class="flex items-center justify-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-              </svg>
-              {{ editingForum ? 'Modifier le sujet' : 'Publier le sujet' }}
-            </span>
-            <span *ngIf="loading" class="flex items-center justify-center gap-2">
-              <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              Publication en cours...
-            </span>
-          </button>
-          <button (click)="cancelEdit()" type="button"
-            class="rounded-2xl border-2 border-blue-300 bg-white px-6 py-4 text-sm font-semibold text-blue-700 shadow-lg hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 hover:scale-105">
-            Annuler
-          </button>
-        </div>
-      </form>
+    <!-- Titre -->
+    <div class="animate-slide-in-left">
+      <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        Titre du sujet <span class="text-red-500">*</span>
+      </label>
+      <input [(ngModel)]="forumTitle" name="forumTitle" type="text" (input)="capitalizeTitle()"
+        placeholder="Quel est le sujet de votre discussion ? 🇹🇳"
+        class="w-full rounded-2xl border-2 border-amber-200 bg-gradient-to-r from-white to-amber-50/50 px-6 py-4 text-sm text-amber-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all duration-300 hover:border-amber-400 placeholder:text-amber-400"/>
     </div>
 
+    <!-- Contenu -->
+    <div class="animate-slide-in-right delay-200">
+      <label class="block text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        Description du sujet <span class="text-red-500">*</span>
+      </label>
+      <textarea [(ngModel)]="forumContent" name="forumContent" rows="6"
+        placeholder="Partagez vos expériences et idées... 💼🤝"
+        class="w-full rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-white to-blue-50/50 px-6 py-4 text-sm text-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-300 hover:border-blue-400 placeholder:text-blue-400 resize-none">
+      </textarea>
+    </div>
+
+    <!-- ✨ BOUTON CORRECTION IA -->
+    <div class="animate-fade-in delay-300">
+      <button type="button" (click)="correctWithAi()"
+        [disabled]="aiCorrecting || !forumTitle.trim() || !forumContent.trim()"
+        style="display:inline-flex;align-items:center;gap:8px;
+               padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;
+               cursor:pointer;border:1.5px solid #7C3AED;
+               background:linear-gradient(135deg,#EDE9FE,#F5F3FF);
+               color:#5B21B6;transition:all 0.2s;
+               box-shadow:0 2px 8px rgba(124,58,237,0.15)"
+        [style.opacity]="aiCorrecting || !forumTitle.trim() || !forumContent.trim() ? '0.5' : '1'">
+        <!-- Spinner IA -->
+        <svg *ngIf="aiCorrecting" class="animate-spin" style="width:16px;height:16px"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <!-- Icône IA -->
+        <svg *ngIf="!aiCorrecting" style="width:16px;height:16px" fill="none"
+          stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        {{ aiCorrecting ? 'Correction en cours...' : '✨ Corriger avec l\'IA' }}
+      </button>
+      <span style="font-size:11px;color:#7C3AED;margin-left:10px;opacity:0.7">
+        Grammaire, orthographe et reformulation automatique
+      </span>
+    </div>
+
+    <!-- ✅ PREVIEW DE LA CORRECTION -->
+    <div *ngIf="aiCorrectionResult" class="animate-fade-in-up"
+      style="border-radius:16px;overflow:hidden;border:1.5px solid #7C3AED;
+             box-shadow:0 4px 20px rgba(124,58,237,0.12)">
+
+      <!-- En-tête -->
+      <div style="background:linear-gradient(135deg,#7C3AED,#6D28D9);
+                  padding:12px 18px;display:flex;align-items:center;gap:8px">
+        <svg style="width:16px;height:16px;color:white" fill="none"
+          stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span style="color:white;font-size:13px;font-weight:600">
+          Suggestion de correction par l'IA
+        </span>
+        <span style="margin-left:auto;font-size:10px;color:#DDD6FE;
+                     background:rgba(255,255,255,0.15);padding:2px 8px;
+                     border-radius:20px;border:0.5px solid rgba(255,255,255,0.3)">
+          Claude AI
+        </span>
+      </div>
+
+      <!-- Contenu corrigé -->
+      <div style="padding:16px 18px;background:#FAFAFF">
+
+        <!-- Titre corrigé -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;
+                      color:#7C3AED;font-weight:600;margin-bottom:6px;
+                      display:flex;align-items:center;gap:5px">
+            <svg style="width:11px;height:11px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Titre corrigé
+          </div>
+          <p style="font-size:14px;color:#1e293b;background:white;
+                    padding:10px 14px;border-radius:10px;
+                    border:0.5px solid #DDD6FE;line-height:1.6">
+            {{ aiCorrectionResult.correctedTitle }}
+          </p>
+        </div>
+
+        <!-- Contenu corrigé -->
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;
+                      color:#7C3AED;font-weight:600;margin-bottom:6px;
+                      display:flex;align-items:center;gap:5px">
+            <svg style="width:11px;height:11px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h12"/>
+            </svg>
+            Contenu reformulé
+          </div>
+          <p style="font-size:13px;color:#475569;background:white;
+                    padding:10px 14px;border-radius:10px;
+                    border:0.5px solid #DDD6FE;line-height:1.7;
+                    white-space:pre-wrap">
+            {{ aiCorrectionResult.correctedContent }}
+          </p>
+        </div>
+
+        <!-- Boutons Accepter / Refuser -->
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button type="button" (click)="acceptAiCorrection()"
+            style="display:inline-flex;align-items:center;gap:6px;
+                   padding:9px 20px;border-radius:20px;font-size:13px;
+                   font-weight:600;cursor:pointer;background:#7C3AED;
+                   color:white;border:none;transition:all 0.2s;
+                   box-shadow:0 2px 8px rgba(124,58,237,0.3)">
+            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Appliquer la correction
+          </button>
+          <button type="button" (click)="dismissAiCorrection()"
+            style="display:inline-flex;align-items:center;gap:6px;
+                   padding:9px 20px;border-radius:20px;font-size:13px;
+                   font-weight:500;cursor:pointer;
+                   background:white;color:#7C3AED;
+                   border:1.5px solid #DDD6FE;transition:all 0.2s">
+            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Garder l'original
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boutons submit -->
+    <div class="flex gap-4 pt-4 animate-fade-in delay-400">
+      <button type="submit" [disabled]="loading"
+        class="flex-1 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-600/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+        <span *ngIf="!loading" class="flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          {{ editingForum ? 'Modifier le sujet' : 'Publier le sujet' }}
+        </span>
+        <span *ngIf="loading" class="flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Publication en cours...
+        </span>
+      </button>
+      <button (click)="cancelEdit()" type="button"
+        class="rounded-2xl border-2 border-blue-300 bg-white px-6 py-4 text-sm font-semibold text-blue-700 shadow-lg hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 hover:scale-105">
+        Annuler
+      </button>
+    </div>
+  </form>
+</div>
     <!-- Forums List -->
     <div class="space-y-8">
 

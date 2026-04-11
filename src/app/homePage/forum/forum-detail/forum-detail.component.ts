@@ -549,4 +549,49 @@ onAiQuestionClick(question: string, forumId: number): void {
     textarea.focus();
   }
 }
+// ─── AI CORRECTION ────────────────────────────────────────────────────────────
+
+aiCorrecting = false;
+aiCorrectionResult: { correctedTitle: string; correctedContent: string } | null = null;
+
+correctWithAi(): void {
+  if (!this.forumTitle.trim() || !this.forumContent.trim()) return;
+
+  this.aiCorrecting = true;
+  this.aiCorrectionResult = null;
+  this.errorMessage = '';
+
+  const token = localStorage.getItem('auth_token') || '';
+
+  this.http.post<{ correctedTitle: string; correctedContent: string }>(
+    'http://localhost:8080/api/ai/correct',
+    { title: this.forumTitle.trim(), content: this.forumContent.trim() },
+    {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      })
+    }
+  ).subscribe({
+    next: (result) => {
+      this.aiCorrectionResult = result;
+      this.aiCorrecting = false;
+    },
+    error: () => {
+      this.errorMessage = 'Service de correction IA indisponible.';
+      this.aiCorrecting = false;
+    }
+  });
+}
+
+acceptAiCorrection(): void {
+  if (!this.aiCorrectionResult) return;
+  this.forumTitle   = this.aiCorrectionResult.correctedTitle;
+  this.forumContent = this.aiCorrectionResult.correctedContent;
+  this.aiCorrectionResult = null;
+}
+
+dismissAiCorrection(): void {
+  this.aiCorrectionResult = null;
+}
 }

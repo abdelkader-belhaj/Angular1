@@ -23,6 +23,8 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
 
 import { VolsListComponent } from './homePage/vols-list.component';
 import { MesReservationsComponent } from './homePage/mes-reservations.component';
+import { StatistiquesPageComponent } from './statistiques/statistiques-page.component';
+
 
 const routes: Routes = [
   { path: '', component: HomePageComponent },
@@ -54,6 +56,9 @@ const routes: Routes = [
   { path: 'organisateur', component: OrganisateurPageComponent, canActivate: [roleGuard], data: { roles: ['ORGANISATEUR'] } },
   { path: 'vendeur-arti', component: VendeurArtPageComponent, canActivate: [roleGuard], data: { roles: ['VENDEUR_ARTI'] } },
   { path: 'societe', component: SocietePageComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
+  { path: 'societe/statistiques', component: StatistiquesPageComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
+
+  
 
   { path: '**', redirectTo: '' }
 ];

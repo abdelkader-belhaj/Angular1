@@ -1,18 +1,276 @@
-<main class="role-page societe-page">
-  <section class="role-hero">
-    <p class="eyebrow">SOCIETE</p>
-    <h1>Espace entreprise</h1>
-    <p>Pilotez votre compte societe, vos services et votre relation avec les utilisateurs.</p>
+<main class="societe-page">
+
+  <!-- ══ HERO ══════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-badge">ESPACE SOCIÉTÉ</div>
+    <h1>Tableau de bord</h1>
+    <p>Gérez vos vols et suivez les réservations de vos clients.</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-val">{{ mesVols.length }}</span>
+        <span class="stat-label">Vols actifs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ reservationsFiltrees.length }}</span>
+        <span class="stat-label">Réservations</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ totalRevenu | number:'1.0-0' }} TND</span>
+        <span class="stat-label">Revenus</span>
+      </div>
+    </div>
   </section>
 
-  <section class="role-grid">
-    <article class="role-card">
-      <h2>Services</h2>
-      <p>Suivez vos offres et vos statuts.</p>
-    </article>
-    <article class="role-card">
-      <h2>Equipe</h2>
-      <p>Controlez les acces et les actions.</p>
-    </article>
+  <!-- ══ TABS + BOUTON STATISTIQUES ════════════════════════════ -->
+<div class="tabs">
+  <button class="tab" [class.active]="activeTab === 'vols'" (click)="activeTab = 'vols'">
+    ✈️ Mes Vols
+  </button>
+  <button class="tab" [class.active]="activeTab === 'reservations'" (click)="switchToReservations()">
+    🎫 Réservations
+  </button>
+  <button class="tab" (click)="allerStatistiques()">
+    📊 Statistiques
+  </button>
+</div>
+  <!-- ══ ALERTE ══════════════════════════════════════════════════ -->
+  <div class="alert success" *ngIf="successMsg">✅ {{ successMsg }}</div>
+  <div class="alert error" *ngIf="errorMsg">❌ {{ errorMsg }}</div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  ONGLET VOLS                                              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section *ngIf="activeTab === 'vols'" class="section">
+
+    <div class="section-header">
+      <h2>Mes Vols</h2>
+      <button class="btn-primary" (click)="openVolForm()">+ Ajouter un vol</button>
+    </div>
+
+    <!-- Formulaire ajout / modification -->
+    <div class="form-card" *ngIf="showVolForm">
+      <h3>{{ editingVol ? 'Modifier le vol' : 'Nouveau vol' }}</h3>
+      <div class="form-grid">
+
+        <div class="field">
+          <label>Numéro de vol <span class="required">*</span></label>
+          <input [(ngModel)]="volForm.numero"
+                 placeholder="ex: TU123"
+                 [class.input-error]="formErrors['numero']"
+                 (input)="formErrors['numero'] = ''" />
+          <span class="field-error" *ngIf="formErrors['numero']">{{ formErrors['numero'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['numero']">2 à 10 caractères alphanumériques</span>
+        </div>
+
+        <div class="field">
+          <label>Départ <span class="required">*</span></label>
+          <input [(ngModel)]="volForm.depart"
+                 placeholder="ex: TUN"
+                 maxlength="8"
+                 style="text-transform:uppercase"
+                 [class.input-error]="formErrors['depart']"
+                 (input)="volForm.depart = volForm.depart.toUpperCase(); formErrors['depart'] = ''" />
+          <span class="field-error" *ngIf="formErrors['depart']">{{ formErrors['depart'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['depart']">Code IATA (8 lettres)</span>
+        </div>
+
+        <div class="field">
+          <label>Arrivée <span class="required">*</span></label>
+          <input [(ngModel)]="volForm.arrivee"
+                 placeholder="ex: PAR"
+                 maxlength="8"
+                 style="text-transform:uppercase"
+                 [class.input-error]="formErrors['arrivee']"
+                 (input)="volForm.arrivee = volForm.arrivee.toUpperCase(); formErrors['arrivee'] = ''" />
+          <span class="field-error" *ngIf="formErrors['arrivee']">{{ formErrors['arrivee'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['arrivee']">Code IATA (8 lettres)</span>
+        </div>
+
+        <div class="field">
+          <label>Date départ <span class="required">*</span></label>
+          <input type="date"
+                 [(ngModel)]="volForm.dateDepart"
+                 [min]="todayStr"
+                 [class.input-error]="formErrors['dateDepart']"
+                 (change)="formErrors['dateDepart'] = ''" />
+          <span class="field-error" *ngIf="formErrors['dateDepart']">{{ formErrors['dateDepart'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['dateDepart']">Minimum : aujourd'hui</span>
+        </div>
+
+        <div class="field">
+          <label>Heure départ <span class="required">*</span></label>
+          <input type="time"
+                 [(ngModel)]="volForm.heureDepart"
+                 [class.input-error]="formErrors['heureDepart']"
+                 (change)="formErrors['heureDepart'] = ''" />
+          <span class="field-error" *ngIf="formErrors['heureDepart']">{{ formErrors['heureDepart'] }}</span>
+        </div>
+
+        <div class="field">
+          <label>Prix (TND) <span class="required">*</span></label>
+          <input type="number"
+                 [(ngModel)]="volForm.prix"
+                 placeholder="ex: 450"
+                 min="1"
+                 max="99999"
+                 [class.input-error]="formErrors['prix']"
+                 (input)="formErrors['prix'] = ''" />
+          <span class="field-error" *ngIf="formErrors['prix']">{{ formErrors['prix'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['prix']">Entre 1 et 99 999 TND</span>
+        </div>
+
+        <div class="field">
+          <label>Places disponibles <span class="required">*</span></label>
+          <input type="number"
+                 [(ngModel)]="volForm.places"
+                 placeholder="ex: 180"
+                 min="1"
+                 max="850"
+                 [class.input-error]="formErrors['places']"
+                 (input)="formErrors['places'] = ''" />
+          <span class="field-error" *ngIf="formErrors['places']">{{ formErrors['places'] }}</span>
+          <span class="field-hint" *ngIf="!formErrors['places']">Maximum 850 places</span>
+        </div>
+
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" (click)="saveVol()" [disabled]="loading">
+          {{ loading ? 'Enregistrement...' : (editingVol ? 'Modifier' : 'Créer') }}
+        </button>
+        <button class="btn-ghost" (click)="cancelVolForm()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- Liste des vols -->
+    <div class="loading-box" *ngIf="loading && !showVolForm">Chargement...</div>
+
+    <div class="empty" *ngIf="!loading && mesVols.length === 0 && !showVolForm">
+      <span>✈️</span>
+      <p>Aucun vol enregistré. Commencez par ajouter un vol !</p>
+    </div>
+
+    <div class="cards-grid" *ngIf="mesVols.length > 0">
+      <div class="vol-card" *ngFor="let v of mesVols">
+        <div class="vol-header">
+          <span class="vol-num">{{ v.numero }}</span>
+          <span class="vol-places" [class.low]="v.places < 10">{{ v.places }} places</span>
+        </div>
+        <div class="vol-route">
+          <span class="iata">{{ v.depart }}</span>
+          <span class="arrow">→</span>
+          <span class="iata">{{ v.arrivee }}</span>
+        </div>
+        <div class="vol-info">
+          <span>📅 {{ v.dateDepart | date:'dd MMM yyyy' }}</span>
+          <span>🕐 {{ v.heureDepart }}</span>
+        </div>
+        <div class="vol-prix">{{ v.prix | number:'1.0-0' }} TND</div>
+        <div class="vol-actions">
+          <button class="btn-edit" (click)="editVol(v)">✏️ Modifier</button>
+          <button class="btn-delete" (click)="confirmDeleteVol(v)">🗑️ Supprimer</button>
+        </div>
+      </div>
+    </div>
   </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  ONGLET RÉSERVATIONS                                      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section *ngIf="activeTab === 'reservations'" class="section">
+
+    <div class="section-header">
+      <h2>Réservations de mes vols</h2>
+      <div class="filters">
+        <select [(ngModel)]="filtreStatutPaiement" (change)="filtrerReservations()">
+          <option value="">Tous les paiements</option>
+          <option value="en_attente">En attente</option>
+          <option value="paye">Payé</option>
+          <option value="echec">Échoué</option>
+          <option value="rembourse">Remboursé</option>
+        </select>
+        <select [(ngModel)]="filtreStatutReservation" (change)="filtrerReservations()">
+          <option value="">Toutes les réservations</option>
+          <option value="active">Active</option>
+          <option value="annulee">Annulée</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="loading-box" *ngIf="loadingRes">Chargement des réservations...</div>
+
+    <div class="empty" *ngIf="!loadingRes && reservationsFiltrees.length === 0">
+      <span>🎫</span>
+      <p>Aucune réservation trouvée.</p>
+    </div>
+
+    <div class="table-wrap" *ngIf="reservationsFiltrees.length > 0">
+      <table class="res-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Client</th>
+            <th>Vol aller</th>
+            <th>Passagers</th>
+            <th>Prix total</th>
+            <th>Paiement</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of reservationsFiltrees">
+            <td><span class="ref">{{ r.reference }}</span></td>
+            <td>{{ r.touristeEmail }}</td>
+            <td>
+              <span class="route-mini">{{ r.volAller.depart }} → {{ r.volAller.arrivee }}</span>
+              <small>{{ r.volAller.dateDepart | date:'dd/MM/yyyy' }}</small>
+            </td>
+            <td>{{ r.nbPassagers }}</td>
+            <td>{{ r.prixTotal | number:'1.0-2' }} TND</td>
+            <td>
+              <span class="badge" [ngClass]="'badge-' + r.statutPaiement">
+                {{ labelPaiement(r.statutPaiement) }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="r.statutReservation === 'active' ? 'badge-active' : 'badge-annulee'">
+                {{ r.statutReservation === 'active' ? 'Active' : 'Annulée' }}
+              </span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <select class="select-statut"
+                        *ngIf="r.statutReservation === 'active'"
+                        (change)="changerStatut(r, $any($event.target).value)"
+                        [value]="r.statutPaiement">
+                  <option value="en_attente">En attente</option>
+                  <option value="paye">Payé</option>
+                  <option value="echec">Échoué</option>
+                </select>
+                <button class="btn-rembourse"
+                        *ngIf="r.statutReservation === 'annulee' && r.statutPaiement !== 'rembourse'"
+                        (click)="confirmerRemboursement(r)">
+                  💰 Rembourser
+                </button>
+                <button class="btn-delete-sm" (click)="confirmDeleteReservation(r)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ MODAL CONFIRMATION ══════════════════════════════════════ -->
+  <div class="modal-overlay" *ngIf="showConfirm" (click)="cancelConfirm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ confirmTitle }}</h3>
+      <p>{{ confirmMessage }}</p>
+      <div class="modal-actions">
+        <button class="btn-danger" (click)="executeConfirm()">Confirmer</button>
+        <button class="btn-ghost" (click)="cancelConfirm()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
 </main>

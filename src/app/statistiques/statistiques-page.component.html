@@ -1,0 +1,254 @@
+<main class="stats-page">
+
+  <!-- ══ HEADER ═══════════════════════════════════════════════ -->
+  <div class="stats-header">
+    <button class="btn-back" (click)="retour()">← Retour</button>
+    <div class="header-text">
+      <div class="header-badge">ANALYTIQUES</div>
+      <h1>Tableau de bord statistiques</h1>
+      <p>Vue complète sur vos vols et réservations</p>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ═══════════════════════════════════════════════ -->
+  <div class="loading-screen" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ══ KPI CARDS ═══════════════════════════════════════════ -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">✈️</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalVols }}</span>
+          <span class="kpi-label">Vols actifs</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="100"></div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">🎫</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalReservations }}</span>
+          <span class="kpi-label">Réservations totales</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="100"></div>
+      </div>
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.revenuTotal | number:'1.0-0' }} TND</span>
+          <span class="kpi-label">Revenus encaissés</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="100"></div>
+      </div>
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-icon">🪑</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalPlaces }}</span>
+          <span class="kpi-label">Places disponibles</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="100"></div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="kpi-icon">❌</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.reservationsAnnulees }}</span>
+          <span class="kpi-label">Annulations</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="tauxAnnulation"></div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalPassagers }}</span>
+          <span class="kpi-label">Passagers transportés</span>
+        </div>
+        <div class="kpi-bar" [style.width.%]="100"></div>
+      </div>
+    </div>
+
+    <!-- ══ GRAPHIQUES ROW 1 ════════════════════════════════════ -->
+    <div class="charts-row">
+
+      <!-- Répartition statut paiement -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <span class="chart-icon">💳</span>
+          Statut des paiements
+        </div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" class="donut-svg">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f1f5f9" stroke-width="28"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#10b981" stroke-width="28"
+                    [attr.stroke-dasharray]="paiementDash('paye')"
+                    [attr.stroke-dashoffset]="paiementOffset('paye')"
+                    transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#f59e0b" stroke-width="28"
+                    [attr.stroke-dasharray]="paiementDash('en_attente')"
+                    [attr.stroke-dashoffset]="paiementOffset('en_attente')"
+                    transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#ef4444" stroke-width="28"
+                    [attr.stroke-dasharray]="paiementDash('echec')"
+                    [attr.stroke-dashoffset]="paiementOffset('echec')"
+                    transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#8b5cf6" stroke-width="28"
+                    [attr.stroke-dasharray]="paiementDash('rembourse')"
+                    [attr.stroke-dashoffset]="paiementOffset('rembourse')"
+                    transform="rotate(-90 100 100)"/>
+            <text x="100" y="96" text-anchor="middle" class="donut-center-val">{{ stats.totalReservations }}</text>
+            <text x="100" y="114" text-anchor="middle" class="donut-center-label">réservations</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background:#10b981"></span>Payé ({{ countPaiement('paye') }})</div>
+          <div class="legend-item"><span class="dot" style="background:#f59e0b"></span>En attente ({{ countPaiement('en_attente') }})</div>
+          <div class="legend-item"><span class="dot" style="background:#ef4444"></span>Échoué ({{ countPaiement('echec') }})</div>
+          <div class="legend-item"><span class="dot" style="background:#8b5cf6"></span>Remboursé ({{ countPaiement('rembourse') }})</div>
+        </div>
+      </div>
+
+      <!-- Répartition statut réservation -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <span class="chart-icon">📋</span>
+          Statut des réservations
+        </div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" class="donut-svg">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f1f5f9" stroke-width="28"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#10b981" stroke-width="28"
+                    [attr.stroke-dasharray]="reservationDash('active')"
+                    stroke-dashoffset="0"
+                    transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#ef4444" stroke-width="28"
+                    [attr.stroke-dasharray]="reservationDash('annulee')"
+                    [attr.stroke-dashoffset]="reservationOffset()"
+                    transform="rotate(-90 100 100)"/>
+            <text x="100" y="96" text-anchor="middle" class="donut-center-val">{{ tauxAnnulation | number:'1.0-0' }}%</text>
+            <text x="100" y="114" text-anchor="middle" class="donut-center-label">annulations</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background:#10b981"></span>Actives ({{ stats.reservationsActives }})</div>
+          <div class="legend-item"><span class="dot" style="background:#ef4444"></span>Annulées ({{ stats.reservationsAnnulees }})</div>
+        </div>
+      </div>
+
+      <!-- Type de billet -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <span class="chart-icon">🎟️</span>
+          Type de billet
+        </div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" class="donut-svg">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f1f5f9" stroke-width="28"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#0e5c42" stroke-width="28"
+                    [attr.stroke-dasharray]="billetDash('aller_simple')"
+                    stroke-dashoffset="0"
+                    transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none"
+                    stroke="#06b6d4" stroke-width="28"
+                    [attr.stroke-dasharray]="billetDash('aller_retour')"
+                    [attr.stroke-dashoffset]="billetOffset()"
+                    transform="rotate(-90 100 100)"/>
+            <text x="100" y="96" text-anchor="middle" class="donut-center-val">{{ countBillet('aller_simple') }}</text>
+            <text x="100" y="114" text-anchor="middle" class="donut-center-label">aller simple</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background:#0e5c42"></span>Aller simple ({{ countBillet('aller_simple') }})</div>
+          <div class="legend-item"><span class="dot" style="background:#06b6d4"></span>Aller-retour ({{ countBillet('aller_retour') }})</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GRAPHIQUES ROW 2 ════════════════════════════════════ -->
+    <div class="charts-row-2">
+      <div class="chart-card chart-wide">
+        <div class="chart-title"><span class="chart-icon">🏆</span>Top vols par réservations</div>
+        <div class="bar-chart">
+          <div class="bar-row" *ngFor="let v of topVols">
+            <div class="bar-label">
+              <span class="bar-route">{{ v.depart }} → {{ v.arrivee }}</span>
+              <span class="bar-num">{{ v.numero }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="barPct(v.count)">
+                <span class="bar-val">{{ v.count }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="empty-chart" *ngIf="topVols.length === 0">Aucune donnée disponible</div>
+        </div>
+      </div>
+      <div class="chart-card chart-wide">
+        <div class="chart-title"><span class="chart-icon">💵</span>Revenus par vol (TND)</div>
+        <div class="bar-chart">
+          <div class="bar-row" *ngFor="let v of revenusParVol">
+            <div class="bar-label">
+              <span class="bar-route">{{ v.depart }} → {{ v.arrivee }}</span>
+              <span class="bar-num">{{ v.numero }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill-green" [style.width.%]="revenuPct(v.revenu)">
+                <span class="bar-val">{{ v.revenu | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="empty-chart" *ngIf="revenusParVol.length === 0">Aucune donnée disponible</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TABLE DÉTAIL VOLS ══════════════════════════════════ -->
+    <div class="chart-card">
+      <div class="chart-title"><span class="chart-icon">📊</span>Détail par vol</div>
+      <div class="table-wrap">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Vol</th><th>Route</th><th>Date</th><th>Prix</th>
+              <th>Places restantes</th><th>Réservations</th><th>Revenus</th><th>Taux remplissage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of detailVols">
+              <td><span class="vol-num-tag">{{ v.numero }}</span></td>
+              <td><strong>{{ v.depart }} → {{ v.arrivee }}</strong></td>
+              <td>{{ v.dateDepart | date:'dd/MM/yyyy' }}</td>
+              <td>{{ v.prix | number:'1.0-0' }} TND</td>
+              <td><span [class]="v.places < 10 ? 'badge-low' : 'badge-ok'">{{ v.places }}</span></td>
+              <td>{{ v.nbReservations }}</td>
+              <td>{{ v.revenu | number:'1.0-0' }} TND</td>
+              <td>
+                <div class="fill-bar-wrap">
+                  <div class="fill-bar">
+                    <div class="fill-bar-inner"
+                         [style.width.%]="v.tauxRemplissage"
+                         [style.background]="v.tauxRemplissage > 70 ? '#10b981' : v.tauxRemplissage > 40 ? '#f59e0b' : '#ef4444'">
+                    </div>
+                  </div>
+                  <span class="fill-pct">{{ v.tauxRemplissage | number:'1.0-0' }}%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-chart" *ngIf="detailVols.length === 0">Aucun vol disponible</div>
+      </div>
+    </div>
+
+  </ng-container>
+
+</main>

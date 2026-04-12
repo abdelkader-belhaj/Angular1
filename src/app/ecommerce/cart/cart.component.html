@@ -1,0 +1,118 @@
+<div class="cart-container">
+  <h1>Shopping Cart</h1>
+
+  <div *ngIf="cartItems.length === 0" class="empty-cart">
+    <p>Your cart is empty</p>
+    <button (click)="continueShopping()" class="btn btn-secondary">
+      Continue Shopping
+    </button>
+  </div>
+
+  <div *ngIf="cartItems.length > 0" class="cart-content">
+    <!-- Cart Items -->
+    <div class="cart-items">
+      <div class="cart-header">
+        <span class="header-col-1">Product</span>
+        <span class="header-col-2">Price</span>
+        <span class="header-col-3">Quantity</span>
+        <span class="header-col-4">Total</span>
+        <span class="header-col-5">Action</span>
+      </div>
+
+      <div class="cart-item" *ngFor="let item of cartItems">
+        <div class="item-product">
+          <img [src]="item.product.image || 'assets/placeholder.png'" [alt]="item.product.name" />
+          <div class="product-info">
+            <h3>{{ item.product.name }}</h3>
+            <p *ngIf="getItemDiscount(item)" class="discount">
+              Save ₽{{ getItemDiscount(item) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="item-price">
+          <div *ngIf="item.product.discountPrice">
+            <span class="original">₽{{ item.product.price }}</span>
+            <span class="current">₽{{ getDisplayPrice(item) }}</span>
+          </div>
+          <div *ngIf="!item.product.discountPrice">
+            <span class="current">₽{{ getDisplayPrice(item) }}</span>
+          </div>
+        </div>
+
+        <div class="item-quantity">
+          <button
+            (click)="updateQuantity(item.product.id, item.quantity - 1)"
+            [disabled]="item.quantity <= 1"
+            class="qty-btn"
+          >
+            -
+          </button>
+          <input
+            type="number"
+            [value]="item.quantity"
+            (change)="updateQuantity(item.product.id, $any($event.target).value)"
+            min="1"
+          />
+          <button
+            (click)="updateQuantity(item.product.id, item.quantity + 1)"
+            [disabled]="item.quantity >= item.product.stockQuantity"
+            class="qty-btn"
+          >
+            +
+          </button>
+        </div>
+
+        <div class="item-total">
+          ₽{{ getItemTotal(item) }}
+        </div>
+
+        <div class="item-action">
+          <button (click)="removeFromCart(item.product.id)" class="btn-remove">
+            🗑 Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+      <div class="summary-section">
+        <h2>Order Summary</h2>
+
+        <div class="summary-row">
+          <span>Subtotal:</span>
+          <span>₽{{ getCartSubtotal() }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Discount:</span>
+          <span class="discount-amount">-₽{{ getTotalDiscount() }}</span>
+        </div>
+
+        <div class="summary-row total">
+          <span>Total:</span>
+          <span>₽{{ getCartTotal() }}</span>
+        </div>
+      </div>
+
+      <div class="promo-code">
+        <input type="text" placeholder="Enter promo code" />
+        <button class="btn btn-secondary">Apply</button>
+      </div>
+
+      <div class="cart-actions">
+        <button (click)="proceedToCheckout()" class="btn btn-primary">
+          Proceed to Checkout
+        </button>
+        <button (click)="continueShopping()" class="btn btn-secondary">
+          Continue Shopping
+        </button>
+      </div>
+
+      <button (click)="clearCart()" class="btn btn-danger btn-clear">
+        Clear Cart
+      </button>
+    </div>
+  </div>
+</div>

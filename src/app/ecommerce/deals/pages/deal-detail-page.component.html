@@ -1,0 +1,174 @@
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Back Button -->
+    <button
+      (click)="goBack()"
+      class="mb-6 text-[#003974] hover:underline font-semibold"
+    >
+      ← Retour aux bons plans
+    </button>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement du bon plan...</p>
+    </div>
+
+    <!-- Deal Details -->
+    <div *ngIf="!isLoading && deal" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Images & Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Main Image -->
+        <div class="relative bg-[#f7f9fc] rounded-lg overflow-hidden h-96">
+          <img
+            [src]="deal.image"
+            [alt]="deal.title"
+            class="w-full h-full object-cover"
+          />
+          <!-- Discount Badge -->
+          <div *ngIf="deal.discount" class="absolute top-4 right-4 bg-red-600 text-white rounded-full px-4 py-2 font-bold text-lg">
+            -{{ deal.discount }}%
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-white rounded-lg border border-[#dbe1ea] p-8 space-y-4">
+          <h2 class="text-2xl font-bold text-[#003974]">À propos de ce bon</h2>
+          <p class="text-[#5f6874] leading-relaxed">{{ deal.description }}</p>
+
+          <!-- Features -->
+          <div class="pt-4 border-t border-[#dbe1ea]">
+            <h3 class="font-bold text-[#003974] mb-4">Ce qui est inclus:</h3>
+            <ul class="space-y-2">
+              <li *ngFor="let feature of deal.features" class="flex items-center gap-2 text-[#5f6874]">
+                <span class="text-[#003974]">✓</span>
+                {{ feature }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Terms & Conditions -->
+          <div *ngIf="deal.terms" class="pt-4 border-t border-[#dbe1ea]">
+            <h3 class="font-bold text-[#003974] mb-2">Conditions et restrictions:</h3>
+            <p class="text-sm text-[#5f6874]">{{ deal.terms }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-1 space-y-6">
+        <!-- Pricing Card -->
+        <div class="bg-white rounded-lg border border-[#dbe1ea] p-8 sticky top-24 space-y-6">
+          <!-- Type Badge -->
+          <div class="inline-block px-3 py-1 bg-[#d6e3ff] text-[#003974] rounded-full text-xs font-bold uppercase">
+            {{ deal.type }}
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-2xl font-bold text-[#003974]">{{ deal.title }}</h1>
+
+          <!-- Rating -->
+          <div *ngIf="deal.rating" class="flex items-center gap-2">
+            <span class="text-yellow-500 text-lg">★</span>
+            <span class="font-bold text-[#5f6874]">{{ deal.rating }}/5 ({{ deal.reviewCount || 0 }} avis)</span>
+          </div>
+
+          <!-- Pricing -->
+          <div class="space-y-2 border-b border-[#dbe1ea] pb-6">
+            <div class="text-sm text-[#5f6874]">Prix disponible</div>
+            <div class="flex items-baseline gap-3">
+              <span class="text-4xl font-bold text-[#003974]">{{ deal.price }}€</span>
+              <span *ngIf="deal.originalPrice" class="text-[#5f6874] line-through text-lg">{{ deal.originalPrice }}€</span>
+            </div>
+            <div *ngIf="deal.discount" class="text-sm text-green-700 font-bold">
+              Vous économisez {{ ((deal.originalPrice - deal.price) | number: '1.2-2') }}€
+            </div>
+          </div>
+
+          <!-- Validity -->
+          <div class="space-y-2 text-sm text-[#5f6874]">
+            <p>📅 <strong>Valide jusqu'au:</strong> {{ deal.validUntil | date: 'dd MMMM yyyy' }}</p>
+            <p>⏰ <strong>Durée de validité:</strong> {{ deal.validityDays || 'N/A' }} jours</p>
+          </div>
+
+          <!-- Quantity Selector -->
+          <div class="border-t border-[#dbe1ea] pt-6">
+            <label class="block text-sm font-semibold text-[#003974] mb-3">Quantité</label>
+            <div class="flex items-center border border-[#dbe1ea] rounded-lg w-fit">
+              <button
+                (click)="quantity = quantity > 1 ? quantity - 1 : 1"
+                class="px-3 py-2 text-[#003974] font-bold hover:bg-[#f7f9fc]"
+              >
+                −
+              </button>
+              <span class="w-12 text-center font-semibold">{{ quantity }}</span>
+              <button
+                (click)="quantity = quantity + 1"
+                class="px-3 py-2 text-[#003974] font-bold hover:bg-[#f7f9fc]"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="space-y-3 border-t border-[#dbe1ea] pt-6">
+            <button
+              (click)="addToCart()"
+              class="w-full px-4 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+            >
+              🛒 Ajouter au panier
+            </button>
+            <button
+              (click)="toggleFavorite()"
+              [class]="'w-full px-4 py-3 rounded-lg font-bold border-2 ' +
+                       (deal.isFavorite ? 'bg-red-100 text-red-700 border-red-300' : 'bg-white text-[#003974] border-[#003974] hover:bg-[#f7f9fc]')"
+            >
+              {{ deal.isFavorite ? '♥ Ajouté' : '♡ Ajouter aux favoris' }}
+            </button>
+          </div>
+
+          <!-- Info -->
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-[#5f6874]">
+            ℹ️ Le bon sera disponible immédiatement après votre achat
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Similar Deals -->
+    <div *ngIf="!isLoading && similarDeals.length > 0" class="mt-16 pt-12 border-t border-[#dbe1ea]">
+      <h2 class="text-2xl font-bold text-[#003974] mb-6">Bons similaires</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div
+          *ngFor="let similarDeal of similarDeals"
+          (click)="viewSimilarDeal(similarDeal.id)"
+          class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+        >
+          <!-- Image -->
+          <div class="relative h-40 bg-[#f7f9fc] overflow-hidden">
+            <img
+              [src]="similarDeal.image"
+              [alt]="similarDeal.title"
+              class="w-full h-full object-cover hover:scale-105 transition-transform"
+            />
+            <div *ngIf="similarDeal.discount" class="absolute top-2 right-2 bg-red-600 text-white rounded-full px-2 py-0.5 font-bold text-xs">
+              -{{ similarDeal.discount }}%
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="p-4">
+            <h3 class="font-bold text-[#003974] mb-2 line-clamp-2">{{ similarDeal.title }}</h3>
+            <div class="flex justify-between items-end">
+              <div class="flex items-baseline gap-2">
+                <span class="text-lg font-bold text-[#003974]">{{ similarDeal.price }}€</span>
+                <span *ngIf="similarDeal.originalPrice" class="text-[#5f6874] line-through text-xs">{{ similarDeal.originalPrice }}€</span>
+              </div>
+              <span class="text-yellow-500 font-bold">★ {{ similarDeal.rating }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

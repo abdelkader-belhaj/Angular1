@@ -1,0 +1,343 @@
+<div class="checkout-container">
+  <button class="back-btn" (click)="backToCart()">← Back to Cart</button>
+
+  <h1>Checkout</h1>
+
+  <div class="checkout-content">
+    <!-- Left: Checkout Form -->
+    <div class="checkout-form-section">
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <button
+          [class.active]="currentStep === 'shipping'"
+          (click)="goToStep('shipping')"
+          class="step"
+        >
+          <span class="step-number">1</span>
+          <span class="step-label">Shipping</span>
+        </button>
+        <div class="step-line"></div>
+        <button
+          [class.active]="currentStep === 'payment'"
+          (click)="goToStep('payment')"
+          class="step"
+          [disabled]="!isShippingStepValid()"
+        >
+          <span class="step-number">2</span>
+          <span class="step-label">Payment</span>
+        </button>
+        <div class="step-line"></div>
+        <button
+          [class.active]="currentStep === 'review'"
+          (click)="goToStep('review')"
+          class="step"
+          [disabled]="!checkoutForm.valid"
+        >
+          <span class="step-number">3</span>
+          <span class="step-label">Review</span>
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="alert alert-error">
+        {{ error }}
+      </div>
+
+      <!-- Success Message -->
+      <div *ngIf="success" class="alert alert-success">
+        {{ success }}
+      </div>
+
+      <form [formGroup]="checkoutForm">
+        <!-- Shipping Information -->
+        <div *ngIf="currentStep === 'shipping'" class="form-section">
+          <h2>Shipping Address</h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name *</label>
+              <input
+                id="firstName"
+                type="text"
+                formControlName="firstName"
+                placeholder="John"
+              />
+              <span
+                *ngIf="
+                  checkoutForm.get('firstName')?.invalid &&
+                  checkoutForm.get('firstName')?.touched
+                "
+                class="error-text"
+              >
+                First name is required
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name *</label>
+              <input
+                id="lastName"
+                type="text"
+                formControlName="lastName"
+                placeholder="Doe"
+              />
+              <span
+                *ngIf="
+                  checkoutForm.get('lastName')?.invalid &&
+                  checkoutForm.get('lastName')?.touched
+                "
+                class="error-text"
+              >
+                Last name is required
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="john@example.com"
+            />
+            <span
+              *ngIf="
+                checkoutForm.get('email')?.invalid &&
+                checkoutForm.get('email')?.touched
+              "
+              class="error-text"
+            >
+              Valid email is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone *</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="+1234567890"
+            />
+            <span
+              *ngIf="
+                checkoutForm.get('phone')?.invalid &&
+                checkoutForm.get('phone')?.touched
+              "
+              class="error-text"
+            >
+              Valid phone number is required
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="address">Address *</label>
+            <input
+              id="address"
+              type="text"
+              formControlName="address"
+              placeholder="123 Main Street"
+            />
+            <span
+              *ngIf="
+                checkoutForm.get('address')?.invalid &&
+                checkoutForm.get('address')?.touched
+              "
+              class="error-text"
+            >
+              Address is required
+            </span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input
+                id="city"
+                type="text"
+                formControlName="city"
+                placeholder="Tunis"
+              />
+              <span
+                *ngIf="
+                  checkoutForm.get('city')?.invalid &&
+                  checkoutForm.get('city')?.touched
+                "
+                class="error-text"
+              >
+                City is required
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="postalCode">Postal Code *</label>
+              <input
+                id="postalCode"
+                type="text"
+                formControlName="postalCode"
+                placeholder="1000"
+              />
+              <span
+                *ngIf="
+                  checkoutForm.get('postalCode')?.invalid &&
+                  checkoutForm.get('postalCode')?.touched
+                "
+                class="error-text"
+              >
+                Valid postal code is required
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="country">Country *</label>
+              <input
+                id="country"
+                type="text"
+                formControlName="country"
+                placeholder="Tunisia"
+              />
+            </div>
+          </div>
+
+          <button
+            (click)="goToStep('payment')"
+            [disabled]="!isShippingStepValid()"
+            class="btn btn-primary"
+          >
+            Continue to Payment
+          </button>
+        </div>
+
+        <!-- Payment Information -->
+        <div *ngIf="currentStep === 'payment'" class="form-section">
+          <h2>Payment Method</h2>
+
+          <div class="form-group">
+            <label for="paymentMethod">Select Payment Method *</label>
+            <select id="paymentMethod" formControlName="paymentMethod">
+              <option *ngFor="let method of paymentMethods" [value]="method">
+                {{ method }}
+              </option>
+            </select>
+          </div>
+
+          <div class="payment-info">
+            <h3>Payment Details</h3>
+            <p>This is a demo checkout. In a real implementation, payment processing would occur here.</p>
+            <p><strong>Selected Method:</strong> {{ checkoutForm.get('paymentMethod')?.value }}</p>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" formControlName="termsAgreed" />
+              I agree to the terms and conditions *
+            </label>
+            <span
+              *ngIf="
+                checkoutForm.get('termsAgreed')?.invalid &&
+                checkoutForm.get('termsAgreed')?.touched
+              "
+              class="error-text"
+            >
+              You must agree to the terms
+            </span>
+          </div>
+
+          <div class="button-group">
+            <button (click)="goToStep('shipping')" class="btn btn-secondary">
+              Back to Shipping
+            </button>
+            <button
+              (click)="goToStep('review')"
+              [disabled]="!checkoutForm.valid"
+              class="btn btn-primary"
+            >
+              Review Order
+            </button>
+          </div>
+        </div>
+
+        <!-- Review Order -->
+        <div *ngIf="currentStep === 'review'" class="form-section">
+          <h2>Review Your Order</h2>
+
+          <div class="review-section">
+            <h3>Shipping Address</h3>
+            <p>
+              {{ checkoutForm.get('firstName')?.value }}
+              {{ checkoutForm.get('lastName')?.value }}
+            </p>
+            <p>{{ getShippingAddress() }}</p>
+            <p>{{ checkoutForm.get('email')?.value }}</p>
+            <p>{{ checkoutForm.get('phone')?.value }}</p>
+          </div>
+
+          <div class="review-section">
+            <h3>Payment Method</h3>
+            <p>{{ checkoutForm.get('paymentMethod')?.value }}</p>
+          </div>
+
+          <div class="button-group">
+            <button (click)="goToStep('payment')" class="btn btn-secondary">
+              Back to Payment
+            </button>
+            <button
+              (click)="placeOrder()"
+              [disabled]="isProcessing"
+              class="btn btn-primary"
+            >
+              <span *ngIf="!isProcessing">Place Order</span>
+              <span *ngIf="isProcessing">Processing...</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: Order Summary -->
+    <aside class="order-summary">
+      <h2>Order Summary</h2>
+
+      <div class="summary-items">
+        <div class="summary-item" *ngFor="let item of cartItems">
+          <img
+            [src]="item.product.image || 'assets/placeholder.png'"
+            [alt]="item.product.name"
+          />
+          <div class="item-details">
+            <p class="item-name">{{ item.product.name }}</p>
+            <p class="item-qty">Qty: {{ item.quantity }}</p>
+            <p class="item-price">
+              ₽{{ (item.product.discountPrice ?? item.product.price) * item.quantity }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-totals">
+        <div class="total-row">
+          <span>Subtotal:</span>
+          <span>₽{{ getCartSubtotal() }}</span>
+        </div>
+
+        <div *ngIf="getTotalDiscount() > 0" class="total-row discount">
+          <span>Discount:</span>
+          <span>-₽{{ getTotalDiscount() }}</span>
+        </div>
+
+        <div class="total-row shipping">
+          <span>Shipping:</span>
+          <span>TBD</span>
+        </div>
+
+        <div class="total-row grand-total">
+          <span>Total:</span>
+          <span>₽{{ cartTotal }}</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

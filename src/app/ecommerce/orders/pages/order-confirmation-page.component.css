@@ -1,0 +1,10 @@
+:host {
+  --primary: #003974;
+  --border: #dbe1ea;
+}
+
+@media print {
+  .print\:hidden {
+    display: none;
+  }
+}

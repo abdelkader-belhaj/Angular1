@@ -1,0 +1,187 @@
+<div class="my-orders-container">
+  <div class="orders-header">
+    <h1>My Orders</h1>
+    <button (click)="continueShopping()" class="btn btn-secondary">
+      Continue Shopping
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading your orders...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button (click)="loadOrders()" class="btn-retry">Retry</button>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="no-orders">
+    <p>You haven't placed any orders yet</p>
+    <button (click)="continueShopping()" class="btn btn-primary">
+      Start Shopping
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="orders-list">
+    <!-- Desktop View -->
+    <table class="orders-table desktop-view">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Payment</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders" class="order-row">
+          <td class="order-number">{{ order.orderNumber }}</td>
+          <td class="order-date">{{ order.createdAt | date: 'short' }}</td>
+          <td class="order-total">₽{{ order.totalAmount }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getStatusColor(order.status)"
+            >
+              {{ order.status }}
+            </span>
+          </td>
+          <td>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getPaymentStatusColor(order.paymentStatus)"
+            >
+              {{ order.paymentStatus }}
+            </span>
+          </td>
+          <td>
+            <button (click)="viewOrder(order)" class="btn-view">View Details</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mobile View -->
+    <div class="orders-mobile mobile-view">
+      <div class="order-card" *ngFor="let order of orders">
+        <div class="card-header">
+          <h3>{{ order.orderNumber }}</h3>
+        </div>
+        <div class="card-body">
+          <div class="card-row">
+            <span class="label">Total:</span>
+            <span class="value">₽{{ order.totalAmount }}</span>
+          </div>
+          <div class="card-row">
+            <span class="label">Status:</span>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getStatusColor(order.status)"
+            >
+              {{ order.status }}
+            </span>
+          </div>
+          <div class="card-row">
+            <span class="label">Payment:</span>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getPaymentStatusColor(order.paymentStatus)"
+            >
+              {{ order.paymentStatus }}
+            </span>
+          </div>
+          <button (click)="viewOrder(order)" class="btn btn-primary btn-view-mobile">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div *ngIf="selectedOrder" class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Order Details</h2>
+        <button class="modal-close" (click)="closeDetail()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Order Header Info -->
+        <div class="order-info-section">
+          <div class="info-row">
+            <span class="label">Order Number:</span>
+            <span class="value">{{ selectedOrder.orderNumber }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getStatusColor(selectedOrder.status)"
+            >
+              {{ selectedOrder.status }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Status:</span>
+            <span
+              class="status-badge"
+              [style.backgroundColor]="getPaymentStatusColor(selectedOrder.paymentStatus)"
+            >
+              {{ selectedOrder.paymentStatus }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Method:</span>
+            <span class="value">{{ selectedOrder.paymentMethod }}</span>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="order-items-section">
+          <h3>Items</h3>
+          <div class="items-list">
+            <div class="item" *ngFor="let detail of selectedOrder.orderDetails">
+              <div class="item-info">
+                <p class="item-name">Product ID: {{ detail.productId }}</p>
+                <p class="item-qty">Quantity: {{ detail.quantity }}</p>
+              </div>
+              <div class="item-price">
+                <p class="unit-price">₽{{ detail.unitPrice }}</p>
+                <p class="total">₽{{ detail.subtotal }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping Info -->
+        <div class="shipping-section">
+          <h3>Shipping Address</h3>
+          <p>{{ selectedOrder.shippingAddress }}</p>
+        </div>
+
+        <!-- Order Totals -->
+        <div class="totals-section">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>₽{{ selectedOrder.subtotal }}</span>
+          </div>
+          <div *ngIf="selectedOrder.discountAmount > 0" class="total-row discount">
+            <span>Discount:</span>
+            <span>-₽{{ selectedOrder.discountAmount }}</span>
+          </div>
+          <div class="total-row grand-total">
+            <span>Total:</span>
+            <span>₽{{ selectedOrder.totalAmount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeDetail()" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

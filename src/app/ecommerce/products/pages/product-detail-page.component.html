@@ -1,0 +1,163 @@
+<div *ngIf="isLoading" class="flex justify-center py-12">
+  <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003974]"></div>
+</div>
+
+<div *ngIf="!isLoading && error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+  {{ error }}
+</div>
+
+<div *ngIf="!isLoading && product" class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white">
+  <!-- Breadcrumb -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <button (click)="router.navigate(['/products'])" class="text-[#003974] hover:underline font-semibold">
+      ← Retour aux produits
+    </button>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Product Hero Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+      <!-- Images -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden">
+          <img
+            [src]="product.image"
+            [alt]="product.name"
+            class="w-full h-96 object-cover"
+          />
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="lg:col-span-2">
+        <!-- Category Badge -->
+        <span class="inline-block bg-[#d6e3ff] text-[#003974] px-3 py-1 rounded-full text-sm font-bold mb-4">
+          {{ product.category || 'Product' }}
+        </span>
+
+        <!-- Title & Price -->
+        <h1 class="text-4xl font-bold text-[#003974] mb-2">{{ product.name }}</h1>
+        
+        <div class="flex items-baseline gap-4 mb-6">
+          <span class="text-4xl font-bold text-[#003974]">{{ product.price }} TND</span>
+          <span *ngIf="product.originalPrice" class="text-lg text-[#5f6874] line-through">
+            {{ product.originalPrice }} TND
+          </span>
+          <span *ngIf="product.discount" class="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold text-sm">
+            -{{ product.discount }}%
+          </span>
+        </div>
+
+        <!-- Description -->
+        <p class="text-[#5f6874] leading-relaxed mb-6">{{ product.description }}</p>
+
+        <!-- Availability -->
+        <div *ngIf="product.stock !== undefined || product.stockQuantity" [class]="'mb-6 p-4 rounded-lg ' + ((product.stock || product.stockQuantity || 0) > 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200')">
+          <p [class]="'font-semibold ' + ((product.stock || product.stockQuantity || 0) > 0 ? 'text-green-700' : 'text-red-700')">
+            {{ (product.stock || product.stockQuantity || 0) > 0 ? '✓ En stock (' + (product.stock || product.stockQuantity) + ' articles)' : '✗ Rupture de stock' }}
+          </p>
+        </div>
+
+        <!-- Quantity Selector & Add to Cart -->
+        <div class="flex gap-4 items-center mb-6">
+          <div class="flex items-center border border-[#dbe1ea] rounded-lg">
+            <button
+              (click)="decreaseQuantity()"
+              class="px-4 py-2 text-[#003974] font-bold hover:bg-[#f7f9fc]"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="quantity"
+              class="w-16 text-center border-none focus:outline-none"
+              min="1"
+            />
+            <button
+              (click)="increaseQuantity()"
+              class="px-4 py-2 text-[#003974] font-bold hover:bg-[#f7f9fc]"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            (click)="addToCart()"
+            [disabled]="isAddingToCart || (product.stock || product.stockQuantity || 0) === 0"
+            [class]="'flex-1 px-6 py-3 rounded-lg font-bold text-white transition-colors ' + (isAddingToCart ? 'bg-[#5f6874]' : (product.stock || product.stockQuantity || 0) === 0 ? 'bg-[#dbe1ea] cursor-not-allowed' : 'bg-[#003974] hover:bg-[#002a54]')"
+          >
+            {{ isAddingToCart ? 'Ajout en cours...' : addedToCart ? '✓ Ajouté!' : 'Ajouter au panier' }}
+          </button>
+        </div>
+
+        <!-- View Cart Button -->
+        <button
+          *ngIf="addedToCart"
+          (click)="goToCart()"
+          class="w-full px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff]"
+        >
+          Voir mon panier
+        </button>
+
+        <!-- Product Details -->
+        <div class="mt-8 pt-8 border-t border-[#dbe1ea] space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📦</span>
+            <div>
+              <p class="font-bold text-[#003974]">Livraison Gratuite</p>
+              <p class="text-[#5f6874]">Pour les commandes de 50€ et plus</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">✓</span>
+            <div>
+              <p class="font-bold text-[#003974]">Garantie</p>
+              <p class="text-[#5f6874]">Protégé par notre garantie 30 jours</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">↩️</span>
+            <div>
+              <p class="font-bold text-[#003974]">Retour facile</p>
+              <p class="text-[#5f6874]">Retours gratuits sous 30 jours</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products Section -->
+    <div *ngIf="relatedProducts.length > 0" class="mb-12">
+      <h2 class="text-3xl font-bold text-[#003974] mb-8">Produits Similaires</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          *ngFor="let prod of relatedProducts"
+          class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+          (click)="viewProduct(prod.id)"
+        >
+          <div class="relative h-40 overflow-hidden bg-[#f7f9fc]">
+            <img
+              [src]="prod.image"
+              [alt]="prod.name"
+              class="w-full h-full object-cover hover:scale-105 transition-transform"
+            />
+            <span *ngIf="prod.discount" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
+              -{{ prod.discount }}%
+            </span>
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-[#003974] mb-2 line-clamp-2">{{ prod.name }}</h3>
+            <p class="text-[#5f6874] text-sm mb-3 line-clamp-1">{{ prod.category || 'Category' }}</p>
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-lg font-bold text-[#003974]">{{ prod.price }}€</span>
+                <span *ngIf="prod.originalPrice" class="text-sm text-[#5f6874] line-through ml-2">{{ prod.originalPrice }}€</span>
+              </div>
+              <span class="text-2xl">🛒</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

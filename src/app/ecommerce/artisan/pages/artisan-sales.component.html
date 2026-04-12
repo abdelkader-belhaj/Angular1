@@ -1,0 +1,233 @@
+<div class="min-h-screen bg-[#f8fafc]">
+  <!-- Sidebar Navigation -->
+  <div 
+    [class.translate-x-0]="sidebarOpen"
+    [class.-translate-x-full]="!sidebarOpen"
+    class="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-[#003974] to-[#002a54] shadow-xl transition-transform duration-300 z-50"
+  >
+    <!-- Logo/Brand -->
+    <div class="p-6 border-b border-[#0047a3]">
+      <h2 class="text-2xl font-bold text-white cursor-pointer hover:opacity-80" (click)="toggleSidebar()">
+        🏪 Mon Artisanat
+      </h2>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="pt-8 space-y-2 px-4">
+      <!-- Dashboard Section -->
+      <div>
+        <a
+          routerLink="/artisan"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
+        >
+          <span class="text-xl">📊</span>
+          <span class="font-semibold">Dashboard</span>
+        </a>
+      </div>
+
+      <!-- Products Section -->
+      <div>
+        <a
+          routerLink="/artisan/products"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
+        >
+          <span class="text-xl">📦</span>
+          <span class="font-semibold">Mes Produits</span>
+        </a>
+      </div>
+
+      <!-- Divider -->
+      <div class="my-4 border-t border-[#0047a3]"></div>
+
+      <!-- Other Sections -->
+      <div class="text-[#8fa3c0] text-xs font-semibold px-4 py-2">SECTIONS</div>
+      <div class="space-y-2">
+        <!-- Statistiques now links to /artisan/sales -->
+        <a
+          routerLink="/artisan/sales"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200 bg-[#0047a3]"
+        >
+          <span class="text-xl">📈</span>
+          <span class="font-semibold text-sm">Statistiques</span>
+        </a>
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
+          <span class="text-xl">⭐</span>
+          <span class="font-semibold text-sm">Avis & Évaluations</span>
+        </div>
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
+          <span class="text-xl">💰</span>
+          <span class="font-semibold text-sm">Mes Revenus</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Log Out at bottom -->
+    <div class="absolute bottom-6 left-4 right-4">
+      <button
+        (click)="logout()"
+        type="button"
+        class="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 transition font-semibold"
+      >
+        <span>🚪</span>
+        Quitter
+      </button>
+    </div>
+  </div>
+
+  <!-- Hamburger Menu (visible when sidebar is closed) -->
+  <button
+    *ngIf="!sidebarOpen"
+    (click)="toggleSidebar()"
+    class="fixed top-6 left-6 z-40 bg-[#003974] text-white p-3 rounded-lg hover:bg-[#002a54] transition shadow-lg"
+    title="Ouvrir le menu"
+  >
+    ☰
+  </button>
+
+  <!-- Main Content Area -->
+  <div [class.ml-64]="sidebarOpen" [class.pt-24]="!sidebarOpen" class="p-8 transition-all duration-300">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-[#003974]">Historique des Ventes</h1>
+        <p class="text-[#5f6874] mt-2">Suivi de tous vos ventes et revenus</p>
+      </div>
+      <button
+        (click)="exportToCsv()"
+        class="px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] transition"
+      >
+        📥 Exporter en CSV
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement de vos ventes...</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div *ngIf="!isLoading && stats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+        <p class="text-[#5f6874] text-sm font-semibold mb-2">Total des ventes</p>
+        <p class="text-3xl font-bold text-[#003974]">{{ stats.totalSales }}</p>
+      </div>
+      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+        <p class="text-[#5f6874] text-sm font-semibold mb-2">Revenue total</p>
+        <p class="text-3xl font-bold text-green-600">{{ stats.totalRevenue | number: '1.2-2' }} TND</p>
+      </div>
+      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+        <p class="text-[#5f6874] text-sm font-semibold mb-2">Ce mois</p>
+        <p class="text-3xl font-bold text-blue-600">{{ stats.thisMonthRevenue | number: '1.2-2' }} TND</p>
+      </div>
+      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+        <p class="text-[#5f6874] text-sm font-semibold mb-2">Ventes ce mois</p>
+        <p class="text-3xl font-bold text-purple-600">{{ stats.thisMonthSales }}</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div *ngIf="!isLoading" class="bg-white rounded-lg border border-[#dbe1ea] p-6 mb-6 flex gap-4">
+      <div>
+        <label class="block text-sm font-semibold text-[#003974] mb-2">Statut</label>
+        <select
+          [(ngModel)]="filterStatus"
+          (change)="onFilterChange()"
+          class="px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+        >
+          <option value="all">Tous les statuts</option>
+          <option value="completed">Complétés</option>
+          <option value="pending">En attente</option>
+          <option value="cancelled">Annulés</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-[#003974] mb-2">Trier par</label>
+        <select
+          [(ngModel)]="sortBy"
+          (change)="onSortChange()"
+          class="px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+        >
+          <option value="date">Date (récent)</option>
+          <option value="amount">Montant (élevé)</option>
+          <option value="quantity">Quantité (élevée)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div *ngIf="!isLoading && filteredSales.length > 0" class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-[#f7f9fc] border-b border-[#dbe1ea]">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Date</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Produit</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Quantité</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Prix unitaire</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Total</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Acheteur</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Statut</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#dbe1ea]">
+            <tr *ngFor="let sale of filteredSales" class="hover:bg-[#f7f9fc]">
+              <td class="px-6 py-4 text-[#5f6874]">{{ sale.saleDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="px-6 py-4 font-semibold text-[#003974]">{{ sale.productName }}</td>
+              <td class="px-6 py-4 text-[#5f6874]">{{ sale.quantity }}</td>
+              <td class="px-6 py-4 text-[#5f6874]">{{ sale.unitPrice | number: '1.2-2' }} TND</td>
+              <td class="px-6 py-4 font-bold text-[#003974]">{{ sale.totalAmount | number: '1.2-2' }} TND</td>
+              <td class="px-6 py-4 text-[#5f6874]">{{ sale.buyerName }}</td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-bold ' + getStatusColor(sale.status)">
+                  {{ sale.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredSales.length === 0" class="text-center py-16 bg-white rounded-lg border border-[#dbe1ea]">
+      <p class="text-6xl mb-4">📊</p>
+      <p class="text-[#5f6874] text-lg">Aucune vente ne correspond à ces critères</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-12">
+      <div class="footer-inner">
+        <div>
+          <h2 class="brand">TunisiaTour</h2>
+          <p class="desc">Plateforme de tourisme digital pour decouvrir la Tunisie, reserver facilement et vivre des experiences uniques.</p>
+        </div>
+
+        <div>
+          <h3 class="title">Navigation</h3>
+          <ul class="links">
+            <li><a href="#">Accueil</a></li>
+            <li><a href="#">Destinations</a></li>
+            <li><a href="#">Hotels</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="title">Support</h3>
+          <ul class="links">
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Confidentialite</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">© 2026 TunisiaTour. Tous droits reserves.</div>
+    </footer>
+  </div>
+  </div>

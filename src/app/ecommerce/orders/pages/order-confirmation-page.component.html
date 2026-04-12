@@ -1,0 +1,111 @@
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Success Message -->
+    <div *ngIf="!isLoading && order" class="text-center mb-12">
+      <div class="text-6xl mb-4">✓</div>
+      <h1 class="text-4xl font-bold text-[#003974] mb-2">Commande confirmée!</h1>
+      <p class="text-[#5f6874] text-lg">Merci pour votre achat. Nous allons préparer votre commande.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement de votre commande...</p>
+    </div>
+
+    <!-- Order Details -->
+    <div *ngIf="!isLoading && order" class="bg-white rounded-lg border border-[#dbe1ea] p-8 mb-8 space-y-8">
+      <!-- Order Header -->
+      <div class="border-b border-[#dbe1ea] pb-6">
+        <div class="grid grid-cols-2 gap-8 mb-6">
+          <div>
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Numéro de commande</p>
+            <p class="text-2xl font-bold text-[#003974]">#{{ order.id }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Date</p>
+            <p class="text-2xl font-bold text-[#003974]">{{ order.createdAt | date: 'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-[#003974] mb-1">Statut</p>
+            <p class="px-3 py-1 bg-green-100 text-green-700 rounded-full inline-block text-sm font-semibold">
+              {{ order.status }}
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold text-[#003974] mb-1">Montant</p>
+            <p class="text-2xl font-bold text-[#003974]">{{ order.total | number: '1.2-2' }}€</p>
+          </div>
+          <div>
+            <p class="font-semibold text-[#003974] mb-1">Livraison estimée</p>
+            <p class="text-lg">3-5 jours</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div>
+        <h2 class="text-lg font-bold text-[#003974] mb-4">Articles commandés</h2>
+        <div class="space-y-3">
+          <div *ngFor="let item of order.items" class="flex justify-between items-center p-4 bg-[#f7f9fc] rounded-lg">
+            <div>
+              <p class="font-semibold text-[#003974]">{{ item.productName }}</p>
+              <p class="text-sm text-[#5f6874]">Quantité: {{ item.quantity }}</p>
+            </div>
+            <p class="text-lg font-bold text-[#003974]">{{ (item.price * item.quantity) | number: '1.2-2' }}€</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping Address -->
+      <div>
+        <h2 class="text-lg font-bold text-[#003974] mb-4">Adresse de livraison</h2>
+        <div class="p-4 bg-[#f7f9fc] rounded-lg text-[#5f6874]">
+          <p>{{ order.shippingAddress?.name }}</p>
+          <p>{{ order.shippingAddress?.address }}</p>
+          <p>{{ order.shippingAddress?.postalCode }} {{ order.shippingAddress?.city }}</p>
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-bold text-[#003974] mb-2">Email</h3>
+          <p class="text-[#5f6874]">{{ order.email }}</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-[#003974] mb-2">Téléphone</h3>
+          <p class="text-[#5f6874]">{{ order.phone }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="space-y-3">
+      <button
+        (click)="printOrder()"
+        class="w-full px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] print:hidden"
+      >
+        🖨️ Imprimer la facture
+      </button>
+      <button
+        (click)="viewMyOrders()"
+        class="w-full px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+      >
+        Voir mes commandes
+      </button>
+      <button
+        (click)="continueShopping()"
+        class="w-full px-6 py-3 bg-transparent border-2 border-[#003974] text-[#003974] rounded-lg font-bold hover:bg-[#f7f9fc]"
+      >
+        Continuer vos achats
+      </button>
+    </div>
+
+    <!-- Info Box -->
+    <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <p class="text-sm text-[#5f6874]">📧 <strong>Un email de confirmation</strong> a été envoyé à votre adresse email. Vous pouvez suivre votre commande à partir de votre compte.</p>
+    </div>
+  </div>
+</div>

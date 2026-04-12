@@ -1,0 +1,12 @@
+:host {
+  --primary: #003974;
+  --border: #dbe1ea;
+  --bg: #f7f9fc;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

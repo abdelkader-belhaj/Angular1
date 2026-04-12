@@ -1,0 +1,105 @@
+<div class="product-catalog">
+  <div class="catalog-header">
+    <h1>Product Catalog</h1>
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search products..."
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+      />
+      <button (click)="onSearch()">Search</button>
+    </div>
+  </div>
+
+  <div class="catalog-content">
+    <!-- Sidebar Filters -->
+    <aside class="sidebar">
+      <div class="filter-section">
+        <h3>Filters</h3>
+
+        <!-- Sort -->
+        <div class="filter-group">
+          <label>Sort By:</label>
+          <select [(ngModel)]="sortBy" (change)="onSortChange()">
+            <option value="name">Name (A-Z)</option>
+            <option value="price">Price (Low to High)</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="products-info">
+        <p>Showing {{ filteredProducts.length }} products</p>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="loading">
+        <p>Loading products...</p>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" *ngIf="!isLoading && filteredProducts.length > 0">
+        <div class="product-card" *ngFor="let product of filteredProducts">
+          <div class="product-image">
+            <img [src]="product.image || 'assets/placeholder.png'" [alt]="product.name" />
+            <div *ngIf="getDiscount(product)" class="discount-badge">
+              -{{ getDiscount(product) }}%
+            </div>
+          </div>
+
+          <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <p class="description">{{ product.description }}</p>
+
+            <div class="pricing">
+              <div *ngIf="product.discountPrice">
+                <span class="original-price">₽{{ product.price }}</span>
+                <span class="price">₽{{ getDisplayPrice(product) }}</span>
+              </div>
+              <div *ngIf="!product.discountPrice">
+                <span class="price">₽{{ getDisplayPrice(product) }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="product.stockQuantity > 0" class="stock-info">
+              In Stock: {{ product.stockQuantity }}
+            </div>
+            <div *ngIf="product.stockQuantity === 0" class="out-of-stock">
+              Out of Stock
+            </div>
+
+            <div class="product-actions">
+              <button
+                (click)="viewProduct(product)"
+                class="btn btn-view"
+              >
+                View Details
+              </button>
+              <button
+                (click)="addToCart(product)"
+                [disabled]="product.stockQuantity === 0"
+                class="btn btn-add-cart"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Products -->
+      <div *ngIf="!isLoading && filteredProducts.length === 0" class="no-products">
+        <p>No products found. Try adjusting your search or filters.</p>
+      </div>
+    </main>
+  </div>
+</div>

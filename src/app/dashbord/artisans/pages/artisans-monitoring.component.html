@@ -1,0 +1,138 @@
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-[#003974] mb-4">Gestion des Artisans</h1>
+      <p class="text-[#5f6874]">Suivi et monitoring de tous les artisans de la plateforme</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement des artisans...</p>
+    </div>
+
+    <!-- Filters & Search -->
+    <div *ngIf="!isLoading" class="bg-white rounded-lg border border-[#dbe1ea] p-6 mb-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div>
+          <label class="block text-sm font-semibold text-[#003974] mb-2">Rechercher</label>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            placeholder="Nom, email, entreprise..."
+            class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+          />
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <label class="block text-sm font-semibold text-[#003974] mb-2">Statut</label>
+          <select
+            [(ngModel)]="filterStatus"
+            (change)="onFilterChange()"
+            class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="active">Actifs</option>
+            <option value="suspended">Suspendus</option>
+            <option value="pending">En attente</option>
+          </select>
+        </div>
+
+        <!-- Sort -->
+        <div>
+          <label class="block text-sm font-semibold text-[#003974] mb-2">Trier par</label>
+          <select
+            [(ngModel)]="sortBy"
+            (change)="onSortChange()"
+            class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+          >
+            <option *ngFor="let option of sortOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Results Count -->
+        <div class="flex items-end">
+          <div class="w-full p-3 bg-[#f7f9fc] rounded-lg text-center">
+            <p class="text-[#5f6874] text-sm">{{ filteredArtisans.length }} artisant(s)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artisans Table -->
+    <div *ngIf="!isLoading && filteredArtisans.length > 0" class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-[#f7f9fc] border-b border-[#dbe1ea]">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Artisan</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Email</th>
+              <th class="px-6 py-4 text-right text-sm font-bold text-[#003974]">Produits</th>
+              <th class="px-6 py-4 text-right text-sm font-bold text-[#003974]">Vendus</th>
+              <th class="px-6 py-4 text-right text-sm font-bold text-[#003974]">Revenue</th>
+              <th class="px-6 py-4 text-left text-sm font-bold text-[#003974]">Statut</th>
+              <th class="px-6 py-4 text-center text-sm font-bold text-[#003974]">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#dbe1ea]">
+            <tr
+              *ngFor="let artisan of filteredArtisans"
+              (click)="viewArtisanDetails(artisan.id)"
+              class="hover:bg-[#f7f9fc] cursor-pointer"
+            >
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-[#003974] text-white flex items-center justify-center font-bold">
+                    {{ artisan.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-[#003974]">{{ artisan.businessName }}</p>
+                    <p class="text-sm text-[#5f6874]">{{ artisan.name }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-[#5f6874]">{{ artisan.email }}</td>
+              <td class="px-6 py-4 text-right font-semibold text-[#003974]">{{ artisan.productsCount || 0 }}</td>
+              <td class="px-6 py-4 text-right font-semibold text-[#003974]">{{ artisan.totalProductsSold }}</td>
+              <td class="px-6 py-4 text-right font-bold text-green-600">{{ artisan.totalRevenue | number: '1.2-2' }}€</td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-bold ' + getStatusColor(artisan.status)">
+                  {{ artisan.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <div class="flex gap-2 justify-center">
+                  <button
+                    *ngIf="artisan.status === 'active'"
+                    (click)="suspendArtisan(artisan.id, $event)"
+                    class="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold hover:bg-red-200"
+                  >
+                    Suspendre
+                  </button>
+                  <button
+                    *ngIf="artisan.status !== 'active'"
+                    (click)="activateArtisan(artisan.id, $event)"
+                    class="px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold hover:bg-green-200"
+                  >
+                    Activer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredArtisans.length === 0" class="text-center py-16 bg-white rounded-lg border border-[#dbe1ea]">
+      <p class="text-6xl mb-4">👥</p>
+      <p class="text-[#5f6874] text-lg">Aucun artisan ne correspond à ces critères</p>
+    </div>
+  </div>
+</div>

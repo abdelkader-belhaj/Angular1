@@ -1,0 +1,89 @@
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-[#003974] mb-2">Mes commandes</h1>
+      <p class="text-[#5f6874]">Suivez l'état de vos commandes et téléchargez les factures.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement de vos commandes...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && orders.length === 0" class="text-center py-16">
+      <p class="text-6xl mb-4">📦</p>
+      <p class="text-[#5f6874] text-lg mb-6">Vous n'avez pas encore de commande</p>
+      <a
+        routerLink="/products"
+        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] inline-block"
+      >
+        Découvrir nos produits
+      </a>
+    </div>
+
+    <!-- Orders List -->
+    <div *ngIf="!isLoading && orders.length > 0" class="space-y-6">
+      <div
+        *ngFor="let order of orders"
+        class="bg-white rounded-lg border border-[#dbe1ea] p-6 hover:shadow-lg transition-shadow"
+      >
+        <!-- Order Header -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 pb-6 border-b border-[#dbe1ea]">
+          <div>
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Numéro</p>
+            <p class="text-lg font-bold text-[#003974]">#{{ order.id }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Date</p>
+            <p class="text-lg font-bold text-[#003974]">{{ order.createdAt | date: 'dd/MM/yyyy' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Statut</p>
+            <p [class]="'px-3 py-1 rounded-full inline-block text-sm font-semibold ' + getStatusColor(order.status)">
+              {{ order.status }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-semibold text-[#5f6874] uppercase mb-1">Total</p>
+            <p class="text-2xl font-bold text-[#003974]">{{ order.total | number: '1.2-2' }}€</p>
+          </div>
+        </div>
+
+        <!-- Order Items Preview -->
+        <div class="mb-6">
+          <p class="text-sm font-semibold text-[#5f6874] mb-3">Articles ({{ order.items?.length || 0 }})</p>
+          <div class="flex gap-2 flex-wrap">
+            <div
+              *ngFor="let item of (order.items || [])?.slice(0, 3)"
+              class="px-3 py-1 bg-[#f7f9fc] text-[#5f6874] rounded-full text-sm"
+            >
+              {{ item.productName }} x{{ item.quantity }}
+            </div>
+            <div *ngIf="(order.items || []).length > 3" class="px-3 py-1 bg-[#dbe1ea] text-[#5f6874] rounded-full text-sm">
+              +{{ (order.items || []).length - 3 }} plus
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <button
+            (click)="viewOrder(order.id)"
+            class="flex-1 px-4 py-2 bg-[#003974] text-white rounded-lg font-semibold hover:bg-[#002a54]"
+          >
+            👁️ Voir les détails
+          </button>
+          <button
+            *ngIf="order.status === 'pending' || order.status === 'confirmed'"
+            (click)="cancelOrder(order.id)"
+            class="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-semibold hover:bg-red-200"
+          >
+            ✕ Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

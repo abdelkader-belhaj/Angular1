@@ -1,0 +1,402 @@
+<div class="min-h-screen bg-[#f8fafc]">
+  <!-- Sidebar Navigation -->
+  <div 
+    [class.translate-x-0]="sidebarOpen"
+    [class.-translate-x-full]="!sidebarOpen"
+    class="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-[#003974] to-[#002a54] shadow-xl transition-transform duration-300 z-50"
+  >
+    <!-- Logo/Brand -->
+    <div class="p-6 border-b border-[#0047a3]">
+      <h2 class="text-2xl font-bold text-white cursor-pointer hover:opacity-80" (click)="toggleSidebar()">
+        🏪 Mon Artisanat
+      </h2>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="pt-8 space-y-2 px-4">
+      <!-- Dashboard Section -->
+      <div>
+        <a
+          routerLink="/artisan"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
+        >
+          <span class="text-xl">📊</span>
+          <span class="font-semibold">Dashboard</span>
+        </a>
+      </div>
+
+      <!-- Products Section (Active) -->
+      <div>
+        <a
+          routerLink="/artisan/products"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200 bg-[#0047a3]"
+        >
+          <span class="text-xl">📦</span>
+          <span class="font-semibold">Mes Produits</span>
+        </a>
+      </div>
+
+      <!-- Divider -->
+      <div class="my-4 border-t border-[#0047a3]"></div>
+
+      <!-- Other Sections -->
+      <div class="text-[#8fa3c0] text-xs font-semibold px-4 py-2">SECTIONS</div>
+      <div class="space-y-2">
+        <!-- Statistiques now links to /artisan/sales -->
+        <a
+          routerLink="/artisan/sales"
+          [routerLinkActive]="'bg-[#0047a3]'"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
+        >
+          <span class="text-xl">📈</span>
+          <span class="font-semibold text-sm">Statistiques</span>
+        </a>
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
+          <span class="text-xl">⭐</span>
+          <span class="font-semibold text-sm">Avis & Évaluations</span>
+        </div>
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
+          <span class="text-xl">💰</span>
+          <span class="font-semibold text-sm">Mes Revenus</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Log Out at bottom -->
+    <div class="absolute bottom-6 left-4 right-4">
+      <button
+        (click)="logout()"
+        type="button"
+        class="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 transition font-semibold"
+      >
+        <span>🚪</span>
+        Quitter
+      </button>
+    </div>
+  </div>
+
+  <!-- Hamburger Menu (visible when sidebar is closed) -->
+  <button
+    *ngIf="!sidebarOpen"
+    (click)="toggleSidebar()"
+    class="fixed top-6 left-6 z-40 bg-[#003974] text-white p-3 rounded-lg hover:bg-[#002a54] transition shadow-lg"
+    title="Ouvrir le menu"
+  >
+    ☰
+  </button>
+
+  <!-- Main Content Area -->
+  <div [class.ml-64]="sidebarOpen" [class.pt-24]="!sidebarOpen" class="p-8 transition-all duration-300">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-[#003974]">Gérer Mes Produits</h1>
+        <p class="text-[#5f6874] mt-2">{{ products.length }} produits publiés</p>
+      </div>
+      <button
+        (click)="toggleForm()"
+        [class.bg-red-600]="showForm"
+        [class.hover:bg-red-700]="showForm"
+        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] transition"
+      >
+        {{ showForm ? '✕ Fermer' : '+ Ajouter un produit' }}
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement de vos produits...</p>
+    </div>
+
+    <!-- Add/Edit Form -->
+    <div #formSection *ngIf="showForm" class="bg-white rounded-lg border border-[#dbe1ea] p-8 mb-8">
+      <h2 class="text-2xl font-bold text-[#003974] mb-6">
+        {{ isEditing ? 'Modifier le produit' : 'Ajouter un nouveau produit' }}
+      </h2>
+
+      <form [formGroup]="productForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Product Name -->
+          <div>
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Nom du produit</label>
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="Ex: Céramique artisanale"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            />
+          </div>
+
+          <!-- Price -->
+          <div>
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Prix (TND)</label>
+            <input
+              type="number"
+              formControlName="price"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            />
+          </div>
+
+          <!-- Stock -->
+          <div>
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Quantité en stock</label>
+            <input
+              type="number"
+              formControlName="stockQuantity"
+              placeholder="0"
+              min="0"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            />
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Catégorie</label>
+            <select
+              formControlName="categoryId"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            >
+              <option value="">Sélectionnez une catégorie</option>
+              <option *ngFor="let cat of allCategories" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+
+          <!-- Sub-Category (shows only if parent category has children) -->
+          <div *ngIf="subcategories.length > 0">
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Sous-catégorie</label>
+            <select
+              formControlName="subcategoryId"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            >
+              <option value="">-- Optionnel --</option>
+              <option *ngFor="let subcat of subcategories" [value]="subcat.id">{{ subcat.name }}</option>
+            </select>
+          </div>
+
+          <!-- Discount Price -->
+          <div>
+            <label class="block text-sm font-semibold text-[#003974] mb-2">Prix réduit (TND) - Optionnel</label>
+            <input
+              type="number"
+              formControlName="discountPrice"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            />
+            <p *ngIf="productForm.get('discountPrice')?.hasError('invalidDiscount')" class="text-red-600 text-sm mt-1">
+              ⚠️ Le prix réduit doit être inférieur au prix normal
+            </p>
+          </div>
+        </div>
+
+        <!-- Image Upload Section -->
+        <div class="space-y-4">
+          <label class="block text-sm font-semibold text-[#003974] mb-2">Photo du produit</label>
+          <div class="border-2 border-dashed border-[#dbe1ea] rounded-lg p-6 text-center hover:border-[#003974] transition">
+            <input
+              type="file"
+              id="product-image"
+              (change)="onImageSelected($event)"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              class="hidden"
+            />
+            <label for="product-image" class="cursor-pointer block">
+              <p class="text-[#5f6874] mb-2">📸 Cliquez pour sélectionner une image</p>
+              <p class="text-xs text-[#5f6874]">Formats: JPG, PNG, GIF, WEBP | Max: 5MB</p>
+            </label>
+          </div>
+
+          <!-- Image Preview -->
+          <div *ngIf="imagePreviewUrl" class="flex items-start gap-4">
+            <div class="relative">
+              <img
+                [src]="imagePreviewUrl.startsWith('data:') ? imagePreviewUrl : getImageUrl(imagePreviewUrl)"
+                alt="Preview"
+                class="w-24 h-24 object-cover rounded-lg border border-[#dbe1ea]"
+              />
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-[#003974]">Aperçu de l'image</p>
+              <button
+                type="button"
+                (click)="clearImageSelection()"
+                class="text-sm text-red-600 hover:text-red-800 mt-2"
+              >
+                ✕ Supprimer le fichier
+              </button>
+            </div>
+          </div>
+
+          <!-- Upload Status -->
+          <div *ngIf="isUploadingImage" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-sm text-blue-700">⏳ Upload de l'image en cours...</p>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-semibold text-[#003974] mb-2">Description</label>
+          <textarea
+            formControlName="description"
+            rows="4"
+            placeholder="Décrivez votre produit en détail..."
+            class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+          ></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-6 border-t border-[#dbe1ea]">
+          <button
+            type="button"
+            (click)="saveProduct()"
+            class="flex-1 px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+          >
+            {{ isEditing ? '✓ Mettre à jour' : '✓ Créer le produit' }}
+          </button>
+          <button
+            type="button"
+            (click)="toggleForm()"
+            class="flex-1 px-6 py-3 bg-[#f0f0f0] text-[#003974] rounded-lg font-bold hover:bg-[#dbe1ea]"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Products List -->
+    <div *ngIf="!isLoading && products.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngFor="let product of products"
+        class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow"
+      >
+        <!-- Product Image -->
+        <div class="relative h-40 bg-[#f7f9fc] overflow-hidden">
+          <img
+            [src]="getImageUrl(product.image)"
+            [alt]="product.name"
+            class="w-full h-full object-cover"
+          />
+          <div [class]="'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ' + getStatusColor(product.status)">
+            {{ product.status }}
+          </div>
+          <!-- Discount Badge -->
+          <div
+            *ngIf="hasDiscount(product)"
+            [class]="'absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold text-white ' + getDiscountPercentageClass(calculateDiscountPercentage(product.price, product.discountPrice))"
+          >
+            -{{ calculateDiscountPercentage(product.price, product.discountPrice) }}%
+          </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="p-6 space-y-4">
+          <h3 class="text-lg font-bold text-[#003974] line-clamp-2">{{ product.name }}</h3>
+          
+          <p class="text-[#5f6874] text-sm line-clamp-2">{{ product.description }}</p>
+
+          <!-- Price Display -->
+          <div class="flex items-center gap-3">
+            <!-- Discount Price (if exists) -->
+            <div *ngIf="hasDiscount(product)">
+              <p class="text-2xl font-bold text-red-600">{{ product.discountPrice }} TND</p>
+              <p class="text-sm text-[#5f6874] line-through">{{ product.price }} TND</p>
+            </div>
+            <!-- Regular Price (if no discount) -->
+            <div *ngIf="!hasDiscount(product)">
+              <span class="text-2xl font-bold text-[#003974]">{{ product.price }} TND</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-4 border-t border-[#dbe1ea]">
+            <div class="flex gap-6">
+              <span class="text-sm text-[#5f6874]">
+                <span class="font-semibold text-[#003974]">Stock:</span> {{ product.stockQuantity }}
+              </span>
+              <span class="text-sm text-[#5f6874]">
+                <span class="font-semibold text-[#003974]">Vendus:</span> {{ product.salesCount }}
+              </span>
+            </div>
+            <span class="text-sm text-[#5f6874]">{{ product.category }}</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col gap-2 pt-4 border-t border-[#dbe1ea]">
+            <div class="flex gap-2">
+              <button
+                (click)="editProduct(product)"
+                class="flex-1 px-3 py-2 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] text-sm"
+              >
+                ✏️ Modifier
+              </button>
+              <button
+                (click)="deleteProduct(product.id)"
+                class="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200 text-sm"
+              >
+                🗑️ Supprimer
+              </button>
+            </div>
+            <button
+              *ngIf="product.image"
+              (click)="deleteProductImage(product.id)"
+              class="w-full px-3 py-2 bg-orange-100 text-orange-700 rounded-lg font-bold hover:bg-orange-200 text-sm"
+            >
+              ❌ Supprimer l'image
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && products.length === 0" class="text-center py-16">
+      <p class="text-6xl mb-4">📦</p>
+      <p class="text-[#5f6874] text-lg mb-6">Vous n'avez pas encore de produits</p>
+      <button
+        (click)="toggleForm()"
+        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+      >
+        Créer votre premier produit
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-12">
+      <div class="footer-inner">
+        <div>
+          <h2 class="brand">TunisiaTour</h2>
+          <p class="desc">Plateforme de tourisme digital pour decouvrir la Tunisie, reserver facilement et vivre des experiences uniques.</p>
+        </div>
+
+        <div>
+          <h3 class="title">Navigation</h3>
+          <ul class="links">
+            <li><a href="#">Accueil</a></li>
+            <li><a href="#">Destinations</a></li>
+            <li><a href="#">Hotels</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="title">Support</h3>
+          <ul class="links">
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Confidentialite</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">© 2026 TunisiaTour. Tous droits reserves.</div>
+    </footer>
+  </div>
+</div>

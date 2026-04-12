@@ -1,0 +1,112 @@
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-[#003974] mb-2">Mes bons favoris</h1>
+      <p class="text-[#5f6874]">Vos bons plans sauvegardés et offres favorites</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="mb-6 flex gap-4">
+      <select
+        [(ngModel)]="filterType"
+        class="px-4 py-2 border border-[#dbe1ea] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#003974]"
+      >
+        <option *ngFor="let option of filterOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-[#5f6874]">Chargement de vos favoris...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && getFilteredFavorites().length === 0" class="text-center py-16">
+      <p class="text-6xl mb-4">♡</p>
+      <p class="text-[#5f6874] text-lg mb-6">Vous n'avez pas encore de bons favoris</p>
+      <a
+        routerLink="/deals"
+        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] inline-block"
+      >
+        Découvrir les bons plans
+      </a>
+    </div>
+
+    <!-- Favorites Grid -->
+    <div *ngIf="!isLoading && getFilteredFavorites().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngFor="let deal of getFilteredFavorites()"
+        class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow"
+      >
+        <!-- Deal Image -->
+        <div class="relative h-40 bg-[#f7f9fc] overflow-hidden">
+          <img
+            [src]="deal.image"
+            [alt]="deal.title"
+            class="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+            (click)="viewDeal(deal.id)"
+          />
+          <!-- Discount Badge -->
+          <div *ngIf="deal.discount" class="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 font-bold text-sm">
+            -{{ deal.discount }}%
+          </div>
+        </div>
+
+        <!-- Deal Info -->
+        <div class="p-6 space-y-4">
+          <!-- Type Badge -->
+          <div class="flex gap-2">
+            <span class="px-2 py-1 bg-[#d6e3ff] text-[#003974] rounded-full text-xs font-bold uppercase">
+              {{ deal.type }}
+            </span>
+          </div>
+
+          <!-- Title -->
+          <h3
+            (click)="viewDeal(deal.id)"
+            class="text-lg font-bold text-[#003974] line-clamp-2 cursor-pointer hover:text-[#002a54]"
+          >
+            {{ deal.title }}
+          </h3>
+
+          <!-- Description -->
+          <p class="text-[#5f6874] text-sm line-clamp-2">{{ deal.description }}</p>
+
+          <!-- Rating -->
+          <div *ngIf="deal.rating" class="flex items-center gap-2">
+            <span class="text-yellow-500">★</span>
+            <span class="text-sm font-semibold text-[#5f6874]">{{ deal.rating }}/5</span>
+          </div>
+
+          <!-- Price -->
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-bold text-[#003974]">{{ deal.price }}€</span>
+            <span *ngIf="deal.originalPrice" class="text-[#5f6874] line-through text-sm">{{ deal.originalPrice }}€</span>
+          </div>
+
+          <!-- Validity -->
+          <p class="text-xs text-[#5f6874]">📅 Valide jusqu'au {{ deal.validUntil | date: 'dd/MM/yyyy' }}</p>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-2 border-t border-[#dbe1ea]">
+            <button
+              (click)="viewDeal(deal.id)"
+              class="flex-1 px-4 py-2 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] text-sm"
+            >
+              Voir
+            </button>
+            <button
+              (click)="removeFavorite(deal.id)"
+              class="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200 text-sm"
+            >
+              ✕ Retirer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

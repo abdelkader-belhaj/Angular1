@@ -1,0 +1,115 @@
+<div class="product-detail">
+  <button class="back-btn" (click)="backToCatalog()">← Back to Catalog</button>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading product details...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!isLoading && product" class="detail-container">
+    <div class="product-image">
+      <img [src]="product.image || 'assets/placeholder.png'" [alt]="product.name" />
+      <div *ngIf="getDiscount()" class="discount-badge">
+        -{{ getDiscount() }}%
+      </div>
+    </div>
+
+    <div class="product-details">
+      <h1>{{ product.name }}</h1>
+
+      <div class="rating-info">
+        <span class="sales-count">{{ product.salesCount }} sold</span>
+      </div>
+
+      <div class="pricing-section">
+        <div *ngIf="product.discountPrice">
+          <span class="original-price">₽{{ product.price }}</span>
+          <span class="price">₽{{ getDisplayPrice() }}</span>
+          <span class="savings">Save ₽{{ product.price - product.discountPrice }}</span>
+        </div>
+        <div *ngIf="!product.discountPrice">
+          <span class="price">₽{{ getDisplayPrice() }}</span>
+        </div>
+      </div>
+
+      <div class="description">
+        <h3>Description</h3>
+        <p>{{ product.description }}</p>
+      </div>
+
+      <div class="stock-info">
+        <h3>Availability</h3>
+        <div *ngIf="product.stockQuantity > 0" class="in-stock">
+          <span class="stock-status">✓ In Stock</span>
+          <span class="stock-quantity">({{ product.stockQuantity }} available)</span>
+        </div>
+        <div *ngIf="product.stockQuantity === 0" class="out-of-stock">
+          <span>Out of Stock</span>
+        </div>
+      </div>
+
+      <div class="cart-section">
+        <div class="quantity-selector">
+          <label for="quantity">Quantity:</label>
+          <div class="quantity-controls">
+            <button
+              (click)="updateQuantity(-1)"
+              [disabled]="quantity <= 1"
+              class="qty-btn"
+            >
+              -
+            </button>
+            <input
+              type="number"
+              id="quantity"
+              [(ngModel)]="quantity"
+              [max]="product.stockQuantity"
+              [disabled]="product.stockQuantity === 0"
+            />
+            <button
+              (click)="updateQuantity(1)"
+              [disabled]="quantity >= product.stockQuantity"
+              class="qty-btn"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="total-price">
+          <span>Total Price:</span>
+          <span class="total-amount">₽{{ getTotalPrice() }}</span>
+        </div>
+
+        <div class="action-buttons">
+          <button
+            (click)="addToCart()"
+            [disabled]="product.stockQuantity === 0"
+            class="btn btn-add-cart"
+          >
+            🛒 Add to Cart
+          </button>
+          <button class="btn btn-wishlist">❤ Add to Wishlist</button>
+        </div>
+      </div>
+
+      <div class="product-meta">
+        <div class="meta-item">
+          <strong>Product ID:</strong>
+          <span>{{ product.id }}</span>
+        </div>
+        <div class="meta-item">
+          <strong>Category ID:</strong>
+          <span>{{ product.categoryId }}</span>
+        </div>
+        <div class="meta-item">
+          <strong>Seller ID:</strong>
+          <span>{{ product.userId }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+:host {
+  display: block;
+  min-height: calc(100vh - 180px);
+  background: linear-gradient(180deg, #f5f9ff 0%, #ffffff 100%);
+}
+
+.settings-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 44px 20px 70px;
+}
+
+.settings-card {
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 14px 34px rgba(10, 22, 41, 0.12);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #0f66b5;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: #10223d;
+}
+
+header p {
+  color: #5a6778;
+}
+
+form {
+  margin-top: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+}
+
+label span {
+  font-weight: 600;
+  color: #1d2f46;
+}
+
+input {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #dbe3ef;
+  padding: 0 12px;
+  font-size: 0.95rem;
+}
+
+textarea {
+  border-radius: 12px;
+  border: 1px solid #dbe3ef;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0f66b5;
+  box-shadow: 0 0 0 4px rgba(15, 102, 181, 0.16);
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #0f66b5;
+  box-shadow: 0 0 0 4px rgba(15, 102, 181, 0.16);
+}
+
+button {
+  margin-top: 4px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #003974;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.secondary {
+  background: #ffffff;
+  color: #003974;
+  border: 1px solid #b7cbe3;
+}
+
+.face-card {
+  margin-top: 22px;
+  border: 1px solid rgba(15, 102, 181, 0.12);
+  border-radius: 20px;
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  box-shadow: 0 10px 26px rgba(10, 22, 41, 0.08);
+  display: grid;
+  gap: 14px;
+}
+
+.face-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #10223d;
+}
+
+.face-card p {
+  margin: 0;
+  color: #5a6778;
+}
+
+.face-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.camera-frame {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #ced9e8;
+  background: radial-gradient(circle at top, rgba(15, 102, 181, 0.14), rgba(11, 18, 32, 0.96));
+}
+
+.camera-preview {
+  width: 100%;
+  max-height: 280px;
+  display: block;
+  object-fit: cover;
+  background: #0b1220;
+}
+
+.camera-empty {
+  min-height: 280px;
+  padding: 28px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  color: #dbe8f7;
+}
+
+.camera-empty svg {
+  width: 56px;
+  height: 56px;
+  fill: currentColor;
+  opacity: 0.95;
+}
+
+.camera-empty span {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.camera-empty small {
+  max-width: 260px;
+  color: rgba(219, 232, 247, 0.78);
+  line-height: 1.4;
+}
+
+.action-pill {
+  min-width: 112px;
+  border-radius: 16px;
+  border: 1px solid #c7d8eb;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f7fc 100%);
+  color: #103e6b;
+  padding: 12px 16px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  box-shadow: 0 8px 18px rgba(10, 22, 41, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.action-pill svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.action-pill span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.action-pill:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #8fb4db;
+  box-shadow: 0 14px 28px rgba(10, 22, 41, 0.12);
+}
+
+.action-pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(15, 102, 181, 0.18), 0 14px 28px rgba(10, 22, 41, 0.12);
+}
+
+.primary-action {
+  background: linear-gradient(180deg, #1677cc 0%, #0f4f8d 100%);
+  border-color: #1677cc;
+  color: #ffffff;
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.success {
+  margin: 0;
+  color: #137a44;
+  font-weight: 600;
+}

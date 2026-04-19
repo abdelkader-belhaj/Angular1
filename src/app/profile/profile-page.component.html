@@ -1,0 +1,83 @@
+<main class="settings-page">
+  <section class="settings-card">
+    <header>
+      <p class="eyebrow">Mon compte</p>
+      <h1>Mon profil</h1>
+      <p>Mettez a jour vos informations personnelles.</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label>
+        <span>Nom utilisateur</span>
+        <input type="text" formControlName="username" placeholder="Votre nom" />
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="vous@exemple.com" />
+      </label>
+
+      <label>
+        <span>Telephone</span>
+        <input type="text" formControlName="phone" placeholder="Votre numero" />
+      </label>
+
+      <label>
+        <span>Bio</span>
+        <textarea formControlName="bio" rows="4" placeholder="Parlez de vous"></textarea>
+      </label>
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+      <p class="success" *ngIf="message">{{ message }}</p>
+
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+      </button>
+    </form>
+
+    <section class="face-card">
+      <h2>Face ID</h2>
+      <p>Mettez a jour votre visage pour la connexion Face ID.</p>
+
+      <div class="camera-frame">
+        <video *ngIf="faceCameraOpen" #faceVideo class="camera-preview" autoplay playsinline muted></video>
+        <img *ngIf="!faceCameraOpen && faceImageBase64" [src]="faceImageBase64" class="camera-preview" alt="Capture Face ID" />
+        <div *ngIf="!faceCameraOpen && !faceImageBase64" class="camera-empty">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 4 7.59 5.41 9.17 7H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.17l1.58-1.59L15 4H9zm3 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z"/>
+          </svg>
+          <span>Aucune capture Face ID</span>
+          <small>Ouvrez la camera puis capturez votre visage.</small>
+        </div>
+      </div>
+
+      <div class="face-actions">
+        <button type="button" class="action-pill" (click)="openFaceCamera()" [disabled]="isFaceSubmitting" aria-label="Ouvrir la camera" title="Ouvrir la camera">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 4 7.59 5.41 9.17 7H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.17l1.58-1.59L15 4H9zm3 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z"/>
+          </svg>
+          <span>Ouvrir</span>
+        </button>
+        <button type="button" class="action-pill primary-action" (click)="captureFace()" [disabled]="!faceCameraOpen || isFaceSubmitting" aria-label="Capturer la photo" title="Capturer">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 3 7.17 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9zm3 4.5A4.5 4.5 0 1 1 12 16a4.5 4.5 0 0 1 0-9zm0 2A2.5 2.5 0 1 0 12 14a2.5 2.5 0 0 0 0-5z"/>
+          </svg>
+          <span>Capturer</span>
+        </button>
+        <button type="button" class="action-pill" (click)="clearFaceCapture()" [disabled]="isFaceSubmitting || !faceImageBase64" aria-label="Reinitialiser la capture" title="Reinitialiser">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 5a7 7 0 1 1-6.32 4H3l3.5-4L10 9H7.96A5 5 0 1 0 12 7.5V5zm0 4.5 4 3-4 3v-2h-3V11h3V9.5z"/>
+          </svg>
+          <span>Reset</span>
+        </button>
+      </div>
+
+      <p class="error" *ngIf="faceError">{{ faceError }}</p>
+      <p class="success" *ngIf="faceMessage">{{ faceMessage }}</p>
+
+      <button type="button" (click)="saveFaceId()" [disabled]="isFaceSubmitting">
+        {{ isFaceSubmitting ? 'Mise a jour Face ID...' : 'Enregistrer Face ID' }}
+      </button>
+    </section>
+  </section>
+</main>

@@ -1,11 +1,12 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { HomeSharedModule } from './homePage/home-shared.module';
+import { NavbarComponent } from './homePage/navbar/navbar.component';
 import { FooterComponent } from './homePage/footer/footer.component';
 import { HomePageComponent } from './homePage/home-page.component';
 import { HeroSectionComponent } from './homePage/hero-section/hero-section.component';
@@ -22,11 +23,16 @@ import { BookingsTableComponent } from './dashbord/bookings-table/bookings-table
 import { InventoryCardsComponent } from './dashbord/inventory-cards/inventory-cards.component';
 import { InquiriesPanelComponent } from './dashbord/inquiries-panel/inquiries-panel.component';
 import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.component';
+import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
+import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.component';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
+import { AuthInterceptor } from './services/auth.interceptor';
+import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    NavbarComponent,
     FooterComponent,
     HomePageComponent,
     HeroSectionComponent,
@@ -43,16 +49,25 @@ import { ResetPasswordComponent } from './homePage/reset-password/reset-password
     InventoryCardsComponent,
     InquiriesPanelComponent,
     DashFooterComponent,
+    AdminUsersPageComponent,
+    LoginDialogComponent,
     ResetPasswordComponent,
+    WaitingResponsePageComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HomeSharedModule,
     ReactiveFormsModule,
-    HttpClientModule,
+    FormsModule,
+    HttpClientModule
   ],
-  providers: [],
-  bootstrap: [AppComponent],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
+  bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

@@ -1,0 +1,28 @@
+<section class="waiting-shell">
+  <article class="waiting-card">
+    <div class="badge">Validation Administrateur</div>
+
+    <h1>Compte cree avec succes</h1>
+    <p class="subtitle">
+      Votre compte est en attente de validation par un administrateur.
+      Vous recevrez l acces des que la demande est acceptee.
+    </p>
+
+    <dl class="meta" *ngIf="role || email">
+      <div *ngIf="role">
+        <dt>Role</dt>
+        <dd>{{ role }}</dd>
+      </div>
+      <div *ngIf="email">
+        <dt>Email</dt>
+        <dd>{{ email }}</dd>
+      </div>
+    </dl>
+
+    <p class="hint">
+      Tant que la validation n est pas faite, la connexion sera bloquee pour ce compte.
+    </p>
+
+    <button type="button" (click)="goHome()">Retour a l accueil</button>
+  </article>
+</section>

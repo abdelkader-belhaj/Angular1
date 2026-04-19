@@ -4,7 +4,6 @@ import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import SockJS from 'sockjs-client';
 import { ApiService } from './api.service';
-import { AuthService } from '../../../../services/auth.service';
 import {
   LocationUpdateDTO,
   ChatMessageDTO,
@@ -29,14 +28,13 @@ export class WebsocketService {
   constructor(
     private api: ApiService,
     private ngZone: NgZone,
-    private authService: AuthService,
   ) {}
 
   /** Connexion WebSocket (appelée par chauffeur ET client) */
   connect(userId?: number): void {
     if (this.stompClient?.active) return;
 
-    const token = this.authService.getToken();
+    const token = localStorage.getItem('auth_token');
 
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws-transport'),

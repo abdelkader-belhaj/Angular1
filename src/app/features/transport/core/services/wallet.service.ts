@@ -18,7 +18,7 @@ export class WalletService {
   ) {}
 
   private walletHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
+    const token = localStorage.getItem('auth_token');
     let headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });

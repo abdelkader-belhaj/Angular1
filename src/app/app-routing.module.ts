@@ -7,7 +7,6 @@ import { roleGuard } from './guards/role.guard';
 import { authGuard } from './guards/auth.guard';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
 import { HebergeurPageComponent } from './hebergeur/hebergeur-page.component';
-import { TransporteurPageComponent } from './transporteur/transporteur-page.component';
 import { AirlinePartnerPageComponent } from './airline_partner/airline-partner-page.component';
 import { OrganisateurPageComponent } from './organisateur/organisateur-page.component';
 import { VendeurArtPageComponent } from './vendeur_art/vendeur-art-page.component';
@@ -19,22 +18,88 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
 
 const routes: Routes = [
   { path: '', component: HomePageComponent },
-  { path: 'homePage', component: HomePageComponent, canActivate: [roleGuard], data: { roles: ['CLIENT_TOURISTE'] } },
+  {
+    path: 'homePage',
+    component: HomePageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['CLIENT_TOURISTE'] },
+  },
   { path: 'waiting-approval', component: WaitingResponsePageComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'profile', component: ProfilePageComponent, canActivate: [authGuard] },
-  { path: 'security', component: SecurityPageComponent, canActivate: [authGuard] },
-  { path: 'dashbord', component: DashbordPageComponent, canActivate: [adminGuard] },
-  { path: 'dashboard', component: DashbordPageComponent, canActivate: [adminGuard] },
-  { path: 'dashbord/users', component: AdminUsersPageComponent, canActivate: [adminGuard] },
-  { path: 'dashboard/users', component: AdminUsersPageComponent, canActivate: [adminGuard] },
-  { path: 'hebergeur', component: HebergeurPageComponent, canActivate: [roleGuard], data: { roles: ['HEBERGEUR'] } },
-  { path: 'transporteur', component: TransporteurPageComponent, canActivate: [roleGuard], data: { roles: ['TRANSPORTEUR'] } },
-  { path: 'airline-partner', component: AirlinePartnerPageComponent, canActivate: [roleGuard], data: { roles: ['AIRLINE_PARTNER'] } },
-  { path: 'organisateur', component: OrganisateurPageComponent, canActivate: [roleGuard], data: { roles: ['ORGANISATEUR'] } },
-  { path: 'vendeur-arti', component: VendeurArtPageComponent, canActivate: [roleGuard], data: { roles: ['VENDEUR_ARTI'] } },
-  { path: 'societe', component: SocietePageComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
-  { path: '**', redirectTo: '' }
+  {
+    path: 'profile',
+    component: ProfilePageComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'security',
+    component: SecurityPageComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'dashbord',
+    component: DashbordPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'dashboard',
+    component: DashbordPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'dashbord/users',
+    component: AdminUsersPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'dashboard/users',
+    component: AdminUsersPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'hebergeur',
+    component: HebergeurPageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['HEBERGEUR'] },
+  },
+  {
+    path: 'transporteur',
+    redirectTo: 'transport',
+    pathMatch: 'full',
+  },
+  {
+    path: 'airline-partner',
+    component: AirlinePartnerPageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['AIRLINE_PARTNER'] },
+  },
+  {
+    path: 'organisateur',
+    component: OrganisateurPageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ORGANISATEUR'] },
+  },
+  {
+    path: 'vendeur-arti',
+    component: VendeurArtPageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['VENDEUR_ARTI'] },
+  },
+  {
+    path: 'societe',
+    component: SocietePageComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['SOCIETE'] },
+  },
+  {
+    path: 'transport',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/transport/transport/transport.module').then(
+        (m) => m.TransportModule,
+      ),
+  },
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
@@ -42,9 +107,9 @@ const routes: Routes = [
     RouterModule.forRoot(routes, {
       anchorScrolling: 'enabled',
       scrollPositionRestoration: 'enabled',
-      scrollOffset: [0, 88]
-    })
+      scrollOffset: [0, 88],
+    }),
   ],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

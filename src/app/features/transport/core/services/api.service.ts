@@ -8,7 +8,6 @@ import {
 } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, timeout } from 'rxjs/operators';
-import { AuthService } from '../../../../services/auth.service';
 
 // Configuration centralisée - PAS d'environnement
 const API_CONFIG = {
@@ -25,10 +24,7 @@ export class ApiService {
   private readonly apiUrl = API_CONFIG.baseUrl + API_CONFIG.apiPrefix;
   private readonly wsUrl = API_CONFIG.wsUrl;
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+  constructor(private http: HttpClient) {}
 
   getApiUrl(): string {
     return this.apiUrl;
@@ -39,7 +35,7 @@ export class ApiService {
   }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
+    const token = localStorage.getItem('auth_token');
     let headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
@@ -795,7 +791,7 @@ export class ApiService {
   }
 
   postMultipart<T>(path: string, formData: FormData): Observable<T> {
-    const token = this.authService.getToken();
+    const token = localStorage.getItem('auth_token');
     let headers = new HttpHeaders();
 
     if (token) {
@@ -808,7 +804,7 @@ export class ApiService {
   }
 
   postForm<T>(path: string, formData: Record<string, string>): Observable<T> {
-    const token = this.authService.getToken();
+    const token = localStorage.getItem('auth_token');
     let headers = new HttpHeaders({
       'Content-Type': 'application/x-www-form-urlencoded',
     });

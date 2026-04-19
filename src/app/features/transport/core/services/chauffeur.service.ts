@@ -23,6 +23,29 @@ export class ChauffeurService {
 
   constructor(private api: ApiService) {}
 
+  createChauffeur(payload: {
+    utilisateurId: number;
+    telephone: string;
+    numeroLicence: string;
+  }): Observable<Chauffeur> {
+    return this.api.post<Chauffeur>('/chauffeurs', payload).pipe(
+      map((c) => this.normalizeChauffeur(c)),
+      tap((c) => this.currentChauffeurSubject.next(c)),
+    );
+  }
+
+  hasChauffeurProfile(userId: number): Observable<boolean> {
+    return this.getChauffeurByUtilisateurId(userId).pipe(
+      map(() => true),
+      catchError((error) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          return of(false);
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
+
   private normalizeChauffeur(raw: any): Chauffeur {
     return {
       ...raw,
@@ -198,11 +221,6 @@ export class ChauffeurService {
 
         if (current?.idChauffeur) {
           return current.idChauffeur;
-        }
-
-        // Fallback dev: si la BDD n'a qu'un seul chauffeur, on l'utilise.
-        if (chauffeurs.length === 1) {
-          return chauffeurs[0].idChauffeur ?? null;
         }
 
         return null;

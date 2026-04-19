@@ -6,7 +6,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { NavbarComponent } from './homePage/navbar/navbar.component';
+import { HomeSharedModule } from './homePage/home-shared.module';
 import { FooterComponent } from './homePage/footer/footer.component';
 import { HomePageComponent } from './homePage/home-page.component';
 import { HeroSectionComponent } from './homePage/hero-section/hero-section.component';
@@ -24,7 +24,6 @@ import { InventoryCardsComponent } from './dashbord/inventory-cards/inventory-ca
 import { InquiriesPanelComponent } from './dashbord/inquiries-panel/inquiries-panel.component';
 import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.component';
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
-import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.component';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
@@ -32,7 +31,6 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
 @NgModule({
   declarations: [
     AppComponent,
-    NavbarComponent,
     FooterComponent,
     HomePageComponent,
     HeroSectionComponent,
@@ -50,24 +48,24 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     InquiriesPanelComponent,
     DashFooterComponent,
     AdminUsersPageComponent,
-    LoginDialogComponent,
     ResetPasswordComponent,
-    WaitingResponsePageComponent
+    WaitingResponsePageComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
+    HomeSharedModule,
     ReactiveFormsModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
-    }
+      multi: true,
+    },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

@@ -35,6 +35,7 @@ import { ChauffeurSidenavComponent } from '../courses/chauffeur/chauffeur-sidena
 import { StatistiquesChauffeurComponent } from '../courses/chauffeur/statistiques-chauffeur/statistiques-chauffeur.component';
 import { StripePaymentComponent } from '../core/components/stripe-payment.component';
 import { CardPaymentModalComponent } from '../core/components/card-payment-modal/card-payment-modal.component';
+import { TransporteurOnboardingComponent } from '../pages/transporteur-onboarding/transporteur-onboarding.component';
 @NgModule({
   declarations: [
     LayoutClientComponent,
@@ -56,6 +57,7 @@ import { CardPaymentModalComponent } from '../core/components/card-payment-modal
     AttenteConfirmationClientComponent,
     ChauffeurSidenavComponent,
     StripePaymentComponent,
+    TransporteurOnboardingComponent,
   ],
   imports: [
     CommonModule,

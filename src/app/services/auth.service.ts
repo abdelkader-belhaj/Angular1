@@ -120,7 +120,7 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => this.persistAuth(auth)),
       );
   }
 
@@ -129,16 +129,18 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => this.persistAuth(auth)),
       );
   }
 
   registerWithFace(payload: FaceRegisterRequest): Observable<AuthResponse> {
     return this.http
-      .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/register-face`, payload)
+      .post<
+        ApiResponse<AuthResponse>
+      >(`${this.authApiUrl}/register-face`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => this.persistAuth(auth)),
       );
   }
 
@@ -147,7 +149,7 @@ export class AuthService {
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login-face`, payload)
       .pipe(
         map((response) => response.data),
-        tap((auth) => this.persistAuth(auth))
+        tap((auth) => this.persistAuth(auth)),
       );
   }
 
@@ -163,7 +165,9 @@ export class AuthService {
       .pipe(map(() => void 0));
   }
 
-  updateCurrentUserProfile(payload: UpdateCurrentUserRequest): Observable<UserResponse> {
+  updateCurrentUserProfile(
+    payload: UpdateCurrentUserRequest,
+  ): Observable<UserResponse> {
     const currentUser = this.getCurrentUser();
 
     if (!currentUser?.id) {
@@ -171,16 +175,23 @@ export class AuthService {
     }
 
     return this.http
-      .put<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}`, payload)
+      .put<
+        ApiResponse<UserResponse>
+      >(`${this.usersApiUrl}/${currentUser.id}`, payload)
       .pipe(
         map((response) => response.data),
         tap((updatedUser) => {
-          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
-        })
+          localStorage.setItem(
+            this.userStorageKey,
+            JSON.stringify(updatedUser),
+          );
+        }),
       );
   }
 
-  updateCurrentUserFaceId(payload: UpdateCurrentFaceIdRequest): Observable<UserResponse> {
+  updateCurrentUserFaceId(
+    payload: UpdateCurrentFaceIdRequest,
+  ): Observable<UserResponse> {
     const currentUser = this.getCurrentUser();
 
     if (!currentUser?.id) {
@@ -188,16 +199,23 @@ export class AuthService {
     }
 
     return this.http
-      .patch<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}/face-id`, payload)
+      .patch<
+        ApiResponse<UserResponse>
+      >(`${this.usersApiUrl}/${currentUser.id}/face-id`, payload)
       .pipe(
         map((response) => response.data),
         tap((updatedUser) => {
-          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
-        })
+          localStorage.setItem(
+            this.userStorageKey,
+            JSON.stringify(updatedUser),
+          );
+        }),
       );
   }
 
-  changeCurrentUserPassword(payload: ChangeCurrentPasswordRequest): Observable<void> {
+  changeCurrentUserPassword(
+    payload: ChangeCurrentPasswordRequest,
+  ): Observable<void> {
     const currentUser = this.getCurrentUser();
 
     if (!currentUser?.id) {
@@ -205,7 +223,9 @@ export class AuthService {
     }
 
     return this.http
-      .patch<ApiResponse<null>>(`${this.usersApiUrl}/${currentUser.id}/password`, payload)
+      .patch<
+        ApiResponse<null>
+      >(`${this.usersApiUrl}/${currentUser.id}/password`, payload)
       .pipe(map(() => void 0));
   }
 
@@ -216,17 +236,19 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post<ApiResponse<null>>(`${this.authApiUrl}/logout`, {}).pipe(
-      tap(() => {
-        localStorage.removeItem(this.tokenStorageKey);
-        localStorage.removeItem(this.userStorageKey);
-      }),
-      finalize(() => {
-        localStorage.removeItem(this.tokenStorageKey);
-        localStorage.removeItem(this.userStorageKey);
-      }),
-      map(() => void 0)
-    );
+    return this.http
+      .post<ApiResponse<null>>(`${this.authApiUrl}/logout`, {})
+      .pipe(
+        tap(() => {
+          localStorage.removeItem(this.tokenStorageKey);
+          localStorage.removeItem(this.userStorageKey);
+        }),
+        finalize(() => {
+          localStorage.removeItem(this.tokenStorageKey);
+          localStorage.removeItem(this.userStorageKey);
+        }),
+        map(() => void 0),
+      );
   }
 
   clearLocalAuth(): void {
@@ -236,7 +258,9 @@ export class AuthService {
 
   setupTwoFactor(): Observable<TwoFactorSetupResponse> {
     return this.http
-      .post<ApiResponse<TwoFactorSetupResponse>>(`${this.authApiUrl}/2fa/setup`, {})
+      .post<
+        ApiResponse<TwoFactorSetupResponse>
+      >(`${this.authApiUrl}/2fa/setup`, {})
       .pipe(map((response) => response.data));
   }
 
@@ -246,8 +270,11 @@ export class AuthService {
       .pipe(
         map((response) => response.data),
         tap((updatedUser) => {
-          localStorage.setItem(this.userStorageKey, JSON.stringify(updatedUser));
-        })
+          localStorage.setItem(
+            this.userStorageKey,
+            JSON.stringify(updatedUser),
+          );
+        }),
       );
   }
 
@@ -289,7 +316,7 @@ export class AuthService {
       case 'HEBERGEUR':
         return '/hebergeur';
       case 'TRANSPORTEUR':
-        return '/transporteur';
+        return '/transport';
       case 'AIRLINE_PARTNER':
         return '/airline-partner';
       case 'ORGANISATEUR':

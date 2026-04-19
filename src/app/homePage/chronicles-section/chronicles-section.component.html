@@ -1,25 +1,90 @@
 <section class="py-24 relative overflow-hidden">
   <div class="absolute inset-0 z-0">
-    <img class="w-full h-full object-cover opacity-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_5LM6sXM-YhVuMcJBQLDj4YLxqaU0Z0oM8Eb5UTdwtCEzBF9UiFQiptFQHkW1XWtH0-ToE1g2RFLgHTvk-cGg38dsDvWM1a0MLApAO209E6OfSnqeuYnX_doeUlbUwLrDy2e5oxKg_i8_OKiLKP4vxdPkQnUy-6YdMwvf2P35hs0lRlGsfkI1Zb7t4JVwbI9jvOPsedQ--tm-9ZEIOmBvZmgz1LtYw5ybscoFQjq-JcxDRkZ6mcFmB3Rrjbmdsz--uH_VUzKJCsk" alt="Carthage"/>
+    <img
+      class="w-full h-full object-cover opacity-10"
+      src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_5LM6sXM-YhVuMcJBQLDj4YLxqaU0Z0oM8Eb5UTdwtCEzBF9UiFQiptFQHkW1XWtH0-ToE1g2RFLgHTvk-cGg38dsDvWM1a0MLApAO209E6OfSnqeuYnX_doeUlbUwLrDy2e5oxKg_i8_OKiLKP4vxdPkQnUy-6YdMwvf2P35hs0lRlGsfkI1Zb7t4JVwbI9jvOPsedQ--tm-9ZEIOmBvZmgz1LtYw5ybscoFQjq-JcxDRkZ6mcFmB3Rrjbmdsz--uH_VUzKJCsk"
+      alt="Carthage"
+    />
   </div>
 
   <div class="max-w-screen-2xl mx-auto px-8 relative z-10">
-    <h2 class="font-headline text-4xl font-extrabold text-primary mb-12 text-center">Traveler Chronicles</h2>
+    <div class="chronicles-hero">
+      <p class="chronicles-kicker">Traveler Chronicles</p>
+      <h2 class="font-headline">Le meilleur des avis, résumé par IA</h2>
+      <p class="chronicles-copy">
+        Au lieu de parcourir des dizaines de commentaires, les visiteurs voient
+        une synthèse claire des points forts et des points de vigilance.
+      </p>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <article class="bg-white p-8 rounded-lg shadow-xl border border-slate-100">
-        <h5 class="font-bold text-primary mb-2">Clara M.</h5>
-        <p class="text-on-surface-variant italic">Walking through Sidi Bou Said felt like stepping into a painting.</p>
+    <div class="chronicles-grid">
+      <article
+        class="chronicles-summary-card"
+        *ngIf="smartReviewSummary as summary"
+      >
+        <div class="chronicles-summary-head">
+          <div>
+            <p class="chronicles-card-kicker">Résumé Review Smart</p>
+            <h3>{{ summary.title }}</h3>
+            <p>{{ summary.subtitle }}</p>
+          </div>
+          <div class="chronicles-score">
+            <strong>{{ summary.averageNote | number: '1.1-1' }}/5</strong>
+            <span>{{ summary.confidence }}</span>
+          </div>
+        </div>
+
+        <p class="chronicles-summary-text">{{ summary.summary }}</p>
+
+        <div class="chronicles-tag-grid">
+          <div>
+            <span class="chronicles-tag-label">Points forts</span>
+            <div class="chronicles-chip-row">
+              <span
+                class="chronicles-chip positive"
+                *ngFor="let item of summary.highlights"
+              >
+                {{ item }}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <span class="chronicles-tag-label">À surveiller</span>
+            <div class="chronicles-chip-row">
+              <span
+                class="chronicles-chip warning"
+                *ngFor="let item of summary.concerns"
+              >
+                {{ item }}
+              </span>
+            </div>
+          </div>
+        </div>
       </article>
 
-      <article class="bg-white p-8 rounded-lg shadow-xl border border-slate-100 md:translate-y-12">
-        <h5 class="font-bold text-primary mb-2">Ahmed Z.</h5>
-        <p class="text-on-surface-variant italic">Managing the booking ecosystem for Dar Hi via this portal has been seamless.</p>
+      <article class="chronicles-quote-card">
+        <h5 class="font-bold text-primary mb-2">Confort vérifié</h5>
+        <p class="text-on-surface-variant italic">
+          Les voyageurs reviennent souvent sur la propreté du véhicule et le
+          confort général du trajet.
+        </p>
       </article>
 
-      <article class="bg-white p-8 rounded-lg shadow-xl border border-slate-100">
-        <h5 class="font-bold text-primary mb-2">Marc L.</h5>
-        <p class="text-on-surface-variant italic">The silence of the desert is the most premium experience I have ever had.</p>
+      <article class="chronicles-quote-card chronicles-quote-card-offset">
+        <h5 class="font-bold text-primary mb-2">Service local</h5>
+        <p class="text-on-surface-variant italic">
+          Les chauffeurs qui connaissent bien le patrimoine local sont ceux qui
+          génèrent les meilleurs retours.
+        </p>
+      </article>
+
+      <article class="chronicles-quote-card">
+        <h5 class="font-bold text-primary mb-2">Vigilance utile</h5>
+        <p class="text-on-surface-variant italic">
+          Quand la climatisation ou les délais de départ sont signalés, l'IA le
+          met immédiatement en avant.
+        </p>
       </article>
     </div>
   </div>

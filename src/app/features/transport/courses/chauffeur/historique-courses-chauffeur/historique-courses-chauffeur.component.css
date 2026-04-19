@@ -1,0 +1,170 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  background: #f7f9fc;
+  overflow: hidden;
+  color: #191c1e;
+}
+
+.sand-sea-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(10px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.orb-left {
+  width: 360px;
+  height: 360px;
+  top: -110px;
+  left: -90px;
+  background: radial-gradient(circle at 30% 30%, #d6e3ff 0%, #f7f9fc 72%);
+}
+
+.orb-right {
+  width: 420px;
+  height: 420px;
+  bottom: -210px;
+  right: -140px;
+  background: radial-gradient(circle at 40% 40%, #ffdf9f 0%, #f7f9fc 68%);
+}
+
+.dashboard-shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.25rem;
+}
+
+.history-main {
+  min-width: 0;
+  margin: 0;
+}
+
+.history-header {
+  position: sticky;
+  top: 1rem;
+  z-index: 8;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .history-main {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-shell {
+    padding: 0.75rem;
+  }
+
+  .history-header {
+    position: static;
+  }
+}
+
+/* Material Symbols styling adjustments */
+::ng-deep .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  vertical-align: middle;
+}
+
+/* Filled star styling for ratings */
+.material-symbols-outlined.filled {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* Optional: Add any Angular-specific adjustments here */
+html {
+  scroll-behavior: smooth;
+}
+
+.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.evaluation-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.evaluation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.evaluation-title {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.evaluation-date,
+.evaluation-author {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.stars-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.star {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+.star.filled {
+  color: #f59e0b;
+}
+
+.note-value {
+  margin-left: 6px;
+  color: #0f172a;
+}
+
+.evaluation-comment {
+  margin: 8px 0 0;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.evaluation-author {
+  margin: 8px 0 0;
+}
+
+.evaluation-empty {
+  margin: 12px 0 0;
+  color: #6b7280;
+  font-style: italic;
+}

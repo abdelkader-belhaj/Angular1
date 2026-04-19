@@ -1,0 +1,427 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap');
+
+.reservations-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f7f9fc;
+  min-height: 100vh;
+  padding-bottom: 40px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Premium Glassmorphic Header - "The Mediterranean Digital Curator" */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+  border-radius: 2rem;
+  background: linear-gradient(135deg, #003974 0%, #1e4d7a 100%);
+  color: #ffffff;
+  box-shadow: 0px 20px 40px rgba(0, 57, 116, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #795900;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 14px;
+  border-radius: 100px;
+  display: inline-block;
+  backdrop-filter: blur(8px);
+}
+
+.page-title {
+  margin: 0;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+/* Filter Dropdown */
+.filter-wrapper {
+  position: relative;
+  z-index: 1;
+  min-width: 280px;
+}
+
+.status-filter {
+  width: 100%;
+  padding: 16px 24px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  color: #ffffff;
+  font-family: 'Inter', inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-filter:hover, .status-filter:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+}
+
+.status-filter option {
+  background: #ffffff;
+  color: #003974;
+}
+
+.filter-wrapper::after {
+  content: '▼';
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  font-size: 0.75rem;
+}
+
+/* Table Card - "The Museum Card" */
+.table-panel {
+  background: #ffffff;
+  border-radius: 2rem;
+  box-shadow: 0px 20px 40px rgba(0, 57, 116, 0.06);
+  overflow: hidden;
+  position: relative;
+  padding: 1rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+th, td {
+  padding: 24px 24px;
+}
+
+th {
+  background: #ffffff;
+  color: #2c3c4a;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: none;
+  white-space: nowrap;
+  position: relative;
+}
+
+th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: rgba(194, 198, 211, 0.4);
+}
+
+tbody tr {
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+}
+
+tbody tr:hover {
+  background-color: #f2f4f7;
+  transform: scale(1.002);
+}
+
+/* No 1px generic border per guidelines. We use 15% ghost border */
+td {
+  color: #2c3c4a;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(194, 198, 211, 0.15);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Typography styles */
+.id-cell {
+  color: #003974;
+  font-family: 'Manrope', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.client-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f2f4f7;
+  color: #003974;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 57, 116, 0.05);
+}
+
+.client-cell {
+  font-weight: 600;
+}
+
+.note-cell {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #2c3c4a;
+  opacity: 0.7;
+}
+
+.period-cell {
+  color: #2c3c4a;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.period-arrow {
+  color: #c2c6d3;
+}
+
+.price-cell {
+  font-weight: 800;
+  font-family: 'Manrope', sans-serif;
+  color: #003974;
+  font-size: 1.05rem;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #f2f4f7;
+  color: #2c3c4a;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  margin-right: 10px;
+  opacity: 0.8;
+}
+
+/* Status variants */
+.status-badge[data-status="PENDING"],
+.status-badge[data-status="DRAFT"],
+.status-badge[data-status="KYC_PENDING"] {
+  background: rgba(121, 89, 0, 0.1);
+  color: #795900;
+}
+
+.status-badge[data-status="CONFIRMED"],
+.status-badge[data-status="CONTRACT_SIGNED"],
+.status-badge[data-status="CHECKOUT_PENDING"] {
+  background: rgba(0, 57, 116, 0.08);
+  color: #003974;
+}
+
+.status-badge[data-status="IN_PROGRESS"] {
+  background: rgba(0, 57, 116, 0.15);
+  color: #003974;
+}
+
+.status-badge[data-status="COMPLETED"] {
+  background: #f2f4f7;
+  color: #2c3c4a;
+}
+
+.status-badge[data-status="CANCELLED_BY_AGENCY"],
+.status-badge[data-status="DEPOSIT_HELD"] {
+  background: rgba(200, 50, 50, 0.08);
+  color: #8b1e1e;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #003974 0%, #0050a0 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 57, 116, 0.15);
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 57, 116, 0.25);
+}
+
+.action-btn.secondary {
+  background: transparent;
+  color: #003974;
+}
+
+.action-btn.secondary:hover {
+  background: #e6e8eb;
+}
+
+/* State Banners */
+.error-banner {
+  padding: 24px;
+  border-radius: 1.5rem;
+  background: rgba(200, 50, 50, 0.04);
+  color: #8b1e1e;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(200, 50, 50, 0.1);
+}
+
+.loading-state,
+.empty-state {
+  padding: 80px 40px;
+  border-radius: 2rem;
+  background: #ffffff;
+  color: #2c3c4a;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  box-shadow: 0px 20px 40px rgba(0, 57, 116, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.spinner {
+  animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  color: #003974;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+.table-responsive::-webkit-scrollbar-track {
+  background: #f7f9fc;
+  border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c2c6d3;
+  border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #2c3c4a;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+  
+  .filter-wrapper {
+    width: 100%;
+  }
+  
+  .table-panel {
+    border-radius: 1.5rem;
+    padding: 0;
+  }
+  
+  th, td {
+    padding: 16px;
+  }
+}

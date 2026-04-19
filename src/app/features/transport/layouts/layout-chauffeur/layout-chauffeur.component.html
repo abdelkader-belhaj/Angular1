@@ -1,0 +1,39 @@
+<div class="layout-chauffeur">
+  <header class="header">
+    <div class="logo">
+      <mat-icon>local_taxi</mat-icon>
+      <span>Chauffeur</span>
+    </div>
+    <nav class="nav">
+      <a
+        routerLink="/transport/courses/chauffeur/dashboard"
+        routerLinkActive="active"
+      >
+        <mat-icon>dashboard</mat-icon> Tableau de bord
+      </a>
+      <a
+        routerLink="/transport/courses/chauffeur/vehicules"
+        routerLinkActive="active"
+      >
+        <mat-icon>directions_car</mat-icon> Véhicules
+      </a>
+      <a
+        routerLink="/transport/courses/chauffeur/gains"
+        routerLinkActive="active"
+      >
+        <mat-icon>attach_money</mat-icon> Gains
+      </a>
+    </nav>
+    <div class="status-toggle">
+      <mat-slide-toggle
+        (change)="onDisponibiliteChange($event)"
+        color="primary"
+      >
+        En ligne
+      </mat-slide-toggle>
+    </div>
+  </header>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,0 +1,217 @@
+<div class="transport-landing">
+  <app-navbar></app-navbar>
+
+  <section class="hero">
+    <img
+      class="hero-bg"
+      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoQw7BzQhTvUgIrlcTKX36GDSPmm7OpfvbSriJ_Qi5pAZro_VLEBmOxbcl-fWiz8B2qRnnS5PorV9m8lQNSr-gFaPZMfwPveGq9qMJJXnYXToP_K-8iiwmYLuLAOcG6LnByrxdD6jEVgoOgiowCbMl7S3jz4ok1w1Vizxghsg_rKwg4XTB5F9kuqkTedyo5R3lWZg1JvB315WfOvRuaj2QXJ3KN1Swi6OMBU7N8iJF8cmzhZDA_sVsOFiHdt26LnT_JEuHo_iGd18"
+      alt="Taxi premium en Tunisie"
+    />
+    <div class="hero-overlay"></div>
+
+    <div class="container hero-content">
+      <div class="hero-text">
+        <h1>Voyagez a travers la Tunisie, <span>a votre facon</span></h1>
+        <p>
+          Un transport premium et fiable pour chaque voyageur. Des ruelles
+          bleues de Sidi Bou Said aux dunes dorees du Sahara.
+        </p>
+      </div>
+
+      <div class="service-grid">
+        <article class="glass-card">
+          <div class="icon-box">T</div>
+          <h3>Taxi Instantane</h3>
+          <p>Courses premium a la demande en moins de 10 minutes.</p>
+          <a routerLink="demander-course" class="card-action">Reserver</a>
+        </article>
+
+        <article class="glass-card">
+          <div class="icon-box">L</div>
+          <h3>Location de Voiture</h3>
+          <p>Flotte moderne de berlines et 4x4 pour votre exploration.</p>
+          <a
+            routerLink="/transport/location/client/recherche"
+            class="card-action"
+          >
+            Reserver
+          </a>
+        </article>
+
+        <article class="glass-card">
+          <div class="icon-box">P</div>
+          <h3>Transfert Planifie</h3>
+          <p>Transferts aeroport et trajets interurbains planifies.</p>
+          <a routerLink="course-active" class="card-action">Planifier</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-band">
+    <div class="container stats-wrap">
+      <div>
+        <strong>120+</strong>
+        <span>CHAUFFEURS PROFESSIONNELS</span>
+      </div>
+      <div class="divider"></div>
+      <div>
+        <strong>85+</strong>
+        <span>VEHICULES PREMIUM</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works container">
+    <h2>Comment ca marche</h2>
+    <div class="steps-grid">
+      <article>
+        <small>01</small>
+        <h4>Choisir</h4>
+        <p>Selectionnez le service adapte a votre voyage.</p>
+      </article>
+      <article>
+        <small>02</small>
+        <h4>Indiquer le lieu</h4>
+        <p>Precisez votre depart et votre destination.</p>
+      </article>
+      <article>
+        <small>03</small>
+        <h4>Confirmer</h4>
+        <p>Verifiez les details, confirmez puis partez serein.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="story container">
+    <div class="story-image-wrap">
+      <img
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC40r_vzITQ4gyLThueCndRw_phqbfkgNkuQNVTGZbzl5es5rRwEw_oyKe4M9784X25iTwtmPXRObvqUtrQFydNY7WD3utJHxv4Qljf9mtfDt9pljMbl8ANtrW-JdQVtTcABqmlZlv9_XkNJU9cPD3MtgJpKCvaAE95hZpRlOCL7gpubEiOcrCPA0uDns9cSKzhnGXTDGP8nnKqN0v9O7UCl0J_3WaK50aK1-HgVigS62CNcNWn-JxaHqvv5wAFVSQfEjD8n1OeFcY"
+        alt="Route cotiere tunisienne"
+      />
+    </div>
+    <div class="story-text">
+      <h2>Au-dela du transport, vivez la Tunisie.</h2>
+      <p>
+        Nos chauffeurs sont des experts de la route et des guides locaux.
+        Ponctualite, confort et hospitalite mediterraneenne sont au coeur de
+        chaque trajet.
+      </p>
+      <div class="story-actions">
+        <a routerLink="chauffeur-dashboard" class="btn">Explorer</a>
+        <a routerLink="profil-chauffeur" class="btn btn-ghost"
+          >Nos chauffeurs</a
+        >
+      </div>
+    </div>
+  </section>
+
+  <section class="all-links">
+    <div class="container">
+      <h2>Tous les liens du module transport</h2>
+      <p class="role-chip">
+        Role courant: <strong>{{ currentRole }}</strong>
+        <span *ngIf="!canAccessAgenceLocation">
+          (location agence reservee au role TRANSPORTEUR)
+        </span>
+      </p>
+
+      <div class="links-grid">
+        <article>
+          <h3>Section Chauffeur</h3>
+          <a routerLink="chauffeur-dashboard">Tableau de Bord Chauffeur</a>
+          <a routerLink="chauffeur-course-active">Course Active - Chauffeur</a>
+          <a routerLink="profil-chauffeur">Profil Chauffeur</a>
+          <a routerLink="gestion-vehicules">Gestion Vehicules</a>
+        </article>
+
+        <article>
+          <h3>Section Client (Courses)</h3>
+          <a routerLink="demander-course">Demander une course</a>
+          <a routerLink="attente-chauffeur">Attente Chauffeur</a>
+          <a routerLink="course-active">Course Active - Client</a>
+        </article>
+
+        <article>
+          <h3>Section Location Client</h3>
+          <a routerLink="/transport/location/client/recherche"
+            >Location Client - Recherche</a
+          >
+          <a routerLink="/transport/location/client/mes-locations"
+            >Location Client - Mes Locations</a
+          >
+          <a routerLink="/transport/location/client/reserver/1"
+            >Location Client - Reserver (ID 1)</a
+          >
+          <a routerLink="/transport/location/client/detail/1"
+            >Location Client - Detail (ID 1)</a
+          >
+        </article>
+
+        <article>
+          <h3>Section Location Agence</h3>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/dashboard'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Dashboard
+          </a>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/flotte'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Flotte
+          </a>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/reservations'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Reservations
+          </a>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/portefeuille'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Portefeuille
+          </a>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/reservation/1'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Detail Reservation (ID 1)
+          </a>
+          <a
+            [routerLink]="
+              canAccessAgenceLocation
+                ? '/transport/location/agence/etat-lieux/1'
+                : '/transport'
+            "
+            [class.link-disabled]="!canAccessAgenceLocation"
+          >
+            Location Agence - Etat des lieux (ID 1)
+          </a>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>

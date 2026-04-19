@@ -40,3 +40,11 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local benchmark/backend artifacts (do not push with frontend)
+/bench-output/
+/python/
+/src/app/features/transport/AI transport/__pycache__/
+/src/app/features/transport/AI transport/ttsEtstt/
+*.onnx
+*.wav

@@ -1,0 +1,281 @@
+<!-- src/app/features/transport/courses/client/demander-course/demander-course.component.html -->
+<div class="booking-page">
+  <header class="page-topbar">
+    <a routerLink="/transport/home" class="brand">TunisiaTour</a>
+
+    <div class="topbar-actions">
+      <a routerLink="/transport/historique-courses">Historique</a>
+      <span class="user-badge">🚕</span>
+    </div>
+  </header>
+
+  <main class="booking-shell">
+    <section class="hero-block">
+      <div>
+        <h1 class="hero-title">
+          <span class="hero-emoji">🚕</span>
+          Demander une course
+        </h1>
+      </div>
+
+      <div class="policy-alert" aria-label="Politique annulation et paiement">
+        <span class="policy-icon">i</span>
+        <div>
+          <h3>Politique d'annulation</h3>
+          <p>
+            Une pénalité de 20% sera appliquée pour toute annulation effectuée
+            plus de 2 minutes après la confirmation du chauffeur.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <nav class="flow-steps" aria-label="Etapes du processus">
+      <div class="step" [class.done]="estimatedPrice !== null">
+        <span class="step-index">1</span>
+        <span>Prix</span>
+      </div>
+      <div class="step" [class.done]="hasConfirmedCard">
+        <span class="step-index">2</span>
+        <span>Carte</span>
+      </div>
+      <div class="step" [class.done]="hasAcceptedPolicy">
+        <span class="step-index">3</span>
+        <span>Politique</span>
+      </div>
+      <div class="step" [class.done]="canSubmitDemande">
+        <span class="step-index">4</span>
+        <span>Demander</span>
+      </div>
+    </nav>
+
+    <form [formGroup]="demandeForm" class="booking-grid">
+      <section class="card surface-card form-card">
+        <div class="field-group">
+          <label>📍 Départ</label>
+          <input
+            type="text"
+            formControlName="adresseDepart"
+            placeholder="Entrez le lieu de départ"
+            autocomplete="off"
+            (input)="onAddressInput('depart')"
+            (focus)="onAddressFocus('depart')"
+            (blur)="onAddressBlur('depart')"
+          />
+          <div
+            class="suggestions-dropdown"
+            *ngIf="isLoadingDepartSuggestions || departSuggestions.length"
+          >
+            <p class="suggestion-loading" *ngIf="isLoadingDepartSuggestions">
+              Recherche de suggestions...
+            </p>
+            <button
+              *ngFor="let suggestion of departSuggestions"
+              type="button"
+              class="suggestion-item"
+              (mousedown)="selectAddressSuggestion('depart', suggestion)"
+            >
+              {{ suggestion.displayName }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="btn-location"
+            [disabled]="isGeolocating || isLoading"
+            (click)="utiliserMaPositionPourDepart()"
+          >
+            <span class="btn-icon">◎</span>
+            <span>
+              {{
+                isGeolocating
+                  ? 'Localisation en cours...'
+                  : 'Utiliser ma position actuelle'
+              }}
+            </span>
+          </button>
+        </div>
+
+        <div class="field-group">
+          <label>🏁 Arrivée</label>
+          <input
+            type="text"
+            formControlName="adresseArrivee"
+            placeholder="Où allez-vous ?"
+            autocomplete="off"
+            (input)="onAddressInput('arrivee')"
+            (focus)="onAddressFocus('arrivee')"
+            (blur)="onAddressBlur('arrivee')"
+          />
+          <div
+            class="suggestions-dropdown"
+            *ngIf="isLoadingArriveeSuggestions || arriveeSuggestions.length"
+          >
+            <p class="suggestion-loading" *ngIf="isLoadingArriveeSuggestions">
+              Recherche de suggestions...
+            </p>
+            <button
+              *ngFor="let suggestion of arriveeSuggestions"
+              type="button"
+              class="suggestion-item"
+              (mousedown)="selectAddressSuggestion('arrivee', suggestion)"
+            >
+              {{ suggestion.displayName }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card map-card">
+        <div class="map-header">
+          <div>
+            <h3>Carte interactive</h3>
+            <p>
+              Cliquez sur la carte pour placer les points de départ et
+              d'arrivée.
+            </p>
+          </div>
+
+          <div class="map-toolbar">
+            <button
+              type="button"
+              class="chip"
+              [class.active]="selectionMode === 'depart'"
+              (click)="setSelectionMode('depart')"
+            >
+              Choisir départ
+            </button>
+            <button
+              type="button"
+              class="chip"
+              [class.active]="selectionMode === 'arrivee'"
+              (click)="setSelectionMode('arrivee')"
+            >
+              Choisir arrivée
+            </button>
+            <button
+              type="button"
+              class="chip chip-icon"
+              (click)="swapRidePoints()"
+            >
+              ⇅
+            </button>
+          </div>
+        </div>
+
+        <div class="leaflet-shell">
+          <div #mapPicker class="leaflet-map"></div>
+
+          <section class="bottom-sheet">
+            <div class="sheet-row">
+              <span>Distance</span>
+              <strong>{{ estimatedDistance ?? 0 }} km</strong>
+            </div>
+            <div class="sheet-row">
+              <span>ETA</span>
+              <strong>{{ estimatedDuration ?? 0 }} min</strong>
+            </div>
+            <div class="sheet-row price-highlight">
+              <span>Estimation</span>
+              <strong>{{ estimatedPrice ?? 0 }} TND</strong>
+            </div>
+          </section>
+        </div>
+
+        <p class="map-empty" *ngIf="!departCoords || !arriveeCoords">
+          Cliquez sur la carte pour placer
+          {{ selectionMode === 'depart' ? 'le départ' : "l'arrivée" }}.
+        </p>
+      </section>
+
+      <section class="card vehicle-card">
+        <div class="section-label">Choisir le véhicule</div>
+        <div class="type-selector">
+          <div
+            *ngFor="let type of typesVehicule"
+            class="type-option"
+            [class.active]="
+              demandeForm.get('typeVehiculeDemande')?.value === type.value
+            "
+            (click)="
+              demandeForm.get('typeVehiculeDemande')?.setValue(type.value)
+            "
+          >
+            <span class="icon">{{ type.icon }}</span>
+            <span class="label">{{ type.label }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card action-card">
+        <button
+          type="button"
+          class="btn-estimate"
+          [disabled]="!canEstimateRequest || isLoading"
+          (click)="estimerPrix()"
+        >
+          <span *ngIf="!isLoading">Calculer le prix précis</span>
+          <span *ngIf="isLoading">Calcul en cours...</span>
+        </button>
+
+        <div class="price-box" *ngIf="estimatedPrice !== null">
+          <div class="price-label">Prix</div>
+          <div class="price-value">{{ estimatedPrice }} TND</div>
+        </div>
+
+        <label class="policy-check">
+          <input type="checkbox" formControlName="acceptCancellationPolicy" />
+          <span>
+            J'accepte la pré-autorisation de paiement sur mon compte bancaire.
+            Le montant final sera débité à la fin de la course.
+          </span>
+        </label>
+
+        <button
+          type="button"
+          class="btn-add-card"
+          [disabled]="!estimatedPrice || isLoading || !hasAcceptedPolicy"
+          [class.card-confirmed]="paymentIntentIdFromCard"
+          (click)="openCardModal()"
+        >
+          <span *ngIf="!paymentIntentIdFromCard"
+            >Ajouter une carte de paiement</span
+          >
+          <span *ngIf="paymentIntentIdFromCard">Carte confirmée</span>
+        </button>
+
+        <p class="card-hint" *ngIf="estimatedPrice === null">
+          Calculez d'abord le prix, puis acceptez la pré-autorisation et ajoutez
+          votre carte.
+        </p>
+        <p
+          class="card-hint"
+          *ngIf="estimatedPrice !== null && !hasAcceptedPolicy"
+        >
+          Cochez d'abord l'acceptation de pré-autorisation pour activer l'ajout
+          de carte.
+        </p>
+
+        <button
+          type="button"
+          class="btn-demander"
+          [disabled]="!canSubmitDemande"
+          (click)="demanderCourse()"
+        >
+          <span>DEMANDER UNE COURSE</span>
+          <span class="send-icon">➜</span>
+        </button>
+
+        <p class="submit-hint" *ngIf="!canSubmitDemande">
+          {{ submitBlockingMessage }}
+        </p>
+      </section>
+    </form>
+
+    <app-card-payment-modal
+      [isOpen]="cardModalOpen"
+      [estimatedPrice]="estimatedPrice"
+      (cardConfirmed)="onCardConfirmed($event)"
+      (cardCancelled)="onCardCancelled()"
+    ></app-card-payment-modal>
+  </main>
+</div>

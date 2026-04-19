@@ -1,0 +1,228 @@
+<section class="page-container relative bg-background min-h-screen">
+
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-br from-primary to-primary-hover text-white py-12 md:py-20 px-6">
+    <div class="max-w-7xl mx-auto flex-col items-center text-center">
+      <span class="badge bg-white/20 text-white backdrop-blur-md uppercase tracking-widest font-bold text-[10px] mb-4 border border-white/30">Catalogue en temps réel</span>
+      <h1 class="text-4xl md:text-5xl font-headline font-extrabold mb-4 tracking-tighter">Location de véhicules</h1>
+      <p class="text-lg md:text-xl font-medium max-w-2xl text-white/80">
+        Parcourez les véhicules actifs de nos agences partenaires et réservez le vôtre en quelques clics simplifiés.
+      </p>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto w-full p-6 md:p-8 -mt-8 relative z-10">
+    <div class="grid-12 gap-8">
+      
+      <!-- Left Sidebar (Filters) -->
+      <aside class="lg-col-3 flex-col gap-6">
+        <div class="card premium-shadow bg-lowest rounded-xl p-6 lg-sticky">
+           <div class="flex-between items-end mb-4 border-b border-light pb-4">
+             <h3 class="font-headline font-bold text-xl text-dark flex items-center gap-2">
+               <span class="material-symbols-outlined text-primary">filter_list</span> Filtres
+             </h3>
+             <span class="badge badge-surface font-bold text-xs">{{ filteredVehicles.length }} / {{ vehicles.length }}</span>
+           </div>
+
+           <div class="flex-col gap-4">
+              <!-- Search Field -->
+              <div class="flex-col gap-1.5">
+                <label class="text-[10px] uppercase font-bold text-muted tracking-widest" for="vehicle-search">Recherche libre</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted icon-small" style="transform: translateY(-50%)">search</span>
+                  <input
+                    id="vehicle-search"
+                    [(ngModel)]="query"
+                    name="query"
+                    type="text"
+                    placeholder="Marque, modèle, agence..."
+                    class="input-form pl-10"
+                  />
+                </div>
+              </div>
+
+              <!-- Type Field -->
+              <div class="flex-col gap-1.5">
+                <label class="text-[10px] uppercase font-bold text-muted tracking-widest" for="vehicle-type">Catégorie</label>
+                <select
+                  [(ngModel)]="selectedType"
+                  name="selectedType"
+                  id="vehicle-type"
+                  class="input-form appearance-none"
+                >
+                  <option *ngFor="let option of typeOptions" [value]="option">
+                    {{ option || 'Tous les types' }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="bg-surface-low p-4 rounded-lg border border-light-subtle mt-2 text-xs text-muted leading-relaxed">
+                 Affichage exclusif des véhicules actuellement <strong>ACTIFS</strong>.
+                 Cliquez sur les miniatures pour ouvrir la galerie photo complète du véhicule.
+              </div>
+           </div>
+        </div>
+      </aside>
+
+      <!-- Right Main Content (Results) -->
+      <div class="lg-col-9 flex-col gap-6">
+
+        <!-- Error & Loading States -->
+        <div class="card bg-error-light border border-error-dark/20 p-5 rounded-lg flex items-center gap-3 text-error-dark" *ngIf="error">
+          <span class="material-symbols-outlined">error</span>
+          <p class="font-bold text-sm">{{ error }}</p>
+        </div>
+
+        <div class="flex-col flex-center py-20 w-full" *ngIf="isLoading">
+          <div class="animate-spin h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full mb-4"></div>
+          <p class="text-muted font-bold tracking-wider uppercase text-xs">Recherche des meilleurs véhicules...</p>
+        </div>
+
+        <!-- Results Grid -->
+        <ng-container *ngIf="!isLoading">
+          <div class="grid-2 xl-grid-3 gap-6" *ngIf="filteredVehicles.length; else emptyState">
+            
+            <article class="card premium-shadow bg-lowest rounded-2xl border border-light flex-col overflow-hidden transition-all duration-300 hover:shadow-premium hover:-translate-y-1 group" *ngFor="let vehicle of filteredVehicles">
+              
+              <!-- Vehicle Hero Image -->
+              <div class="relative h-48 w-full bg-surface-low overflow-hidden cursor-pointer" (click)="openGallery(vehicle, 0)">
+                <img
+                  *ngIf="getVehiclePhotos(vehicle).length; else noVehiclePhoto"
+                  [src]="resolvePhotoUrl(getVehiclePhotos(vehicle)[0])"
+                  alt="Photo véhicule"
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                
+                <ng-template #noVehiclePhoto>
+                  <div class="w-full h-full flex-center bg-surface-low">
+                     <span class="material-symbols-outlined icon-3xl text-muted opacity-30">no_photography</span>
+                  </div>
+                </ng-template>
+                
+                <!-- Gallery Badge Indicator -->
+                <div class="absolute top-3 right-3" *ngIf="getVehiclePhotos(vehicle).length > 1">
+                   <span class="badge bg-black/60 text-white backdrop-blur-md shadow-sm font-bold text-[10px] flex items-center gap-1">
+                     <span class="material-symbols-outlined icon-small">photo_library</span> +{{ getVehiclePhotos(vehicle).length - 1 }}
+                   </span>
+                </div>
+
+                <!-- Gradient Title Layer -->
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex-col justify-end pt-12">
+                   <span class="badge bg-white/20 backdrop-blur-md text-white border border-white/30 text-[9px] font-bold uppercase tracking-wider w-max mb-1.5">{{ vehicle.agenceLabel }}</span>
+                   <h3 class="font-headline font-extrabold text-xl text-white drop-shadow-md leading-tight">
+                      {{ vehicle.marque }} {{ vehicle.modele }}
+                   </h3>
+                </div>
+              </div>
+
+              <!-- Thumbnails Preview (Optional, max 3) -->
+              <div class="grid grid-cols-3 gap-1 px-4 pt-4" *ngIf="getVehiclePhotos(vehicle).length > 1">
+                 <button
+                   type="button"
+                   class="aspect-video w-full rounded-md overflow-hidden bg-surface-low border border-light-subtle cursor-pointer hover:border-primary transition-colors p-0 m-0"
+                   *ngFor="let photo of getVehiclePhotos(vehicle) | slice: 1:4; let idx = index"
+                   (click)="openGallery(vehicle, idx + 1)"
+                 >
+                   <img [src]="resolvePhotoUrl(photo)" class="w-full h-full object-cover" />
+                 </button>
+              </div>
+
+              <!-- Content Body -->
+              <div class="p-5 flex-col flex-grow bg-surface">
+                 
+                 <!-- Plate & Type tags -->
+                 <div class="flex items-center gap-2 mb-4 flex-wrap">
+                   <span class="badge badge-surface text-[10px] font-bold uppercase border border-light-subtle">{{ vehicle.typeVehicule || 'Standard' }}</span>
+                   <span class="badge badge-surface opacity-70 text-[10px] uppercase font-bold">{{ vehicle.numeroPlaque }}</span>
+                 </div>
+
+                 <!-- Meta Info Grid -->
+                 <div class="grid-2 gap-3 mb-5 text-sm">
+                   <div class="flex items-center gap-2 text-dark font-medium">
+                     <span class="material-symbols-outlined text-muted icon-small">group</span> {{ vehicle.capacitePassagers || '-' }} places
+                   </div>
+                   <div class="flex items-center gap-2 text-dark font-medium">
+                     <span class="material-symbols-outlined text-success icon-small">check_circle</span> {{ vehicle.statut }}
+                   </div>
+                   <div class="flex items-center gap-2 text-dark font-medium col-span-full">
+                     <span class="material-symbols-outlined text-primary icon-small">timer</span>
+                     <span>Tarif minute: {{ vehicle.prixMinute || 0 | currency: 'TND' : 'symbol' : '1.0-0' }}</span>
+                   </div>
+                 </div>
+
+                 <!-- Footer Pricing & Action -->
+                 <div class="mt-auto pt-4 border-t border-light-subtle flex-between items-end">
+                    <div class="flex-col">
+                      <span class="text-[10px] uppercase font-bold text-muted tracking-widest leading-none">Estimation Prix</span>
+                      <strong class="font-headline font-black text-xl text-primary leading-tight">{{ vehicle.prixKm || 0 | currency: 'TND' : 'symbol' : '1.0-0' }}<span class="text-xs text-muted font-bold">/km</span></strong>
+                    </div>
+                 </div>
+              </div>
+              
+              <!-- Buttons Area -->
+              <div class="p-4 bg-surface-lowest border-t border-light grid-2 gap-2">
+                 <a class="btn btn-surface text-xs w-full py-2.5 font-bold hover:-translate-y-0.5"
+                    [routerLink]="['/transport/location/client/vehicule', vehicle.idVehiculeAgence]">
+                   Détails
+                 </a>
+                 <a class="btn btn-primary text-xs w-full py-2.5 font-bold shadow-sm hover:-translate-y-0.5"
+                    [routerLink]="['/transport/location/client/reserver', vehicle.idVehiculeAgence]">
+                   Réserver
+                 </a>
+              </div>
+            </article>
+
+          </div>
+
+          <ng-template #emptyState>
+             <div class="card bg-surface-low border-2 border-dashed border-light rounded-xl p-12 text-center flex-col flex-center">
+                <span class="material-symbols-outlined icon-3xl text-muted opacity-30 mb-4">search_off</span>
+                <h3 class="font-headline font-bold text-xl text-dark mb-2">Aucun véhicule trouvé</h3>
+                <p class="text-muted text-sm max-w-sm">Désolé, nous n'avons trouvé aucun véhicule correspondant à vos critères actuels. Essayez de modifier la recherche ou la catégorie.</p>
+             </div>
+          </ng-template>
+        </ng-container>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Gallery Modal -->
+  <div class="overlay" *ngIf="isGalleryOpen" (click)="closeGallery()">
+    <div class="card premium-shadow bg-[#050b14] border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-2xl flex-col overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="p-4 border-b border-white/10 flex-between items-center bg-black/40">
+        <strong class="text-white font-headline text-lg">{{ galleryTitle }}</strong>
+        <button type="button" class="bg-white/10 text-white hover:bg-white/20 transition-colors w-8 h-8 flex-center rounded-full border-none cursor-pointer" (click)="closeGallery()">
+          <span class="material-symbols-outlined icon-small">close</span>
+        </button>
+      </div>
+      
+      <div class="relative flex-center p-4 h-[60vh] bg-black/60">
+        <button
+          type="button"
+          class="absolute left-4 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border-none w-12 h-12 rounded-full flex-center cursor-pointer transition-colors z-50"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="prevGalleryPhoto()"
+        >
+          <span class="material-symbols-outlined icon-2xl">chevron_left</span>
+        </button>
+
+        <img [src]="getCurrentGalleryPhotoUrl()" alt="Photo véhicule" class="max-w-full max-h-full object-contain select-none pointer-events-none rounded-lg" />
+        
+        <button
+          type="button"
+          class="absolute right-4 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border-none w-12 h-12 rounded-full flex-center cursor-pointer transition-colors z-50"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="nextGalleryPhoto()"
+        >
+          <span class="material-symbols-outlined icon-2xl">chevron_right</span>
+        </button>
+      </div>
+
+      <div class="p-3 bg-black/40 border-t border-white/10 flex-center">
+         <span class="badge bg-white/20 text-white font-medium border border-white/30">{{ galleryIndex + 1 }} / {{ galleryPhotos.length }}</span>
+      </div>
+    </div>
+  </div>
+
+</section>

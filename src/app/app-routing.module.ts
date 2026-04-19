@@ -8,9 +8,25 @@ import { ResetPasswordComponent } from './homePage/reset-password/reset-password
 const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'dashbord', component: DashbordPageComponent, canActivate: [adminGuard] },
-  { path: 'dashboard', component: DashbordPageComponent, canActivate: [adminGuard] },
-  { path: '**', redirectTo: '' }
+  {
+    path: 'dashbord',
+    component: DashbordPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'dashboard',
+    component: DashbordPageComponent,
+    canActivate: [adminGuard],
+  },
+  // ==================== TRANSPORT MODULE ====================
+  {
+    path: 'transport',
+    loadChildren: () =>
+      import('./features/transport/transport/transport.module').then(
+        (m) => m.TransportModule,
+      ),
+  },
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({

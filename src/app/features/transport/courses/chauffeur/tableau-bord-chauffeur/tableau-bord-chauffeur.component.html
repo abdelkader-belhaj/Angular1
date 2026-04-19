@@ -1,0 +1,411 @@
+<!-- tableau-bord-chauffeur.component.html -->
+<div class="dashboard-container">
+  <div class="sand-sea-orb orb-left"></div>
+  <div class="sand-sea-orb orb-right"></div>
+
+  <div class="dashboard-shell">
+    <app-chauffeur-sidenav
+      [activeSection]="'overview'"
+      [showCta]="true"
+      [ctaLabel]="'Prendre une course'"
+      [ctaDisabled]="!hasActiveCourse"
+      (ctaClick)="goToActiveCourse()"
+    ></app-chauffeur-sidenav>
+
+    <div class="dashboard-main">
+      <header class="dashboard-header glass-surface">
+        <div class="search-shell">
+          <input
+            type="text"
+            placeholder="Rechercher une course ou un client..."
+            readonly
+          />
+        </div>
+
+        <div class="header-right">
+          <button class="wallet-link-btn" type="button" (click)="goToWallet()">
+            <span>Portefeuille</span>
+          </button>
+
+          <button
+            class="online-toggle"
+            [class.online]="isOnline"
+            type="button"
+            (click)="toggleDisponibilite()"
+          >
+            <span class="status-dot"></span>
+            <span>{{ isOnline ? 'En ligne' : 'Hors ligne' }}</span>
+          </button>
+
+          <button class="icon-btn" type="button" (click)="goToProfile()">
+            Profil
+          </button>
+        </div>
+      </header>
+
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Chargement du tableau de bord...</p>
+      </div>
+
+      <div class="dashboard-content" *ngIf="!isLoading">
+        <section class="welcome-row stagger-item" style="--stagger: 0">
+          <div>
+            <h1>
+              Bonjour, {{ chauffeur?.utilisateur?.username || 'Chauffeur' }}
+            </h1>
+            <p>Voici le récapitulatif de votre activité pour aujourd'hui.</p>
+          </div>
+
+          <article class="rating-card">
+            <p>Note actuelle</p>
+            <h3>{{ noteMoyenneFormatted }}<span>/5</span></h3>
+          </article>
+        </section>
+
+        <section class="stats-grid stagger-item" style="--stagger: 1">
+          <article class="stat-card metric-main">
+            <p>Revenus aujourd'hui</p>
+            <h3>{{ revenusAujourdhuiFormatted }} TND</h3>
+          </article>
+
+          <article class="stat-card">
+            <p>Courses aujourd'hui</p>
+            <h3>{{ stats.totalCoursesAujourdhui }}</h3>
+            <span class="stat-context"
+              >Semaine: {{ stats.totalCoursesSemaine }}</span
+            >
+          </article>
+
+          <article class="stat-card">
+            <p>Note moyenne</p>
+            <h3>{{ noteMoyenneFormatted }}</h3>
+          </article>
+
+          <article class="stat-card wallet-stat" (click)="goToWallet()">
+            <p>Solde disponible</p>
+            <h3>{{ soldeFormatted }} TND</h3>
+          </article>
+
+          <article class="stat-card" *ngIf="isOnline">
+            <p>Temps en ligne</p>
+            <h3>{{ tempsEnLigneDisplay }}</h3>
+          </article>
+        </section>
+
+        <div
+          *ngIf="hasActiveCourse"
+          class="active-course-banner stagger-item"
+          style="--stagger: 2"
+          (click)="goToActiveCourse()"
+        >
+          <div class="banner-content">
+            <span class="pulse-dot"></span>
+            <span>Course en cours - Appuyez pour voir les détails</span>
+          </div>
+          <span class="banner-arrow">Voir</span>
+        </div>
+
+        <section class="workspace-grid stagger-item" style="--stagger: 3">
+          <div class="workspace-left">
+            <article
+              class="panel-card map-panel stagger-item"
+              style="--stagger: 4"
+            >
+              <div class="panel-head">
+                <h2>Ma localisation en direct</h2>
+              </div>
+
+              <article
+                class="driver-map-card"
+                *ngIf="
+                  getMapEmbedUrl(chauffeur?.positionActuelle) as driverMapUrl;
+                  else noDriverPosition
+                "
+              >
+                <iframe
+                  [src]="driverMapUrl"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  title="Position chauffeur"
+                ></iframe>
+                <a
+                  *ngIf="
+                    getMapLinkUrl(chauffeur?.positionActuelle) as driverMapLink
+                  "
+                  [href]="driverMapLink"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ouvrir dans OpenStreetMap
+                </a>
+              </article>
+
+              <ng-template #noDriverPosition>
+                <p class="driver-map-empty">
+                  Position GPS indisponible. Passez en ligne et vérifiez l'envoi
+                  de position côté backend/mobile.
+                </p>
+              </ng-template>
+            </article>
+
+            <article
+              class="panel-card weekly-summary stagger-item"
+              style="--stagger: 5"
+            >
+              <h2>Cette semaine</h2>
+              <div class="summary-bar">
+                <div class="summary-item">
+                  <span class="summary-value">{{
+                    stats.totalCoursesSemaine
+                  }}</span>
+                  <span class="summary-label">Courses</span>
+                </div>
+                <div class="summary-item highlight">
+                  <span class="summary-value"
+                    >{{ revenusSemaineFormatted }} TND</span
+                  >
+                  <span class="summary-label">Gains</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="panel-card evaluations-panel stagger-item"
+              style="--stagger: 6"
+            >
+              <div class="panel-head">
+                <h2>Évaluations récentes</h2>
+              </div>
+
+              <p class="loading-inline" *ngIf="isLoadingEvaluations">
+                Chargement des évaluations...
+              </p>
+
+              <div
+                class="smart-review-card"
+                *ngIf="smartReviewSummary as summary"
+              >
+                <div class="smart-review-summary-clean">
+                  <h3>🤖 Synthèse IA des Avis Chauffeur</h3>
+                  <p class="subtitle">
+                    Analyse de
+                    <strong>{{ summary.sourceCount }} avis clients</strong>
+                    pour ce chauffeur
+                  </p>
+                </div>
+
+                <div class="average-score">
+                  <span class="score">{{
+                    summary.averageNote | number: '1.1-1'
+                  }}</span>
+                  <span class="sur5">/ 5</span>
+                  <span class="label">Note moyenne</span>
+                </div>
+
+                <p class="smart-review-confidence">
+                  Fiabilité: {{ summary.confidence }}
+                </p>
+
+                <p class="smart-review-text">{{ summary.summary }}</p>
+
+                <div class="smart-review-lists">
+                  <div class="smart-list-card">
+                    <h4>✅ Points forts</h4>
+                    <ul>
+                      <li *ngFor="let item of summary.highlights">
+                        {{ formatReviewTopicLabel(item) }}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="smart-list-card warning">
+                    <h4>⚠️ Points à surveiller</h4>
+                    <ul>
+                      <li *ngFor="let item of summary.concerns">
+                        {{ formatReviewTopicLabel(item) }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <small class="smart-review-source"
+                  >Basé sur des avis réels de vos clients</small
+                >
+              </div>
+
+              <div *ngIf="!isLoadingEvaluations && recentEvaluations.length">
+                <div
+                  class="evaluation-card"
+                  *ngFor="let evaluation of recentEvaluations"
+                >
+                  <div class="evaluation-top">
+                    <div>
+                      <strong>
+                        {{ evaluation.evaluateurNom || 'Client' }}
+                      </strong>
+                      <p>{{ evaluation.dateCreation | date: 'mediumDate' }}</p>
+                    </div>
+                    <span class="evaluation-note">{{ evaluation.note }}/5</span>
+                  </div>
+
+                  <div class="evaluation-stars" aria-label="Note reçue">
+                    <span
+                      class="evaluation-star"
+                      *ngFor="let filled of getRatingStars(evaluation.note)"
+                      [class.filled]="filled"
+                    >
+                      ★
+                    </span>
+                  </div>
+
+                  <p class="evaluation-comment" *ngIf="evaluation.commentaire">
+                    {{ evaluation.commentaire }}
+                  </p>
+                </div>
+              </div>
+
+              <p
+                class="empty-evaluations"
+                *ngIf="!isLoadingEvaluations && !recentEvaluations.length"
+              >
+                Aucune évaluation reçue pour le moment.
+              </p>
+            </article>
+
+            <article
+              class="panel-card quick-menu stagger-item"
+              style="--stagger: 7"
+            >
+              <h2>Accès rapide</h2>
+              <div class="menu-grid">
+                <div class="menu-item" (click)="goToVehicles()">
+                  <div class="menu-icon">V</div>
+                  <span>Mes véhicules</span>
+                </div>
+
+                <div class="menu-item" (click)="goToEarnings()">
+                  <div class="menu-icon">G</div>
+                  <span>Mes gains</span>
+                </div>
+
+                <div class="menu-item" (click)="goToWallet()">
+                  <div class="menu-icon">P</div>
+                  <span>Portefeuille</span>
+                  <span class="badge" *ngIf="chauffeur?.solde"
+                    >{{ soldeFormatted }} TND</span
+                  >
+                </div>
+
+                <div
+                  class="menu-item"
+                  routerLink="/transport/chauffeur-historique-courses"
+                >
+                  <div class="menu-icon">H</div>
+                  <span>Historique</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="workspace-right">
+            <section
+              class="matching-section panel-card stagger-item"
+              style="--stagger: 8"
+              *ngIf="isLoadingMatchings || pendingMatchings.length > 0"
+            >
+              <div class="panel-head">
+                <h2>Nouvelles demandes ({{ pendingMatchings.length }})</h2>
+              </div>
+
+              <p class="loading-inline" *ngIf="isLoadingMatchings">
+                Chargement des courses proposées...
+              </p>
+
+              <div class="matching-cards">
+                <div
+                  class="matching-card"
+                  *ngFor="let matching of pendingMatchings"
+                >
+                  <div class="matching-header">
+                    <span class="price"
+                      >{{ matching.prixEstime.toFixed(2) }} TND</span
+                    >
+                    <span class="distance" *ngIf="matching.distanceKm"
+                      >{{ matching.distanceKm.toFixed(1) }} km</span
+                    >
+                  </div>
+
+                  <div class="matching-route">
+                    <div class="route-point">
+                      <span class="dot pickup"></span>
+                      <span class="address">{{ matching.adresseDepart }}</span>
+                    </div>
+                    <div class="route-line"></div>
+                    <div class="route-point">
+                      <span class="dot dropoff"></span>
+                      <span class="address">{{ matching.adresseArrivee }}</span>
+                    </div>
+                  </div>
+
+                  <div class="matching-meta">
+                    <span>Client: {{ matching.clientNom }}</span>
+                    <span>|</span>
+                    <span>Vehicule: {{ matching.typeVehicule }}</span>
+                  </div>
+
+                  <div class="matching-actions">
+                    <button
+                      class="btn-reject"
+                      type="button"
+                      (click)="rejeterMatching(matching)"
+                      [disabled]="acceptingMatchingId === matching.idMatching"
+                    >
+                      Refuser
+                    </button>
+                    <button
+                      class="btn-accept"
+                      type="button"
+                      (click)="accepterMatching(matching)"
+                      [disabled]="acceptingMatchingId !== null"
+                    >
+                      {{
+                        acceptingMatchingId === matching.idMatching
+                          ? 'Acceptation...'
+                          : 'Accepter (' +
+                            (matching.tempsEstimeMinutes || '--') +
+                            ' min)'
+                      }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="matching-section panel-card empty-state stagger-item"
+              style="--stagger: 8"
+              *ngIf="!isLoadingMatchings && pendingMatchings.length === 0"
+            >
+              <div class="empty-visual">
+                <span class="empty-ring"></span>
+                <span class="empty-dot"></span>
+              </div>
+              <h2>Nouvelles demandes (0)</h2>
+              <p class="empty-main">Aucune course proposée pour le moment.</p>
+              <p class="empty-sub">
+                Restez en ligne pour recevoir des demandes en temps réel et
+                prioriser vos prochaines courses.
+              </p>
+              <div class="empty-chips">
+                <span>Statut: {{ isOnline ? 'En ligne' : 'Hors ligne' }}</span>
+                <span *ngIf="isOnline">Réception active</span>
+                <span *ngIf="!isOnline">Passez en ligne</span>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

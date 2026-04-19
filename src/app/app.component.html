@@ -1,2 +1,26 @@
-
 <router-outlet></router-outlet>
+
+<section class="toast-stack" aria-live="polite" aria-atomic="true">
+  <article
+    *ngFor="let toast of toasts$ | async"
+    class="toast-card"
+    [class.toast-success]="toast.type === 'success'"
+    [class.toast-error]="toast.type === 'error'"
+    [class.toast-warning]="toast.type === 'warning'"
+    [class.toast-info]="toast.type === 'info'"
+    role="status"
+  >
+    <div class="toast-content">
+      <h4 class="toast-title">{{ toast.title }}</h4>
+      <p class="toast-message">{{ toast.message }}</p>
+    </div>
+    <button
+      type="button"
+      class="toast-close"
+      aria-label="Fermer la notification"
+      (click)="dismissToast(toast.id)"
+    >
+      x
+    </button>
+  </article>
+</section>

@@ -61,7 +61,7 @@ export class AuthService {
         tap((auth) => {
           localStorage.setItem(this.tokenStorageKey, auth.token);
           localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
-        })
+        }),
       );
   }
 
@@ -73,7 +73,7 @@ export class AuthService {
         tap((auth) => {
           localStorage.setItem(this.tokenStorageKey, auth.token);
           localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
-        })
+        }),
       );
   }
 
@@ -113,5 +113,8 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.getCurrentUser()?.role === 'ADMIN';
+  }
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenStorageKey);
   }
 }

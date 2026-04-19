@@ -1,31 +1,57 @@
 <section class="bg-surface-container-lowest rounded-lg overflow-hidden">
-  <div class="p-6 border-b border-surface-container flex justify-between items-center">
+  <div
+    class="p-6 border-b border-surface-container flex justify-between items-center"
+  >
     <h2 class="text-xl font-bold text-primary">Active Bookings</h2>
-    <button class="text-sm text-primary font-semibold hover:underline" type="button">View All</button>
+    <span class="text-sm text-on-surface-variant" *ngIf="!isLoading">
+      {{ activeReservations.length }} location(s) active(s)
+    </span>
   </div>
 
   <div class="overflow-x-auto">
     <table class="w-full text-left">
-      <thead class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface-variant">
+      <thead
+        class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface-variant"
+      >
         <tr>
           <th class="px-6 py-4">Client Name</th>
-          <th class="px-6 py-4">Service</th>
-          <th class="px-6 py-4">Date</th>
+          <th class="px-6 py-4">Vehicle</th>
+          <th class="px-6 py-4">Return Date</th>
           <th class="px-6 py-4">Status</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-surface-container">
-        <tr class="hover:bg-surface-container-low transition-colors">
-          <td class="px-6 py-5 text-sm font-medium">Elena Rodriguez</td>
-          <td class="px-6 py-5 text-sm">Carthage Heritage Tour</td>
-          <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 12, 2024</td>
-          <td class="px-6 py-5"><span class="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-full uppercase">Confirmed</span></td>
+        <tr
+          *ngIf="isLoading"
+          class="hover:bg-surface-container-low transition-colors"
+        >
+          <td class="px-6 py-5 text-sm text-on-surface-variant" colspan="4">
+            Chargement des locations actives...
+          </td>
         </tr>
-        <tr class="hover:bg-surface-container-low transition-colors">
-          <td class="px-6 py-5 text-sm font-medium">Jean-Luc Picard</td>
-          <td class="px-6 py-5 text-sm">Luxury Coastal Suite</td>
-          <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 14, 2024</td>
-          <td class="px-6 py-5"><span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full uppercase">In Progress</span></td>
+        <tr
+          *ngFor="let reservation of activeReservations"
+          class="hover:bg-surface-container-low transition-colors"
+        >
+          <td class="px-6 py-5 text-sm font-medium">
+            {{ getClientName(reservation) }}
+          </td>
+          <td class="px-6 py-5 text-sm">{{ getVehicleName(reservation) }}</td>
+          <td class="px-6 py-5 text-sm text-on-surface-variant">
+            {{ reservation.dateFin | date: "mediumDate" }}
+          </td>
+          <td class="px-6 py-5">
+            <span
+              class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full uppercase"
+            >
+              {{ reservation.statut }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="!isLoading && activeReservations.length === 0">
+          <td class="px-6 py-5 text-sm text-on-surface-variant" colspan="4">
+            Aucune location active pour le moment.
+          </td>
         </tr>
       </tbody>
     </table>

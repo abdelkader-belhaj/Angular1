@@ -1,0 +1,407 @@
+<section class="fleet-shell">
+  <header class="page-header">
+    <div class="header-copy">
+      <nav class="breadcrumb">
+        <span>Mon agence</span>
+        <span class="separator">/</span>
+        <span class="current">Mes véhicules</span>
+      </nav>
+      <p class="eyebrow">Espace agence</p>
+      <h1>Vos véhicules</h1>
+      <p>
+        Retrouvez ici tous vos véhicules, mettez leurs informations à jour et
+        gérez leur disponibilité en quelques clics.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="button button-primary"
+      (click)="openCreateModal()"
+    >
+      Nouveau véhicule
+    </button>
+  </header>
+
+  <p class="error-banner" *ngIf="error">{{ error }}</p>
+  <p class="success-banner" *ngIf="success">{{ success }}</p>
+
+  <section class="hero-metrics" *ngIf="agency">
+    <article class="metric-card metric-primary">
+      <span class="metric-label">Total véhicules</span>
+      <strong>{{ vehicles.length }}</strong>
+      <small>Véhicules liés à votre agence</small>
+    </article>
+    <article class="metric-card">
+      <span class="metric-label">Prêts à louer</span>
+      <strong>{{ activeVehiclesCount }}</strong>
+      <small>Disponibles à la location</small>
+    </article>
+    <article class="metric-card">
+      <span class="metric-label">À vérifier</span>
+      <strong>{{ inactiveVehiclesCount }}</strong>
+      <small>À contrôler ou à préparer</small>
+    </article>
+  </section>
+
+  <section class="toolbar" *ngIf="agency">
+    <div class="toolbar-search">
+      <input
+        type="text"
+        placeholder="Rechercher un véhicule ou une plaque..."
+        [(ngModel)]="vehicleSearch"
+        name="vehicleSearch"
+      />
+    </div>
+    <div class="toolbar-filters">
+      <label>
+        Type
+        <select [(ngModel)]="selectedTypeFilter" name="selectedTypeFilter">
+          <option *ngFor="let option of typeFilterOptions" [value]="option">
+            {{ option === 'ALL' ? 'Tous' : option }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Statut
+        <select [(ngModel)]="selectedStatusFilter" name="selectedStatusFilter">
+          <option *ngFor="let option of statusFilterOptions" [value]="option">
+            {{ option === 'ALL' ? 'Tous' : option }}
+          </option>
+        </select>
+      </label>
+    </div>
+    <p class="toolbar-count">
+      {{ filteredVehicles.length }} véhicule(s) affiché(s)
+    </p>
+  </section>
+
+  <section class="content-grid" *ngIf="agency">
+    <article class="panel panel-inventory">
+      <div class="panel-header">
+        <div>
+          <p class="panel-kicker">Inventaire</p>
+          <h2>Véhicules enregistrés</h2>
+          <p class="panel-subtitle">
+            Liste des véhicules disponibles et de leur état actuel
+          </p>
+        </div>
+        <button
+          type="button"
+          class="button button-primary"
+          (click)="openCreateModal()"
+        >
+          Ajouter un véhicule
+        </button>
+      </div>
+      <div
+        class="vehicle-grid"
+        *ngIf="filteredVehicles.length; else emptyFleet"
+      >
+        <article class="vehicle-card" *ngFor="let vehicle of filteredVehicles">
+          <div class="vehicle-card-hero">
+            <button
+              type="button"
+              class="vehicle-hero-button"
+              *ngIf="getVehiclePhotos(vehicle).length; else noVehiclePhoto"
+              (click)="openGallery(vehicle, 0)"
+            >
+              <img
+                [src]="resolvePhotoUrl(getVehiclePhotos(vehicle)[0])"
+                alt="Photo véhicule"
+              />
+            </button>
+            <ng-template #noVehiclePhoto>
+              <div class="vehicle-photo-placeholder">Pas de photo</div>
+            </ng-template>
+
+            <div class="vehicle-badges">
+              <span class="type-pill">{{ vehicle.typeVehicule }}</span>
+              <span
+                class="vehicle-status"
+                [class.active]="isVehicleActive(vehicle)"
+              >
+                {{ isVehicleActive(vehicle) ? 'Actif' : 'Inactif' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="vehicle-card-body">
+            <div class="vehicle-title-row">
+              <strong>{{ vehicle.marque }} {{ vehicle.modele }}</strong>
+            </div>
+            <p class="vehicle-plate">{{ vehicle.numeroPlaque }}</p>
+            <div class="vehicle-meta">
+              <span>{{ vehicle.capacitePassagers || 0 }} places</span>
+              <span>{{ vehicle.prixJour || 0 }} TND/jour</span>
+              <span>
+                Caution 20%:
+                {{
+                  (vehicle.prixVehicule || 0) * 0.2
+                    | currency: 'TND' : 'symbol' : '1.0-0'
+                }}
+              </span>
+            </div>
+
+            <div
+              class="vehicle-gallery vehicle-gallery-inline"
+              *ngIf="getVehiclePhotos(vehicle).length > 1"
+            >
+              <button
+                type="button"
+                class="vehicle-thumb"
+                *ngFor="
+                  let photo of getVehiclePhotos(vehicle) | slice: 0 : 4;
+                  let idx = index
+                "
+                (click)="openGallery(vehicle, idx)"
+              >
+                <img
+                  [src]="resolvePhotoUrl(photo)"
+                  [alt]="'Photo ' + (idx + 1)"
+                />
+              </button>
+            </div>
+          </div>
+
+          <div class="vehicle-actions">
+            <button
+              type="button"
+              class="mini-button"
+              (click)="openEditModal(vehicle)"
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              class="mini-button"
+              *ngIf="isVehicleActive(vehicle)"
+              (click)="deactivateVehicle(vehicle)"
+            >
+              Désactiver
+            </button>
+            <button
+              type="button"
+              class="mini-button"
+              *ngIf="!isVehicleActive(vehicle)"
+              (click)="activateVehicle(vehicle)"
+            >
+              Activer
+            </button>
+            <button
+              type="button"
+              class="mini-button danger"
+              (click)="deleteVehicle(vehicle)"
+            >
+              Supprimer
+            </button>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #emptyFleet>
+        <div class="empty-state">
+          Aucun véhicule ne correspond aux critères actuels.
+        </div>
+      </ng-template>
+    </article>
+  </section>
+
+  <div
+    class="form-modal-overlay"
+    *ngIf="isFormModalOpen"
+    (click)="closeFormModal()"
+  >
+    <article class="form-modal" (click)="$event.stopPropagation()">
+      <header class="form-modal-header">
+        <div>
+          <p class="panel-kicker">Véhicules</p>
+          <h2>
+            {{
+              editingVehicleId ? 'Modifier le véhicule' : 'Ajouter un véhicule'
+            }}
+          </h2>
+        </div>
+        <button type="button" class="form-close" (click)="closeFormModal()">
+          ✕
+        </button>
+      </header>
+
+      <div class="form-grid">
+        <label>
+          Marque
+          <input [(ngModel)]="form.marque" name="marque" type="text" />
+        </label>
+        <label>
+          Modèle
+          <input [(ngModel)]="form.modele" name="modele" type="text" />
+        </label>
+        <label>
+          Plaque
+          <input
+            [(ngModel)]="form.numeroPlaque"
+            name="numeroPlaque"
+            type="text"
+          />
+        </label>
+        <label>
+          Type
+          <select [(ngModel)]="form.typeVehicule" name="typeVehicule">
+            <option *ngFor="let option of typeOptions" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Places
+          <input
+            [(ngModel)]="form.capacitePassagers"
+            name="capacitePassagers"
+            type="number"
+          />
+        </label>
+        <label>
+          Statut
+          <select [(ngModel)]="form.statut" name="statut">
+            <option *ngFor="let option of statusOptions" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Prix / jour
+          <input [(ngModel)]="form.prixJour" name="prixJour" type="number" />
+        </label>
+        <label>
+          Prix du véhicule (base caution)
+          <input
+            [(ngModel)]="form.prixVehicule"
+            name="prixVehicule"
+            type="number"
+          />
+        </label>
+        <label class="full-width">
+          Photos du véhicule
+          <input
+            name="photosVehicule"
+            type="file"
+            accept="image/*"
+            multiple
+            (change)="onPhotosSelected($event)"
+          />
+        </label>
+      </div>
+
+      <div class="photos-preview" *ngIf="photoPreviews.length > 0">
+        <div
+          class="preview-item"
+          *ngFor="let preview of photoPreviews; let i = index"
+        >
+          <img [src]="preview" alt="Photo sélectionnée" />
+          <button
+            type="button"
+            class="mini-button danger"
+            (click)="removeSelectedPhoto(i)"
+          >
+            Retirer
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="photos-existing"
+        *ngIf="editingVehicleId && getEditingPhotos().length > 0"
+      >
+        <p>Photos actuelles</p>
+        <div class="existing-grid">
+          <div class="existing-item" *ngFor="let photo of getEditingPhotos()">
+            <img [src]="resolvePhotoUrl(photo)" alt="Photo actuelle véhicule" />
+            <button
+              type="button"
+              class="mini-button danger"
+              (click)="deleteEditingPhoto(photo)"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="actions modal-actions">
+        <button
+          type="button"
+          class="button button-primary"
+          (click)="saveVehicle()"
+          [disabled]="isSaving"
+        >
+          {{
+            isSaving
+              ? 'Enregistrement...'
+              : editingVehicleId
+                ? 'Mettre à jour'
+                : 'Ajouter'
+          }}
+        </button>
+        <button
+          type="button"
+          class="button button-secondary"
+          (click)="startCreate()"
+        >
+          Réinitialiser
+        </button>
+        <button
+          type="button"
+          class="button button-secondary"
+          (click)="closeFormModal()"
+        >
+          Annuler
+        </button>
+      </footer>
+    </article>
+  </div>
+
+  <div class="gallery-overlay" *ngIf="isGalleryOpen" (click)="closeGallery()">
+    <div class="gallery-modal" (click)="$event.stopPropagation()">
+      <div class="gallery-header">
+        <strong>{{ galleryTitle }}</strong>
+        <button type="button" class="gallery-close" (click)="closeGallery()">
+          ✕
+        </button>
+      </div>
+
+      <div class="gallery-main">
+        <button
+          type="button"
+          class="gallery-nav"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="prevGalleryPhoto()"
+        >
+          ‹
+        </button>
+        <img
+          [src]="getCurrentGalleryPhotoUrl()"
+          alt="Photo véhicule agrandie"
+        />
+        <button
+          type="button"
+          class="gallery-nav"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="nextGalleryPhoto()"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="gallery-strip" *ngIf="galleryPhotos.length > 1">
+        <button
+          type="button"
+          class="gallery-strip-item"
+          *ngFor="let photo of galleryPhotos; let i = index"
+          [class.active]="i === galleryIndex"
+          (click)="galleryIndex = i"
+        >
+          <img [src]="resolvePhotoUrl(photo)" alt="Miniature" />
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

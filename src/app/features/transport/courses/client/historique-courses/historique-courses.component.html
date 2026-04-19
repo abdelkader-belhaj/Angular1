@@ -1,0 +1,93 @@
+<div class="history-page">
+  <main class="history-main">
+    <header class="history-header glass-surface">
+      <div>
+        <p class="history-kicker">Espace client</p>
+        <h1>Historique des courses</h1>
+        <p class="history-subtitle">
+          Retrouvez vos trajets passés, leurs statuts et vos retours clients.
+        </p>
+      </div>
+
+      <a class="history-cta" routerLink="/transport/demander-course">
+        Nouvelle course
+      </a>
+    </header>
+
+    <div *ngIf="isLoading" class="loading-card glass-surface">
+      <div class="spinner"></div>
+      <p>Chargement de l’historique...</p>
+    </div>
+
+    <div *ngIf="error && !isLoading" class="error-card glass-surface">
+      <p>{{ error }}</p>
+    </div>
+
+    <section
+      class="history-list"
+      *ngIf="!isLoading && !error && courses.length"
+    >
+      <article class="history-card" *ngFor="let course of courses">
+        <div class="history-top">
+          <span
+            class="status-chip"
+            [class]="'status-chip ' + getStatusClass(course.statut)"
+          >
+            {{ getStatusLabel(course.statut) }}
+          </span>
+        </div>
+
+        <div class="route">
+          <p>📍 {{ getDeparture(course) }}</p>
+          <p>🏁 {{ getArrival(course) }}</p>
+        </div>
+
+        <div class="history-meta">
+          <span>{{ formatCourseWhen(course) }}</span>
+          <strong>{{ formatAmount(course.prixFinal || 0) }}</strong>
+        </div>
+
+        <div
+          class="evaluation-panel"
+          *ngIf="getEvaluationForCourse(course) as evaluation"
+        >
+          <div class="evaluation-head">
+            <span class="evaluation-title">Votre évaluation</span>
+            <span class="evaluation-date">
+              {{ formatWhen(evaluation.dateCreation) }}
+            </span>
+          </div>
+
+          <div
+            class="stars-row"
+            [attr.aria-label]="'Note ' + evaluation.note + ' sur 5'"
+          >
+            <span
+              class="star"
+              *ngFor="let filled of getRatingStars(evaluation.note)"
+              [class.filled]="filled"
+            >
+              ★
+            </span>
+            <strong class="note-value">{{ evaluation.note }}/5</strong>
+          </div>
+
+          <p class="evaluation-comment" *ngIf="evaluation.commentaire">
+            {{ evaluation.commentaire }}
+          </p>
+        </div>
+
+        <p class="evaluation-empty" *ngIf="!getEvaluationForCourse(course)">
+          Aucune évaluation envoyée pour cette course.
+        </p>
+      </article>
+    </section>
+
+    <article
+      class="empty-card glass-surface"
+      *ngIf="!isLoading && !error && !courses.length"
+    >
+      Aucune course trouvée pour le moment.
+    </article>
+  </main>
+</div>

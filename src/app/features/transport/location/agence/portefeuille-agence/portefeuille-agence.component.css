@@ -1,0 +1,300 @@
+/* portefeuille-agence.component.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap');
+
+.wallet-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f7f9fc;
+  min-height: 100vh;
+  padding-bottom: 40px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.page-header {
+  padding: 40px;
+  border-radius: 2rem;
+  background: #ffffff;
+  box-shadow: 0px 20px 40px rgba(0, 57, 116, 0.04);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #795900;
+  font-family: 'Manrope', sans-serif;
+}
+
+.page-header h1 {
+  margin: 0 0 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #003974;
+}
+
+.page-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: rgba(44, 60, 74, 0.7);
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.stat-card {
+  padding: 32px;
+  background: #003974;
+  border-radius: 2rem;
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 57, 116, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: 50%; width: 100%; height: 200%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stat-card:nth-child(2) { background: #f2f4f7; color: #2c3c4a; box-shadow: 0 20px 40px rgba(0, 57, 116, 0.04); }
+.stat-card:nth-child(2)::after { display: none; }
+.stat-card:nth-child(2) strong { color: #003974; }
+
+.stat-card:nth-child(3) { background: #ffffff; color: #2c3c4a; box-shadow: 0 20px 40px rgba(0, 57, 116, 0.04); }
+.stat-card:nth-child(3)::after { display: none; }
+.stat-card:nth-child(3) strong { color: #795900; }
+
+.stat-card:nth-child(4) { background: #ffffff; color: #2c3c4a; box-shadow: 0 20px 40px rgba(0, 57, 116, 0.04); }
+.stat-card:nth-child(4)::after { display: none; }
+.stat-card:nth-child(4) strong { color: #2c3c4a; }
+
+
+.stat-card span {
+  font-family: 'Manrope', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  margin-bottom: 12px;
+  opacity: 0.8;
+  position: relative; z-index: 1;
+}
+
+.stat-card strong {
+  font-family: 'Manrope', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  position: relative; z-index: 1;
+}
+
+/* Panel */
+.panel {
+  background: #ffffff;
+  border-radius: 2rem;
+  padding: 40px;
+  box-shadow: 0px 20px 40px rgba(0, 57, 116, 0.04);
+}
+
+.panel h2 {
+  margin: 0 0 32px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #003974;
+}
+
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.reservation-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 1fr;
+  padding: 24px;
+  border-bottom: 1px solid rgba(194, 198, 211, 0.15);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2c3c4a;
+  align-items: center;
+}
+
+.reservation-row:hover {
+  background: #f7f9fc;
+  border-radius: 1rem;
+}
+
+.reservation-row:last-child {
+  border-bottom: none;
+}
+
+.reservation-row span:last-child {
+  text-align: right;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.credit { color: #003974 !important; }
+.debit { color: #795900 !important; }
+
+/* States */
+.error-banner {
+  padding: 24px;
+  border-radius: 1.5rem;
+  background: rgba(200, 50, 50, 0.04);
+  color: #8b1e1e;
+  font-weight: 500;
+}
+
+.loading-state {
+  padding: 80px 40px;
+  background: #ffffff;
+  border-radius: 2rem;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  color: rgba(44, 60, 74, 0.6);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .reservation-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 16px;
+  }
+  .reservation-row span:last-child {
+    text-align: left;
+  }
+}
+
+/* SVG Animations */
+.spinner {
+  animation: spin 1s linear infinite;
+  color: rgba(44, 60, 74, 0.6);
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+.page-header {
+  padding: 22px 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #102033 0%, #244870 100%);
+  color: #f8fafc;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  opacity: 0.72;
+  font-size: 0.75rem;
+}
+
+.page-header h1,
+.panel h2 {
+  margin: 0;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+  color: rgba(248, 250, 252, 0.84);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card,
+.panel,
+.loading-state {
+  padding: 20px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.stat-card {
+  display: grid;
+  gap: 8px;
+}
+
+.stat-card span {
+  color: #627084;
+}
+
+.stat-card strong {
+  font-size: 2rem;
+}
+
+.reservation-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.reservation-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 140px 140px;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.credit {
+  color: #166534;
+  font-weight: 700;
+}
+
+.debit {
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.reservation-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.error-banner {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff0f0;
+  color: #9b1c1c;
+}
+
+@media (max-width: 900px) {
+  .stats-grid,
+  .reservation-row {
+    grid-template-columns: 1fr;
+  }
+}

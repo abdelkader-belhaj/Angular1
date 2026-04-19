@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule ,CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -65,6 +65,7 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     ReviewSectionComponent,
     CommunityAdminComponent,
     ForumConditionsModalComponent
+    
   ],
   imports: [
     BrowserModule,
@@ -78,6 +79,8 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
       useClass: AuthInterceptor,
       multi: true
     }],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA] 
+  
 })
 export class AppModule { }

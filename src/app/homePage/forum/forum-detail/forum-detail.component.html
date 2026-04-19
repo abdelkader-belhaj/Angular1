@@ -1,6 +1,6 @@
 <app-navbar></app-navbar>
 
-<div class="forum-page min-h-screen pt-20 px-6 lg:px-12 relative overflow-hidden">
+<div class="forum-page min-h-screen pt-20 px-6 lg:px-12 relative overflow-hidden" (click)="closeAllEmojiPickers()">
 
   <!-- Animated background orbs -->
   <div class="bg-orb bg-orb-1"></div>
@@ -77,6 +77,43 @@
       </svg>
     </button>
   </div>
+</div>
+<!-- FILTRE TRI -->
+<div class="filter-wrap mb-6">
+  <button (click)="setSortOrder('newest')"
+          class="filter-btn"
+          [class.filter-btn-active]="sortOrder === 'newest'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/>
+    </svg>
+    Plus récent
+  </button>
+  <button (click)="setSortOrder('oldest')"
+          class="filter-btn"
+          [class.filter-btn-active]="sortOrder === 'oldest'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="17 13 12 18 7 13"/><line x1="12" y1="6" x2="12" y2="18"/>
+    </svg>
+    Plus ancien
+  </button>
+  <button (click)="setSortOrder('popular')"
+          class="filter-btn"
+          [class.filter-btn-active]="sortOrder === 'popular'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+    </svg>
+    Populaire
+  </button>
+  <button (click)="setSortOrder('positive')"
+          class="filter-btn filter-btn-positive"
+          [class.filter-btn-active]="sortOrder === 'positive'">
+    😊 Positif
+  </button>
+  <button (click)="setSortOrder('negative')"
+          class="filter-btn filter-btn-negative"
+          [class.filter-btn-active]="sortOrder === 'negative'">
+    😡 Négatif
+  </button>
 </div>
 
     <!-- ═══════════════════════════════════════════════════ LOCATION ZONE -->
@@ -389,18 +426,77 @@
         </div>
 
         <!-- Contenu -->
-        <div class="form-field animate-slide-in-right delay-200">
-          <label class="form-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 6h16M4 12h16M4 18h12"/>
-            </svg>
-            Description du sujet <span class="text-red-400">*</span>
-          </label>
-          <textarea [(ngModel)]="forumContent" name="forumContent" rows="5"
-                    placeholder="Partagez vos expériences et idées... 💼🤝"
-                    class="form-textarea"></textarea>
-        </div>
+<div class="form-field animate-slide-in-right delay-200">
+  <label class="form-label">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 6h16M4 12h16M4 18h12"/>
+    </svg>
+    Description du sujet <span class="text-red-400">*</span>
+  </label>
+  <textarea [(ngModel)]="forumContent" name="forumContent" rows="5"
+            placeholder="Partagez vos expériences et idées... 💼🤝"
+            class="form-textarea"></textarea>
 
+  <!-- Bouton emoji pour le forum -->
+  <div style="position:relative;margin-top:6px;display:inline-block"
+       (click)="$event.stopPropagation()">
+    <button type="button"
+            (click)="toggleEmojiPickerCreate($event)"
+            style="display:inline-flex;align-items:center;gap:5px;
+                   background:none;border:1px solid rgba(0,0,0,0.08);
+                   cursor:pointer;font-size:13px;padding:5px 10px;
+                   border-radius:20px;color:#64748b;transition:all 0.15s"
+            onmouseover="this.style.background='#f8fafc';this.style.borderColor='rgba(0,0,0,0.15)'"
+            onmouseout="this.style.background='none';this.style.borderColor='rgba(0,0,0,0.08)'">
+      <span style="font-size:16px">😊</span>
+      Emoji
+    </button>
+
+   <div *ngIf="showEmojiPickerCreate"
+     style="position:absolute;bottom:calc(100% + 8px);left:0;z-index:9999;
+            background:white;border:1px solid rgba(0,0,0,0.08);
+            border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,0.16);
+            padding:16px;width:320px">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:12px;font-weight:600;color:#64748b;
+                     text-transform:uppercase;letter-spacing:0.05em">Emojis</span>
+        <button (click)="showEmojiPickerCreate=false;$event.stopPropagation()"
+                style="background:none;border:none;cursor:pointer;
+                       color:#94a3b8;font-size:16px;padding:2px 6px;border-radius:6px"
+                onmouseover="this.style.background='#f1f5f9'"
+                onmouseout="this.style.background='none'">✕</button>
+      </div>
+
+      <div style="display:flex;gap:4px;margin-bottom:12px;
+                  background:#f8fafc;border-radius:12px;padding:4px">
+        <button *ngFor="let cat of emojiCategories; let ci = index"
+                (click)="selectedEmojiCategory = ci; $event.stopPropagation()"
+                style="flex:1;padding:6px;border-radius:9px;border:none;
+                       cursor:pointer;font-size:16px;transition:all 0.15s"
+                [style.background]="selectedEmojiCategory === ci ? 'white' : 'transparent'"
+                [style.boxShadow]="selectedEmojiCategory === ci ? '0 2px 8px rgba(0,0,0,0.10)' : 'none'">
+          {{ cat.label }}
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px">
+        <button *ngFor="let emoji of emojiCategories[selectedEmojiCategory].emojis"
+                (click)="insertEmojiCreate(emoji, $event)"
+                style="background:none;border:none;cursor:pointer;
+                       font-size:22px;padding:6px;border-radius:10px;
+                       transition:all 0.1s;aspect-ratio:1"
+                onmouseover="this.style.background='#f1f5f9';this.style.transform='scale(1.2)'"
+                onmouseout="this.style.background='none';this.style.transform='scale(1)'">
+          {{ emoji }}
+        </button>
+      </div>
+
+    </div><!-- ← fermeture du picker dropdown -->
+  </div><!-- ← fermeture du wrapper relatif -->
+
+</div>
+<!-- ← fermeture du form-field -->
         <!-- Bouton correction IA -->
         <div class="animate-fade-in delay-300">
           <button type="button" (click)="correctWithAi()"
@@ -498,10 +594,12 @@
         </button>
       </div>
 
-      <!-- Forum Cards -->
       <div *ngFor="let forum of filteredForums; let i = index"
-
-           class="forum-card"
+     class="forum-card"
+     [ngClass]="{
+       'border-positive': forum.sentiment === 'POSITIVE',
+       'border-negative': forum.sentiment === 'NEGATIVE'
+     }"
            [style.animation-delay]="i * 80 + 'ms'">
 
         <!-- Top accent bar -->
@@ -520,8 +618,63 @@
 
                 <!-- Contenu gauche -->
                 <div class="flex-1 min-w-0">
-                  <h3 class="forum-title">{{ forum.title }}</h3>
-                  <p class="forum-content-text">{{ forum.content }}</p>
+                  <h3 class="forum-title">{{ getTranslatedTitle(forum) }}</h3>
+
+<div style="position:relative">
+  <p class="forum-content-text">
+    {{ getTranslatedContent(forum) }}
+  </p>
+  <div *ngIf="isTranslating(forum.id!)"
+       style="display:flex;align-items:center;gap:6px;
+              font-size:12px;color:#1D9E75;margin-top:4px">
+    <svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9"/>
+    </svg>
+    Traduction en cours...
+  </div>
+</div>
+                  <!-- AI SENTIMENT BADGE -->
+<div class="ai-sentiment-card"
+     [ngClass]="{
+       'sentiment-positive': forum.sentiment === 'POSITIVE',
+       'sentiment-negative': forum.sentiment === 'NEGATIVE',
+       'sentiment-neutral':  forum.sentiment === 'NEUTRAL' || !forum.sentiment
+     }"
+     title="Analyse automatique par IA">
+
+  <!-- Barre de progression sentiment -->
+  <div class="sentiment-bar-track">
+    <div class="sentiment-bar-fill"></div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="sentiment-main">
+    <div class="sentiment-left">
+      <span class="sentiment-pulse-dot"></span>
+      <span class="sentiment-label">
+        {{
+  forum.sentiment === 'POSITIVE' ? 'Expérience positive' :
+  forum.sentiment === 'NEGATIVE' ? 'Expérience négative' :
+  forum.sentiment === 'NEUTRAL'  ? 'Expérience neutre'   :
+  'Analyse IA en cours...'
+}}
+      </span>
+    </div>
+
+    <div class="sentiment-right">
+      <span class="sentiment-score-text">IA</span>
+      <span class="sentiment-emoji">
+        {{
+  forum.sentiment === 'POSITIVE' ? '😊' :
+  forum.sentiment === 'NEGATIVE' ? '😡' :
+  forum.sentiment === 'NEUTRAL'  ? '😐' : '🤖'
+}}
+      </span>
+     <span class="sentiment-ai-chip">AI Analyzer</span>
+    </div>
+  </div>
+</div>
 
                   <!-- Meta pills -->
                   <div class="meta-pills">
@@ -545,6 +698,57 @@
                       {{ forum.views || 0 }} vues
                     </span>
                   </div>
+                   <!-- ✅ BOUTON TRADUCTION —  -->
+          <div style="position:relative;margin-top:10px">
+
+            <span *ngIf="isTranslated(forum.id!)"
+                  style="font-size:11px;color:#1D9E75;background:#E1F5EE;
+                         padding:2px 8px;border-radius:10px;margin-right:6px">
+              ✓ Traduit
+            </span>
+
+            <button (click)="toggleLangPicker(forum.id!)"
+                    style="display:inline-flex;align-items:center;gap:6px;
+                           font-size:12px;padding:5px 12px;border-radius:20px;
+                           border:1px solid rgba(29,158,117,0.4);color:#1D9E75;
+                           background:rgba(29,158,117,0.06);cursor:pointer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10
+                         15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              {{ isTranslated(forum.id!) ? 'Changer la langue' : 'Traduire' }}
+            </button>
+
+            <button *ngIf="isTranslated(forum.id!)"
+                    (click)="resetTranslation(forum.id!)"
+                    style="margin-left:6px;font-size:11px;color:#999;
+                           background:none;border:none;cursor:pointer;
+                           text-decoration:underline">
+              Voir l'original
+            </button>
+
+            <div *ngIf="isLangPickerOpen(forum.id!)"
+                 style="position:absolute;top:calc(100% + 6px);left:0;z-index:100;
+                        background:white;border:1px solid rgba(0,0,0,0.1);
+                        border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+                        padding:6px;min-width:200px;
+                        display:grid;grid-template-columns:1fr 1fr;gap:3px">
+              <button *ngFor="let lang of languages"
+                      (click)="translateForum(forum, lang.code)"
+                      [style.background]="getActiveLang(forum.id!) === lang.code
+                                           ? 'rgba(29,158,117,0.1)' : 'transparent'"
+                      [style.color]="getActiveLang(forum.id!) === lang.code
+                                      ? '#1D9E75' : '#333'"
+                      style="padding:7px 10px;border-radius:8px;border:none;
+                             cursor:pointer;font-size:12px;text-align:left">
+                {{ lang.label }}
+              </button>
+            </div>
+
+          </div>
+          <!-- ✅ FIN BOUTON TRADUCTION -->
                 </div>
 
                 <!-- Droite actions -->
@@ -660,16 +864,67 @@
                       (blur)="commentInput.style.borderColor='rgba(226,232,240,0.8)'"
                       (input)="errorMessage = ''"></textarea>
             <div class="comment-input-footer">
-              <span class="comment-count">{{ commentInput.value.length }} / 1000</span>
-              <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
-                      [disabled]="commentInput.value.trim().length < 5"
-                      class="btn-comment">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-                Commenter
-              </button>
-            </div>
+  <span class="comment-count">{{ commentInput.value.length }} / 1000</span>
+
+  <!-- Bouton emoji commentaire -->
+  <div style="position:relative" (click)="$event.stopPropagation()">
+    <button type="button"
+            (click)="toggleEmojiPickerComment(forum.id!, $event)"
+            style="background:none;border:none;cursor:pointer;
+                   font-size:18px;padding:4px 8px;border-radius:8px">
+      😊
+    </button>
+
+  <div *ngIf="showEmojiPickerForumId === forum.id"
+     style="position:absolute;bottom:calc(100% + 8px);right:0;left:auto;z-index:9999;
+            background:white;border:1px solid rgba(0,0,0,0.08);
+            border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,0.16);
+            padding:16px;width:300px">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em">Emojis</span>
+    <button (click)="showEmojiPickerForumId=null;$event.stopPropagation()"
+            style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:2px 6px;border-radius:6px"
+            onmouseover="this.style.background='#f1f5f9'"
+            onmouseout="this.style.background='none'">✕</button>
+  </div>
+
+  <!-- Tabs catégories -->
+  <div style="display:flex;gap:4px;margin-bottom:12px;background:#f8fafc;border-radius:12px;padding:4px">
+    <button *ngFor="let cat of emojiCategories; let ci = index"
+            (click)="selectedEmojiCategory = ci; $event.stopPropagation()"
+            style="flex:1;padding:6px;border-radius:9px;border:none;
+                   cursor:pointer;font-size:16px;transition:all 0.15s"
+            [style.background]="selectedEmojiCategory === ci ? 'white' : 'transparent'"
+            [style.boxShadow]="selectedEmojiCategory === ci ? '0 2px 8px rgba(0,0,0,0.10)' : 'none'">
+      {{ cat.label }}
+    </button>
+  </div>
+
+  <!-- Grille emojis -->
+  <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px">
+    <button *ngFor="let emoji of emojiCategories[selectedEmojiCategory].emojis"
+            (click)="insertEmojiComment(emoji, commentInput, $event)"
+            style="background:none;border:none;cursor:pointer;
+                   font-size:22px;padding:6px;border-radius:10px;
+                   transition:all 0.1s;aspect-ratio:1"
+            onmouseover="this.style.background='#f1f5f9';this.style.transform='scale(1.2)'"
+            onmouseout="this.style.background='none';this.style.transform='scale(1)'">
+      {{ emoji }}
+    </button>
+  </div>
+</div>
+
+  <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
+          [disabled]="commentInput.value.trim().length < 5"
+          class="btn-comment">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>
+    Commenter
+  </button>
+</div>
           </div>
 
           <div class="comments-list">
@@ -685,7 +940,28 @@
                   <span *ngIf="comment.aiStatus === 'PENDING'" class="status-badge status-pending">En attente</span>
                   <span *ngIf="comment.flaggedByAI" class="status-badge status-flagged">Signalé</span>
                 </div>
-                <p class="comment-text">{{ comment.content }}</p>
+<p class="comment-text">{{ getCommentText(comment) }}</p>
+                <!-- ✅ Boutons traduction commentaire — ICI dans la boucle *ngFor comment -->
+  <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+    <button *ngFor="let lang of languages.slice(0, 4)"
+        (click)="$event.stopPropagation(); translateComment(comment, lang.code)"
+        style="font-size:10px;padding:2px 8px;border-radius:10px;
+               border:1px solid rgba(0,0,0,0.12);background:none;
+               cursor:pointer;color:#666;
+               background-color: transparent;"
+        [style.background]="commentTranslationMap.has(comment.id!) ? 'rgba(29,158,117,0.1)' : 'transparent'"
+        [style.color]="commentTranslationMap.has(comment.id!) ? '#1D9E75' : '#666'">
+  <span *ngIf="isCommentTranslating(comment.id!)">...</span>
+  <span *ngIf="!isCommentTranslating(comment.id!)">{{ lang.label }}</span>
+</button>
+    <button *ngIf="commentTranslationMap.has(comment.id!)"
+            (click)="commentTranslationMap.delete(comment.id!)"
+            style="font-size:10px;padding:2px 8px;border-radius:10px;
+                   border:none;background:none;cursor:pointer;
+                   color:#999;text-decoration:underline">
+      Original
+    </button>
+  </div>
               </div>
               <button *ngIf="currentUser && comment.user?.id === currentUser.id"
                       (click)="deleteComment(comment.id!)"
@@ -747,6 +1023,8 @@
                 <span class="comment-date" style="margin-left:auto">{{ review.createdAt | date:'short' }}</span>
               </div>
               <p class="comment-text">{{ review.comment }}</p>
+              
+
             </div>
           </div>
         </div>

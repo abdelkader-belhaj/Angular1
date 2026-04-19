@@ -13,6 +13,7 @@ export interface Forum {
   containsForbiddenWords?: boolean;
   aiStatus?: string;
   aiReason?: string;
+  sentiment?: string;
 
   community?: { id: number; name?: string };
   user?: { id: number; username?: string };

@@ -14,6 +14,7 @@ const routes: Routes = [
   { path: 'dashbord', component: DashbordPageComponent, canActivate: [adminGuard] },
   { path: 'dashboard', component: DashbordPageComponent, canActivate: [adminGuard] },
   { path: 'community-admin', component: CommunityAdminComponent },
+  
   { path: 'communities/:id', component: CommunityDetailComponent },
   { path: 'communities/:id/forum', component: ForumDetailComponent },
   { path: '**', redirectTo: '' }

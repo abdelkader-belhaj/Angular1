@@ -40,12 +40,15 @@ export class ForumService {
     );
   }
 
-  removeReaction(forumId: number, userId: number): Observable<any> {
-    return this.http.delete(
-      `${this.apiUrl}/reactions/forum/${forumId}/user/${userId}`,
-      { headers: this.getHeaders() }
-    );
-  }
+  removeReaction(forumId: number, userId: number) {
+  return this.http.delete(
+    `${this.apiUrl}/reactions/forum/${forumId}/user/${userId}`,
+    {
+      headers: this.getHeaders(),   
+      responseType: 'text'          
+    }
+  );
+}
 
   getReactions(forumId: number): Observable<Reaction[]> {
     return this.http.get<Reaction[]>(

@@ -1,0 +1,101 @@
+<app-navbar></app-navbar>
+
+<div class="min-h-screen bg-slate-50 py-16 px-6 lg:px-12">
+  <div class="mx-auto max-w-4xl">
+
+    <!-- Card principale -->
+    <div class="rounded-[32px] bg-white p-10 shadow-xl border border-slate-100">
+
+      <!-- Catégorie -->
+      <div class="mb-4">
+        <span class="inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700 border border-blue-100">
+          {{ community?.category }}
+        </span>
+      </div>
+
+      <!-- Nom + description -->
+      <h1 class="text-5xl font-black text-slate-950 mb-4">{{ community?.name }}</h1>
+      <p class="text-slate-500 text-base leading-relaxed max-w-xl mb-10">{{ community?.description }}</p>
+
+      <!-- Infos + bouton -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pt-8 border-t border-slate-100">
+
+        <div class="flex items-center gap-8">
+          <!-- Membres -->
+          <div>
+            <p class="text-xs uppercase tracking-widest text-slate-400 mb-1">Membres</p>
+            <p class="text-3xl font-black text-slate-900">{{ community?.members?.length || 0 }}</p>
+          </div>
+          <!-- Statut -->
+          <div>
+            <p class="text-xs uppercase tracking-widest text-slate-400 mb-1">Statut</p>
+            <span *ngIf="membershipStatus === 'approved'"
+              class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Membre actif
+            </span>
+            <span *ngIf="membershipStatus === 'pending'"
+              class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              En attente
+            </span>
+            <span *ngIf="membershipStatus === 'none'"
+              class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              Non membre
+            </span>
+          </div>
+        </div>
+
+        <!-- Boutons actions -->
+        <div class="flex gap-3">
+          <button *ngIf="membershipStatus === 'none'"
+            (click)="requestJoin()"
+            class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition-all duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+            Rejoindre
+          </button>
+
+          <button *ngIf="membershipStatus === 'pending'" disabled
+            class="inline-flex items-center gap-2 rounded-2xl bg-amber-50 px-6 py-3 text-sm font-semibold text-amber-600 border border-amber-200 cursor-not-allowed">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Demande en attente
+          </button>
+
+          <button *ngIf="membershipStatus === 'approved'"
+            (click)="openConditionsModal()"
+            class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all duration-200 hover:scale-105">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            Accéder au forum
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngIf="infoMessage || errorMessage" class="mt-6 space-y-3">
+        <div *ngIf="infoMessage" class="rounded-2xl bg-emerald-50 border border-emerald-200 px-5 py-3 text-sm text-emerald-800">
+          {{ infoMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="rounded-2xl bg-red-50 border border-red-200 px-5 py-3 text-sm text-red-800">
+          {{ errorMessage }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal conditions -->
+  <app-forum-conditions-modal
+  *ngIf="showConditionsModal"
+  [communityId]="communityIdAsNumber"
+  (accepted)="onConditionsAccepted()"
+  (cancelled)="showConditionsModal = false">
+</app-forum-conditions-modal>
+
+</div>

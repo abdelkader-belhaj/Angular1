@@ -1,0 +1,117 @@
+:host {
+  display: block;
+}
+
+.success-shell {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(6, 182, 212, 0.28), transparent 42%),
+    radial-gradient(circle at 88% 16%, rgba(59, 130, 246, 0.23), transparent 35%),
+    radial-gradient(circle at 52% 104%, rgba(244, 63, 94, 0.14), transparent 48%),
+    linear-gradient(150deg, #ecfeff 0%, #eef2ff 52%, #f8fafc 100%);
+}
+
+.celebration-card {
+  backdrop-filter: blur(3px);
+  box-shadow: 0 22px 60px rgba(14, 116, 144, 0.2);
+}
+
+.success-badge {
+  box-shadow: 0 12px 28px rgba(14, 116, 144, 0.25);
+}
+
+.summary-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.confetti {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0.55;
+}
+
+.confetti-a {
+  width: 180px;
+  height: 180px;
+  top: -40px;
+  left: -30px;
+  background: linear-gradient(120deg, #34d399, #10b981);
+}
+
+.confetti-b {
+  width: 140px;
+  height: 140px;
+  top: 50px;
+  right: -30px;
+  background: linear-gradient(120deg, #38bdf8, #0ea5e9);
+}
+
+.confetti-c {
+  width: 120px;
+  height: 120px;
+  bottom: -40px;
+  left: 45%;
+  background: linear-gradient(120deg, #818cf8, #22d3ee);
+}
+
+.heart-fall {
+  position: absolute;
+  top: -48px;
+  z-index: 6;
+  font-size: 22px;
+  color: #f43f5e;
+  filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.5));
+  opacity: 0;
+  animation: heartDrop 3.7s ease-out forwards;
+}
+
+.heart-row-a { top: -44px; }
+.heart-row-b { top: -78px; }
+.heart-row-c { top: -112px; }
+
+.heart-1 { left: 5%; animation-delay: 0.02s; }
+.heart-2 { left: 12%; animation-delay: 0.14s; }
+.heart-3 { left: 20%; animation-delay: 0.24s; }
+.heart-4 { left: 29%; animation-delay: 0.05s; }
+.heart-5 { left: 38%; animation-delay: 0.18s; }
+.heart-6 { left: 47%; animation-delay: 0.29s; }
+.heart-7 { left: 56%; animation-delay: 0.12s; }
+.heart-8 { left: 65%; animation-delay: 0.27s; }
+.heart-9 { left: 73%; animation-delay: 0.08s; }
+.heart-10 { left: 81%; animation-delay: 0.22s; }
+.heart-11 { left: 89%; animation-delay: 0.16s; }
+.heart-12 { left: 95%; animation-delay: 0.3s; }
+
+.heart-13 { left: 9%; animation-delay: 0.33s; }
+.heart-14 { left: 18%; animation-delay: 0.42s; }
+.heart-15 { left: 27%; animation-delay: 0.48s; }
+.heart-16 { left: 41%; animation-delay: 0.37s; }
+.heart-17 { left: 53%; animation-delay: 0.5s; }
+.heart-18 { left: 64%; animation-delay: 0.46s; }
+.heart-19 { left: 76%; animation-delay: 0.4s; }
+.heart-20 { left: 87%; animation-delay: 0.52s; }
+
+.heart-21 { left: 14%; animation-delay: 0.58s; }
+.heart-22 { left: 31%; animation-delay: 0.66s; }
+.heart-23 { left: 49%; animation-delay: 0.61s; }
+.heart-24 { left: 62%; animation-delay: 0.73s; }
+.heart-25 { left: 79%; animation-delay: 0.68s; }
+.heart-26 { left: 92%; animation-delay: 0.76s; }
+
+@keyframes heartDrop {
+  0% {
+    transform: translateY(-20px) scale(0.7) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+    transform: translateY(10px) scale(1) rotate(8deg);
+  }
+  60% {
+    opacity: 0.85;
+    transform: translateY(240px) scale(1.18) rotate(-12deg);
+  }
+  100% {
+    transform: translateY(430px) scale(0.82) rotate(18deg);
+    opacity: 0;
+  }
+}

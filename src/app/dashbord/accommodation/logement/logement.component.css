@@ -1,0 +1,74 @@
+:host { display: block; }
+button:focus, input:focus, textarea:focus { outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+
+.admin-actions-row {
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.admin-action-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	border-radius: 9999px;
+	width: 2.35rem;
+	height: 2.35rem;
+	padding: 0;
+	font-size: 0.73rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	transition: all 180ms ease;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+
+.admin-action-edit {
+	color: #1d4ed8;
+	background: #dbeafe;
+	border-color: #bfdbfe;
+}
+
+.admin-action-edit:hover {
+	background: #bfdbfe;
+	transform: translateY(-1px) scale(1.02);
+}
+
+.admin-action-archive {
+	color: #7e22ce;
+	border-color: #e9d5ff;
+	background: #f3e8ff;
+}
+
+.admin-action-archive:hover {
+	background: #e9d5ff;
+	transform: translateY(-1px) scale(1.02);
+}
+
+.admin-action-restore {
+	color: #047857;
+	border-color: #a7f3d0;
+	background: #d1fae5;
+}
+
+.admin-action-restore:hover {
+	background: #a7f3d0;
+	transform: translateY(-1px) scale(1.02);
+}
+
+.admin-action-delete {
+	color: #b91c1c;
+	border-color: #fecaca;
+	background: #fee2e2;
+}
+
+.admin-action-delete:hover {
+	background: #fecaca;
+	transform: translateY(-1px) scale(1.02);
+}
+
+.admin-action-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}

@@ -1,0 +1,26 @@
+<header *ngIf="!isCategoriePage" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+  <div>
+    <h1 *ngIf="pageTitle" class="text-3xl font-extrabold tracking-tight text-primary">{{ pageTitle }}</h1>
+    <p *ngIf="pageSubtitle" class="text-on-surface-variant">{{ pageSubtitle }}</p>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <button class="bg-red-600 text-white px-4 py-2.5 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2" type="button" (click)="logout()">
+      <span class="material-symbols-outlined text-sm">logout</span>
+      <span>Deconnexion</span>
+    </button>
+  </div>
+</header>
+
+<header *ngIf="isCategoriePage" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+  <div>
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Gestion des Catégories</h1>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <button class="bg-red-600 text-white px-4 py-2.5 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2" type="button" (click)="logout()">
+      <span class="material-symbols-outlined text-sm">logout</span>
+      <span>Deconnexion</span>
+    </button>
+  </div>
+</header>

@@ -1,0 +1,557 @@
+﻿<app-navbar></app-navbar>
+
+<!-- ========== PAGE WRAPPER ========== -->
+<div class="min-h-screen bg-slate-50 page-shell" [class.page-dark]="isDarkMode">
+
+  <!-- ── HEADER HERO ── -->
+  <div class="relative overflow-hidden bg-white border-b border-slate-200 pt-14 pb-16 px-6" [class.hero-dark]="isDarkMode">
+    <!-- Decorative blobs -->
+    <div class="absolute top-0 right-0 w-72 h-72 bg-indigo-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+      <div class="theme-top-row">
+        <button
+          type="button"
+          (click)="toggleThemeMode()"
+          class="theme-switch"
+          [class.is-on]="isDarkMode"
+          aria-label="Basculer le thème"
+        >
+          <span class="theme-switch-thumb" aria-hidden="true"></span>
+          <span class="theme-switch-moon" aria-hidden="true"></span>
+          <span class="theme-switch-stars" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="hero-topline">
+        <div class="hero-brand">
+          <div class="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm">
+            <lucide-icon name="calendar-days" class="w-5 h-5 text-indigo-600"></lucide-icon>
+          </div>
+          <div>
+            <span class="text-indigo-600 text-sm font-bold tracking-wider uppercase block">Espace Client</span>
+            <span class="text-slate-500 text-xs font-medium">Séjours, notifications et réclamations</span>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button
+            type="button"
+            (click)="toggleNotificationsPanel()"
+            class="hero-action hero-action--notif"
+            aria-label="Ouvrir les notifications"
+          >
+            <span class="hero-action-icon">
+              <lucide-icon name="bell" class="w-4 h-4"></lucide-icon>
+            </span>
+            <span class="hero-action-text">
+              <strong>Notifications</strong>
+              <small>{{ unreadNotifCount > 0 ? unreadNotifCount + ' non lues' : 'Tout est lu' }}</small>
+            </span>
+            <span *ngIf="unreadNotifCount > 0" class="hero-action-badge">{{ unreadNotifCount }}</span>
+          </button>
+
+          <button
+            type="button"
+            routerLink="/mes-reclamations"
+            class="hero-action hero-action--claim"
+            aria-label="Accéder à mes réclamations"
+          >
+            <span class="hero-action-icon hero-action-icon--amber">
+              <lucide-icon name="message-square" class="w-4 h-4"></lucide-icon>
+            </span>
+            <span class="hero-action-text">
+              <strong>Réclamations</strong>
+              <small>Ouvrir ou suivre un dossier</small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <p class="mt-1 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Mes réservations</p>
+
+      <!-- Stats bar -->
+      <div class="summary-strip mt-4" *ngIf="!loading">
+        <div class="summary-chip summary-chip--indigo">
+          <lucide-icon name="layers" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <div>
+            <p class="summary-value">{{ visibleReservations.length }}</p>
+            <p class="summary-label">Séjours</p>
+          </div>
+        </div>
+        <div class="summary-chip summary-chip--emerald">
+          <lucide-icon name="check-circle" class="w-4 h-4 text-emerald-600"></lucide-icon>
+          <div>
+            <p class="summary-value">{{ countConfirmee }}</p>
+            <p class="summary-label">Confirmées</p>
+          </div>
+        </div>
+        <div class="summary-chip summary-chip--amber">
+          <lucide-icon name="hourglass" class="w-4 h-4 text-amber-600"></lucide-icon>
+          <div>
+            <p class="summary-value">{{ countModifiables }}</p>
+            <p class="summary-label">Modif. 2h</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="max-w-5xl mx-auto px-4 md:px-6 -mt-12 pb-20 relative z-10">
+
+    <div *ngIf="apiErrorMessage" class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">
+      <p class="font-semibold">Connexion API indisponible</p>
+      <p class="text-sm">{{ apiErrorMessage }}</p>
+    </div>
+
+    <div *ngIf="paymentStatus === 'success'" class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm">
+      <p class="font-semibold">Paiement Stripe confirme.</p>
+      <p class="text-sm">Votre reservation{{ paymentReservationId ? ' #' + paymentReservationId : '' }} est en cours de finalisation. Rechargez la page si le statut tarde a apparaitre.</p>
+    </div>
+
+    <div *ngIf="paymentStatus === 'cancel'" class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 shadow-sm">
+      <p class="font-semibold">Paiement annule.</p>
+      <p class="text-sm">Vous pouvez relancer le paiement pour la reservation{{ paymentReservationId ? ' #' + paymentReservationId : '' }} depuis son detail.</p>
+    </div>
+
+    <!-- Smart Lock Guide Banner -->
+    <div *ngIf="showSmartLockGuide" class="mb-6 rounded-3xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-indigo-900 font-black text-lg">Comment fonctionne votre Clé Intelligente ?</h3>
+          <p class="text-indigo-700 text-sm mt-1">Après votre réservation, vous obtenez l'accès ici dans la section Smart Lock de votre carte réservation.</p>
+          <ul class="mt-3 text-sm text-indigo-800 space-y-1">
+            <li>1. Attendez la date d'arrivée (activation à 00:00).</li>
+            <li>2. Cliquez sur "Obtenir ma clé secrète".</li>
+            <li>3. Autorisez la géolocalisation pour valider votre position.</li>
+            <li>4. Le code PIN sécurisé s'affiche après validation.</li>
+          </ul>
+          <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800 text-xs font-semibold">
+            Cette clé est personnelle, secrète et unique. Ne la partagez avec personne.
+          </div>
+        </div>
+        <button type="button" (click)="closeSmartLockGuide()" class="rounded-full p-2 text-indigo-500 hover:bg-indigo-100">
+          <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-24 gap-4">
+      <div class="w-14 h-14 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+      <p class="text-slate-500 font-semibold">Chargement en cours...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && visibleReservations.length === 0"
+      class="bg-white border border-slate-100 shadow-sm rounded-3xl p-12 text-center mt-4">
+      <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-100">
+        <lucide-icon name="calendar-x" class="w-10 h-10 text-indigo-500"></lucide-icon>
+      </div>
+      <h3 class="text-xl font-extrabold text-slate-800 mb-2">Aucune réservation</h3>
+      <p class="text-slate-500 mb-8 max-w-sm mx-auto">Vous n'avez pas encore effectué de réservation. Explorez nos logements pour commencer.</p>
+      <button routerLink="/stays"
+        class="inline-flex items-center gap-2 px-8 py-3.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+        <lucide-icon name="search" class="w-5 h-5"></lucide-icon>
+        Explorer les logements
+      </button>
+    </div>
+
+    <!-- ── RESERVATION CARDS GRID ── -->
+    <div *ngIf="!loading && visibleReservations.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+
+      <div *ngFor="let res of visibleReservations"
+        [attr.id]="'reservation-card-' + res.idReservation"
+        class="group relative bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1"
+        [ngClass]="highlightedSmartLockReservationId === res.idReservation ? 'directed-reservation-glow' : ''">
+
+        <button
+          type="button"
+          class="absolute top-3 right-3 z-20 h-8 w-8 rounded-full border border-slate-200 bg-white/95 text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors flex items-center justify-center"
+          (click)="hideReservation(res.idReservation)"
+          title="Masquer cette réservation"
+          aria-label="Masquer cette réservation"
+        >
+          <lucide-icon name="x" class="w-4 h-4"></lucide-icon>
+        </button>
+
+        <!-- Status bar (top accent) -->
+        <div class="h-1 w-full"
+          [ngClass]="{
+            'bg-gradient-to-r from-amber-400 to-orange-400': res.statut === 'en_attente',
+            'bg-gradient-to-r from-emerald-400 to-teal-400': res.statut === 'confirmee',
+            'bg-gradient-to-r from-rose-500 to-red-500': res.statut === 'annulee'
+          }">
+        </div>
+
+        <!-- ─ VIEW MODE ─ -->
+        <div *ngIf="editingReservationId !== res.idReservation" class="p-6 flex flex-col gap-4 h-full">
+
+          <!-- Card Header -->
+          <div class="flex justify-between items-start gap-3">
+            <div>
+              <h4 class="font-extrabold text-lg text-slate-800 leading-tight">{{ res.nomLogement }}</h4>
+              <p class="text-slate-500 text-sm font-medium flex items-center gap-1.5 mt-1">
+                <lucide-icon name="map-pin" class="w-3.5 h-3.5"></lucide-icon>
+                {{ res.villeLogement }}
+              </p>
+            </div>
+            <!-- Status badge -->
+            <span class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-black border"
+              [ngClass]="{
+                'bg-amber-50 text-amber-700 border-amber-200': res.statut === 'en_attente',
+                'bg-emerald-50 text-emerald-700 border-emerald-200': res.statut === 'confirmee',
+                'bg-rose-50 text-rose-700 border-rose-200': res.statut === 'annulee'
+              }">
+              {{ res.statut === 'en_attente' ? '⏳ En attente' : res.statut === 'confirmee' ? '✅ Confirmée' : '❌ Annulée' }}
+            </span>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Arrivée</p>
+              <p class="text-slate-800 font-bold text-sm">{{ res.dateDebut | date:'d MMM yyyy' }}</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Départ</p>
+              <p class="text-slate-800 font-bold text-sm">{{ res.dateFin | date:'d MMM yyyy' }}</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Voyageurs</p>
+              <p class="text-slate-800 font-bold text-sm flex items-center gap-1.5">
+                <lucide-icon name="users" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+                {{ res.nbPersonnes }} personne{{ res.nbPersonnes > 1 ? 's' : '' }}
+              </p>
+            </div>
+            <div class="bg-indigo-50 rounded-2xl p-3 border border-indigo-100">
+              <p class="text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">Prix total</p>
+              <p class="text-indigo-900 font-black text-lg leading-none">{{ res.prixTotal }} <span class="text-sm font-semibold text-indigo-500">DT</span></p>
+            </div>
+          </div>
+
+          <!-- Reservation date -->
+          <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+            <lucide-icon name="clock" class="w-3.5 h-3.5"></lucide-icon>
+            Réservé le {{ res.dateReservation | date:'d MMM yyyy à HH:mm' }}
+          </p>
+
+          <!-- Modification Progress Window -->
+          <div *ngIf="res.canCancelOrModify && getProgressPercentage(res.dateReservation) < 100"
+            class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-500 flex items-center gap-1.5">
+                <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+                Fenêtre de modification
+              </span>
+              <span class="text-indigo-600 font-bold">{{ getRemainingTimeText(res.dateReservation) }}</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-1000 ease-out"
+                [ngClass]="getProgressPercentage(res.dateReservation) > 70 ? 'bg-gradient-to-r from-amber-400 to-red-400' : 'bg-gradient-to-r from-indigo-500 to-purple-500'"
+                [style.width.%]="getProgressPercentage(res.dateReservation)">
+              </div>
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button
+                class="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                (click)="cancelReservation(res.idReservation)">
+                <lucide-icon name="x-circle" class="w-4 h-4"></lucide-icon> Annuler
+              </button>
+              <button
+                class="flex-1 bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                (click)="startEditingRes(res)">
+                <lucide-icon name="edit-2" class="w-4 h-4"></lucide-icon> Modifier
+              </button>
+            </div>
+          </div>
+
+          <!-- Expired modification window -->
+          <div *ngIf="res.statut !== 'annulee' && (!res.canCancelOrModify || getProgressPercentage(res.dateReservation) >= 100)"
+            class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-2 text-slate-500 text-xs font-semibold">
+            <lucide-icon name="lock" class="w-3.5 h-3.5"></lucide-icon>
+            Fenêtre de modification expirée (2h dépassées)
+          </div>
+
+          <!-- Cancelled badge with Hover Reveal to Delete -->
+          <div *ngIf="res.statut === 'annulee'" class="relative overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 group">
+            <div class="w-full transition-transform duration-300 ease-out group-hover:-translate-x-[5rem] bg-rose-100/50 p-4 flex justify-between items-center text-rose-600 text-sm font-semibold">
+              <span class="flex items-center gap-2"><lucide-icon name="x-circle" class="w-4 h-4"></lucide-icon> Cette réservation a été annulée.</span>
+              <span class="text-[10px] uppercase font-bold tracking-wider text-rose-500 flex items-center gap-1 transition-opacity duration-300 group-hover:opacity-0"><lucide-icon name="arrow-left" class="w-3 h-3"></lucide-icon> Survoler</span>
+            </div>
+            <div class="absolute top-0 right-0 h-full w-[5rem] translate-x-[5rem] group-hover:translate-x-0 transition-transform duration-300 ease-out bg-rose-600 flex items-center justify-center cursor-pointer hover:bg-rose-700 z-10"
+              (click)="deleteReservationHistory(res.idReservation)">
+              <lucide-icon name="trash-2" class="w-5 h-5 text-white animate-pulse"></lucide-icon>
+            </div>
+          </div>
+
+          <!-- ── SMART LOCK ── -->
+          <div *ngIf="res.statut === 'confirmee'"
+            class="border-t border-slate-200 pt-4 rounded-2xl transition-all"
+            [id]="'smart-lock-' + res.idReservation"
+            [ngClass]="highlightedSmartLockReservationId === res.idReservation ? 'ring-2 ring-indigo-500 bg-indigo-50/60 p-3 directed-smartlock-focus' : ''">
+            <h5 class="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
+              <lucide-icon name="key" class="w-4 h-4 text-indigo-500"></lucide-icon> Smart Lock IoT
+            </h5>
+
+            <!-- Locked state (before check-in date) -->
+            <div *ngIf="!isSmartLockActive(res)"
+              class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
+              <div class="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center border border-slate-300">
+                <lucide-icon name="lock" class="w-5 h-5 text-slate-500"></lucide-icon>
+              </div>
+              <div>
+                <p class="text-slate-800 font-bold text-sm">Accès verrouillé</p>
+                <p class="text-slate-500 text-xs font-medium mt-0.5">
+                  Disponible le <span class="text-slate-700 font-bold">{{ res.dateDebut | date:'d MMM yyyy' }}</span> à 00:00
+                </p>
+              </div>
+            </div>
+
+            <!-- Active smart lock (on/after check-in date) -->
+            <div *ngIf="isSmartLockActive(res) && res.smartLockCode"
+              class="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500"
+              [ngClass]="unlockedLocks.has(res.idReservation)
+                ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 shadow-lg shadow-indigo-100/50'
+                : 'bg-emerald-50 border border-emerald-200 hover:border-emerald-400 shadow-md shadow-emerald-100/50 hover:shadow-lg'"
+              (click)="toggleLock(res)">
+
+              <!-- ── Locked → Ready state ── -->
+              <div *ngIf="!unlockedLocks.has(res.idReservation)" class="p-5 flex items-center justify-between gap-4 relative">
+                <div class="flex items-center gap-4">
+                  <div class="relative">
+                    <div *ngIf="!verifyingLocks.has(res.idReservation)" class="absolute inset-0 rounded-full bg-emerald-400/30 animate-ping"></div>
+                    <div class="relative w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-colors"
+                         [ngClass]="verifyingLocks.has(res.idReservation) ? 'bg-amber-400 shadow-amber-200 animate-pulse' : 'bg-gradient-to-b from-emerald-400 to-emerald-500 shadow-emerald-200'">
+                      <lucide-icon [name]="verifyingLocks.has(res.idReservation) ? 'loader-2' : 'fingerprint'" 
+                                   [class.animate-spin]="verifyingLocks.has(res.idReservation)" 
+                                   class="w-6 h-6 text-white"></lucide-icon>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-emerald-900 font-black">{{ verifyingLocks.has(res.idReservation) ? 'Vérification GPS...' : 'Obtenir ma clé secrète' }}</p>
+                    <p *ngIf="!unlockErrors.has(res.idReservation)" class="text-emerald-700 text-xs font-semibold mt-0.5">
+                      Placez-vous près de la chambre (50m max), puis récupérez votre clé unique.
+                    </p>
+                    <p *ngIf="unlockErrors.has(res.idReservation)" class="text-rose-600 text-xs font-semibold mt-0.5">
+                      ⚠️ {{ unlockErrors.get(res.idReservation) }}
+                    </p>
+                  </div>
+                </div>
+
+                
+              </div>
+
+              <!-- ── Unlocked → PIN revealed state ── -->
+              <div *ngIf="unlockedLocks.has(res.idReservation)" class="p-5 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+                <p class="text-xs font-bold text-indigo-700 uppercase tracking-[0.15em] mb-3 flex items-center gap-2 relative z-10">
+                  <lucide-icon name="shield-check" class="w-3.5 h-3.5 text-indigo-600"></lucide-icon>
+                  VOTRE CLÉ SECRÈTE UNIQUE
+                </p>
+                <div class="digital-code text-4xl font-black text-slate-800 text-center py-4 px-6 bg-white rounded-xl border border-indigo-100 shadow-inner shadow-indigo-100 mb-3 relative z-10 tracking-[0.3em]">
+                  {{ unlockedCodes.get(res.idReservation) }}
+                </div>
+                <p class="text-xs text-rose-600 font-semibold text-center relative z-10">Clé strictement confidentielle - ne pas partager</p>
+              </div>
+
+            </div>
+
+            <!-- Payment Button (direct access, independent from smart-lock click) -->
+            <div class="p-5 border-t border-slate-200 space-y-3 bg-white rounded-2xl mt-4">
+              <button
+                *ngIf="!isReservationPaid(res.idReservation)"
+                type="button"
+                (click)="openPaymentModal(res)"
+                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                <lucide-icon name="credit-card" class="w-5 h-5"></lucide-icon>
+                Payer maintenant
+                <span class="ml-auto text-sm font-semibold">{{ res.prixTotal }} DT</span>
+              </button>
+
+              <div *ngIf="isReservationPaid(res.idReservation)" class="space-y-2">
+                <div class="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 text-sm font-bold flex items-center gap-2 justify-center">
+                  <lucide-icon name="check-circle" class="w-5 h-5"></lucide-icon>
+                  Réservation déjà payée
+                </div>
+                <button
+                  type="button"
+                  (click)="openInvoice(res.idReservation)"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 font-bold hover:bg-slate-50 transition-colors">
+                  Voir facture et détails
+                </button>
+              </div>
+
+              <p class="text-xs text-slate-500 text-center">Paiement sécurisé par Stripe</p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ─ EDIT MODE ─ -->
+        <form *ngIf="editingReservationId === res.idReservation"
+          [formGroup]="editResForm" (ngSubmit)="saveReservation(res)"
+          class="p-6 flex flex-col gap-4 h-full">
+
+          <h5 class="text-slate-800 font-bold flex items-center gap-2 text-base">
+            <lucide-icon name="settings-2" class="w-5 h-5 text-indigo-600"></lucide-icon>
+            Modifier la réservation
+          </h5>
+          <p class="text-xs text-slate-500 -mt-2 font-medium">{{ res.nomLogement }}</p>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date d'arrivée</label>
+            <input type="date" formControlName="dateDebut"
+              class="w-full px-4 py-3 bg-white border border-slate-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date de départ</label>
+            <input type="date" formControlName="dateFin"
+              class="w-full px-4 py-3 bg-white border border-slate-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex justify-between">
+              <span>Nombre de personnes</span>
+              <span class="text-indigo-600 normal-case font-semibold">Max : {{ res.capaciteLogement }}</span>
+            </label>
+            <input type="number" formControlName="nbPersonnes" min="1"
+              class="w-full px-4 py-3 bg-white border border-slate-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all font-medium" />
+            <div *ngIf="editResForm.controls.nbPersonnes.invalid"
+              class="text-xs text-rose-600 mt-2 font-bold flex items-center gap-1.5">
+              <lucide-icon name="alert-circle" class="w-3.5 h-3.5"></lucide-icon>
+              Dépassement de la capacité autorisée.
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-2 mt-auto border-t border-slate-200">
+            <button type="button"
+              class="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-100 transition-colors text-sm"
+              (click)="cancelEditingRes()">Annuler</button>
+            <button type="submit"
+              class="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md shadow-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+              [disabled]="editResForm.invalid">Confirmer</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── NOTIFICATIONS DRAWER ── -->
+<div *ngIf="showNotificationsPanel" class="fixed inset-0 z-50 flex justify-end bg-slate-950/40 backdrop-blur-sm" (click)="closeNotificationsPanel()">
+  <aside
+    class="h-full w-full max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="p-5 border-b border-slate-200 bg-slate-50/80">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <lucide-icon name="bell" class="w-5 h-5 text-indigo-600"></lucide-icon>
+            Notifications
+          </h3>
+          <p class="text-xs text-slate-500 mt-1">Glissez une carte vers la gauche pour la supprimer.</p>
+        </div>
+        <button
+          type="button"
+          (click)="closeNotificationsPanel()"
+          class="rounded-full p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+          aria-label="Fermer les notifications"
+        >
+          <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button
+          type="button"
+          (click)="markAllNotificationsAsRead()"
+          class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          [disabled]="unreadNotifCount === 0"
+        >
+          Tout marquer comme lu
+        </button>
+        <span class="text-xs text-slate-500">{{ notifications.length }} notification(s)</span>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+      <div *ngIf="notifications.length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+        Aucune notification pour le moment.
+      </div>
+
+      <div *ngFor="let n of notifications" class="group notif-card-shell relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md" [class.notif-removing]="isNotifRemoving(n.id)">
+        <button
+          type="button"
+          class="notif-hover-trash"
+          (click)="$event.stopPropagation(); deleteNotification(n)"
+          [disabled]="isNotifRemoving(n.id)"
+          data-no-swipe="true"
+          aria-label="Supprimer la notification"
+        >
+          <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+        </button>
+
+        <div class="notif-delete-action" [class.revealed]="isNotifDeleteRevealed(n.id)">
+          <button
+            type="button"
+            class="h-full w-full text-white text-xs font-bold tracking-wide"
+            (click)="deleteNotification(n)"
+            [disabled]="isNotifRemoving(n.id)"
+            data-no-swipe="true"
+            aria-label="Supprimer la notification"
+          >
+            Supprimer
+          </button>
+        </div>
+
+        <div
+          class="notif-swipe-surface"
+          [style.transform]="getNotifSwipeTransform(n.id)"
+          [class.notif-swipe-revealed]="isNotifDeleteRevealed(n.id)"
+          (pointerdown)="onNotifPointerDown($event, n.id)"
+          (pointermove)="onNotifPointerMove($event, n.id)"
+          (pointerup)="onNotifPointerEnd(n.id)"
+          (pointercancel)="onNotifPointerEnd(n.id)"
+          (touchstart)="onNotifTouchStart($event, n.id)"
+          (touchmove)="onNotifTouchMove($event, n.id)"
+          (touchend)="onNotifTouchEnd(n.id)"
+        >
+          <button
+            type="button"
+            class="w-full p-4 text-left"
+            [ngClass]="n.isRead ? 'text-slate-500' : 'bg-indigo-50/60 text-slate-900'"
+            [disabled]="isNotifRemoving(n.id)"
+            (click)="onNotifCardPrimaryAction(n)"
+          >
+            <div class="flex items-start gap-3">
+              <span class="mt-2 h-2.5 w-2.5 rounded-full shrink-0" [ngClass]="n.isRead ? 'bg-slate-300' : 'bg-indigo-500'"></span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium leading-6">{{ n.message }}</p>
+                <p class="mt-1 text-xs" [ngClass]="n.isRead ? 'text-slate-400' : 'text-indigo-600 font-semibold'">
+                  {{ n.createdAt | date:'d MMM yyyy, HH:mm' }}
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <div *ngIf="isSmartLockNotification(n)" class="px-4 pb-3">
+            <button
+              type="button"
+              class="w-full rounded-xl bg-indigo-600 text-white text-xs font-semibold py-2 hover:bg-indigo-700 transition-colors"
+              [disabled]="isNotifRemoving(n.id)"
+              data-no-swipe="true"
+              (click)="onGuideButtonClick($event, n)">
+              Me guider vers la cle de la chambre
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>

@@ -1,0 +1,158 @@
+<div class="reclamations-wrap" [class.client-flow]="isClient">
+  <div class="reclamations-hero">
+    <div class="hero-mark" aria-hidden="true">!</div>
+    <div class="hero-content">
+      <div class="hero-top-actions" *ngIf="isClient">
+        <button type="button" class="back-link-btn" (click)="goBack()" aria-label="Retour a la page precedente">
+          <span class="material-symbols-outlined">arrow_back</span>
+          <span>Retour</span>
+        </button>
+      </div>
+      <p class="hero-kicker">Centre litiges</p>
+      <h2>Espace Reclamations</h2>
+      <p *ngIf="isClient">Déclarez un incident, ajoutez des preuves et suivez l'avancement de votre dossier.</p>
+      <p *ngIf="isHebergeur">Traitez les incidents signalés, apportez des réponses claires et mettez le statut à jour.</p>
+      <p *ngIf="isAdmin">Pilotez les dossiers sensibles et assurez une résolution transparente des litiges.</p>
+      <div class="hero-tags">
+        <span class="hero-tag">{{ reclamations.length }} dossier(s)</span>
+        <span class="hero-tag" *ngIf="isClient">Vue client</span>
+        <span class="hero-tag" *ngIf="isHebergeur">Vue hebergeur</span>
+        <span class="hero-tag" *ngIf="isAdmin">Vue admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-box">Chargement des dossiers...</div>
+
+  <div *ngIf="!loading && requestError" class="error-box">{{ requestError }}</div>
+  <div *ngIf="!loading && requestSuccess" class="loading-box">{{ requestSuccess }}</div>
+  <div *ngIf="!loading && isClient && clientReplyNotice" class="client-notice-box">{{ clientReplyNotice }}</div>
+
+  <section *ngIf="!loading && isClient" class="claim-create-card">
+    <div class="claim-create-head">
+      <div>
+        <p class="section-kicker">Nouveau dossier</p>
+        <h3>Deposer une reclamation</h3>
+      </div>
+      <div class="claim-status-chip" *ngIf="canCreateReclamation">Reservation active detectee</div>
+    </div>
+    <p class="hint" *ngIf="!canCreateReclamation">{{ createBlockedReason }}</p>
+
+    <div class="form-grid" *ngIf="canCreateReclamation">
+      <div class="full detected-card">
+        <p class="detected-label">Dossier lie au logement</p>
+        <p class="detected-value">{{ getCurrentReservationLabel() }}</p>
+      </div>
+
+      <label class="full">
+        <span>Titre du probleme</span>
+        <input [(ngModel)]="formData.title" name="title" placeholder="Ex: Proprete insuffisante a l'arrivee" />
+      </label>
+
+      <label class="full">
+        <span>Description detaillee</span>
+        <textarea rows="4" [(ngModel)]="formData.description" name="description" placeholder="Expliquez le probleme, le contexte et l'impact constates..."></textarea>
+      </label>
+
+      <div class="full upload-panel">
+        <div>
+          <strong>Preuves visuelles</strong>
+          <p>Ajoutez des images pour renforcer votre dossier.</p>
+        </div>
+        <label class="upload-btn">
+          Ajouter des images
+          <input type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
+        </label>
+      </div>
+
+      <div class="images-grid full" *ngIf="imageFiles.length">
+        <div class="img-card" *ngFor="let img of imageFiles; let i = index">
+          <img [src]="img.dataUrl" [alt]="img.name" />
+          <div class="img-meta">
+            <span>{{ img.name }}</span>
+            <button type="button" (click)="removeImage(i)">x</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="submit-btn" (click)="createReclamation()" [disabled]="saving">
+        {{ saving ? 'Envoi...' : 'Envoyer la reclamation' }}
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="!loading" class="claims-list">
+    <article class="claim-card" *ngFor="let item of reclamations; let i = index" [ngClass]="{
+      'claim-open': item.status === 'ouverte',
+      'claim-progress': item.status === 'en_cours',
+      'claim-resolved': item.status === 'resolue'
+    }" [attr.id]="'reclamation-card-' + item.id">
+      <header>
+        <div>
+          <p class="claim-id">Dossier {{ i + 1 }}</p>
+          <h4>{{ item.title }}</h4>
+          <p>{{ item.logementNom }}</p>
+        </div>
+        <span class="status-badge" [ngClass]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+      </header>
+
+      <p class="claim-description">{{ item.description }}</p>
+
+      <div class="meta-line">
+        <span>Client: {{ item.clientName }}</span>
+        <span>Creation: {{ formatDate(item.createdAt) }}</span>
+      </div>
+
+      <div class="conversation-toolbar">
+        <span class="conversation-status" [ngClass]="statusClass(item.status)">
+          <span class="material-symbols-outlined status-icon">{{ statusIcon(item.status) }}</span>
+          <span>{{ statusLabel(item.status) }}</span>
+        </span>
+        <button type="button" class="conversation-toggle-btn" [class.is-open]="isConversationOpen(item.id)" (click)="toggleConversation(item.id)">
+          <span class="material-symbols-outlined">{{ isConversationOpen(item.id) ? 'expand_less' : 'expand_more' }}</span>
+          <span>{{ isConversationOpen(item.id) ? 'Fermer la conversation' : 'Ouvrir la conversation' }}</span>
+        </button>
+      </div>
+
+      <div class="images-grid" *ngIf="item.imageCount > 0">
+        <p class="image-count-badge">{{ item.imageCount }} image(s) jointe(s)</p>
+        <div class="img-card" *ngFor="let preview of item.imagePreviews || []; let idx = index">
+          <img [src]="preview" [alt]="'Preuve ' + (idx + 1)" />
+          <div class="img-meta">
+            <span>Preuve {{ idx + 1 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="reply-thread" *ngIf="item.replies.length && isConversationOpen(item.id)">
+        <h5>Suivi des reponses</h5>
+        <div class="conversation-thread">
+        <div class="reply-item" *ngFor="let reply of item.replies" [ngClass]="replyBubbleClass(reply)">
+          <div class="reply-avatar" aria-hidden="true">{{ replyAvatarText(reply) }}</div>
+          <div class="reply-body">
+            <div class="reply-head">
+              <strong>{{ replyDisplayName(reply, item.clientName, item.clientEmail) }}</strong>
+              <span class="role" *ngIf="showReplyRoleBadge(reply.authorRole)">{{ replyRoleBadge(reply.authorRole) }}</span>
+              <span>{{ formatDate(reply.createdAt) }}</span>
+            </div>
+            <p>{{ reply.message }}</p>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div *ngIf="canReply(item) && isConversationOpen(item.id)" class="reply-box">
+        <div class="status-actions" *ngIf="canManageStatus(item)">
+          <button type="button" (click)="updateStatus(item, 'ouverte')" [class.active]="item.status === 'ouverte'">Ouverte</button>
+          <button type="button" (click)="updateStatus(item, 'en_cours')" [class.active]="item.status === 'en_cours'">En cours</button>
+          <button type="button" (click)="updateStatus(item, 'resolue')" [class.active]="item.status === 'resolue'">Resolue</button>
+        </div>
+
+        <textarea rows="3" [(ngModel)]="replyDrafts[item.id]" [name]="'reply-' + item.id" placeholder="Ecrire une reponse claire et utile..."></textarea>
+        <button type="button" (click)="sendReply(item)" [disabled]="replyingId === item.id">Repondre</button>
+      </div>
+    </article>
+
+    <div *ngIf="!reclamations.length" class="empty-box">Aucune reclamation pour le moment.</div>
+  </section>
+</div>

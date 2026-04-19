@@ -1,0 +1,27 @@
+<div class="bg-surface text-on-surface min-h-screen">
+  <app-dash-side-nav></app-dash-side-nav>
+
+  <main class="md:ml-64 p-6 lg:p-10">
+    <app-dash-header *ngIf="!isCategoriePage"></app-dash-header>
+
+    <!-- Dashboard principal — masqué quand une page enfant est active -->
+    <ng-container *ngIf="!isChildRoute">
+      <app-stats-overview></app-stats-overview>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+          <app-bookings-table></app-bookings-table>
+          <app-inventory-cards></app-inventory-cards>
+        </div>
+        <aside class="space-y-8">
+          <app-inquiries-panel></app-inquiries-panel>
+        </aside>
+      </div>
+    </ng-container>
+
+    <!-- Pages enfants (categorie, etc.) -->
+    <router-outlet></router-outlet>
+
+  </main>
+
+  <app-dash-footer *ngIf="!isFooterHidden"></app-dash-footer>
+</div>

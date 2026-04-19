@@ -1,0 +1,61 @@
+<nav
+  class="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300"
+  [ngClass]="isMobileMenuOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'">
+  <div class="border-b border-slate-100 p-5">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-900 text-white">
+        <span class="material-symbols-outlined text-2xl">domain</span>
+      </div>
+      <div>
+        <p class="font-headline text-base font-extrabold tracking-tight text-slate-900">TunisiaTour</p>
+        <p class="text-[11px] font-medium text-slate-500">Hébergement</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4">
+    <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-900/10 text-blue-900">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold text-slate-900">{{ getCurrentUserName() }}</p>
+          <p class="truncate text-xs text-slate-500">{{ getCurrentUserEmail() || '—' }}</p>
+          <p class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-900/70">Hébergeur</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-3 pb-4">
+    <p class="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Menu</p>
+    <div class="mt-2 space-y-1">
+      <button
+        *ngFor="let item of navItems"
+        type="button"
+        (click)="navigate(item.route)"
+        [class]="
+          isActive(item.route)
+            ? 'flex w-full items-center gap-3 rounded-xl bg-blue-900 px-3 py-2.5 text-left text-sm font-semibold text-white shadow-sm'
+            : 'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50'
+        ">
+        <span class="material-symbols-outlined text-[22px] leading-none">{{ item.icon }}</span>
+        <span class="leading-tight flex-1">{{ item.label }}</span>
+        <span *ngIf="item.badge && unreadCount > 0" class="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+          {{ unreadCount > 9 ? '9+' : unreadCount }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+</nav>
+
+<div *ngIf="isMobileMenuOpen" (click)="toggleMobileMenu()" class="fixed inset-0 z-30 bg-black/40 md:hidden"></div>
+
+<button
+  type="button"
+  (click)="toggleMobileMenu()"
+  class="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-900 text-white shadow-lg md:hidden">
+  <span class="material-symbols-outlined">{{ isMobileMenuOpen ? 'close' : 'menu' }}</span>
+</button>

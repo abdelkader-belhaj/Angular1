@@ -1,0 +1,28 @@
+.coming-soon-chip {
+	position: relative;
+	overflow: hidden;
+	box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.2);
+}
+
+.coming-soon-chip::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%);
+	animation: comingSoonShine 2.4s linear infinite;
+}
+
+.coming-soon-panel {
+	box-shadow: 0 24px 50px -28px rgba(217, 119, 6, 0.35);
+	animation: comingSoonPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes comingSoonShine {
+	from { transform: translateX(-40%); }
+	to { transform: translateX(40%); }
+}
+
+@keyframes comingSoonPulse {
+	0%, 100% { box-shadow: 0 24px 50px -28px rgba(217, 119, 6, 0.35); }
+	50% { box-shadow: 0 30px 56px -26px rgba(217, 119, 6, 0.42); }
+}

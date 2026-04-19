@@ -1,0 +1,70 @@
+<div class="success-shell min-h-screen px-4 py-12">
+  <div class="mx-auto w-full max-w-3xl">
+    <div class="relative overflow-hidden rounded-3xl border border-cyan-200/70 bg-white/95 p-8 shadow-2xl celebration-card">
+      <span class="heart-fall heart-row-a heart-1">❤</span>
+      <span class="heart-fall heart-row-a heart-2">❤</span>
+      <span class="heart-fall heart-row-a heart-3">❤</span>
+      <span class="heart-fall heart-row-a heart-4">❤</span>
+      <span class="heart-fall heart-row-a heart-5">❤</span>
+      <span class="heart-fall heart-row-a heart-6">❤</span>
+      <span class="heart-fall heart-row-a heart-7">❤</span>
+      <span class="heart-fall heart-row-a heart-8">❤</span>
+      <span class="heart-fall heart-row-a heart-9">❤</span>
+      <span class="heart-fall heart-row-a heart-10">❤</span>
+      <span class="heart-fall heart-row-a heart-11">❤</span>
+      <span class="heart-fall heart-row-a heart-12">❤</span>
+
+      <span class="heart-fall heart-row-b heart-13">❤</span>
+      <span class="heart-fall heart-row-b heart-14">❤</span>
+      <span class="heart-fall heart-row-b heart-15">❤</span>
+      <span class="heart-fall heart-row-b heart-16">❤</span>
+      <span class="heart-fall heart-row-b heart-17">❤</span>
+      <span class="heart-fall heart-row-b heart-18">❤</span>
+      <span class="heart-fall heart-row-b heart-19">❤</span>
+      <span class="heart-fall heart-row-b heart-20">❤</span>
+
+      <span class="heart-fall heart-row-c heart-21">❤</span>
+      <span class="heart-fall heart-row-c heart-22">❤</span>
+      <span class="heart-fall heart-row-c heart-23">❤</span>
+      <span class="heart-fall heart-row-c heart-24">❤</span>
+      <span class="heart-fall heart-row-c heart-25">❤</span>
+      <span class="heart-fall heart-row-c heart-26">❤</span>
+
+      <div class="confetti confetti-a"></div>
+      <div class="confetti confetti-b"></div>
+      <div class="confetti confetti-c"></div>
+
+      <div class="relative z-10 text-center">
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-cyan-100 ring-8 ring-cyan-50 success-badge">
+          <lucide-icon name="check-circle" class="h-11 w-11 text-cyan-700"></lucide-icon>
+        </div>
+
+        <p class="text-xs font-black uppercase tracking-[0.22em] text-cyan-700">Congratulations</p>
+        <h1 class="mt-2 text-3xl font-black text-slate-900">Paiement effectue avec succes</h1>
+        <p class="mt-2 text-sm text-slate-600">Transaction confirmee. Cette reservation est verrouillee en etat paye pour eviter tout double paiement.</p>
+
+        <div class="mx-auto mt-6 max-w-md rounded-2xl border border-cyan-100 bg-cyan-50/60 p-4 text-left summary-card" *ngIf="receipt">
+          <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Résumé rapide</p>
+          <p class="mt-2 text-sm font-semibold text-slate-800">Logement: {{ displayLogementName }}</p>
+          <p class="text-sm text-slate-700">Montant: {{ (receipt.amountInCents / 100).toFixed(2) }} DT</p>
+          <p class="text-sm text-slate-700">Date: {{ receipt.paidAtIso | date:'d MMM yyyy à HH:mm' }}</p>
+        </div>
+
+        <div class="mt-8 grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            (click)="viewInvoice()"
+            class="rounded-2xl bg-gradient-to-r from-cyan-700 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg hover:from-cyan-800 hover:to-blue-800 transition-colors">
+            Voir la facture
+          </button>
+          <button
+            type="button"
+            (click)="backToReservations()"
+            class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors">
+            Retour vers mes réservations
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

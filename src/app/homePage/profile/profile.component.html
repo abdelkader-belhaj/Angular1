@@ -1,0 +1,99 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <button class="back-btn" (click)="goBack()">
+      <lucide-icon name="arrow-left" class="w-5 h-5"></lucide-icon>
+      Retour
+    </button>
+    <h1>Mon Profil</h1>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-card">
+      <div class="profile-avatar-section">
+        <div class="profile-avatar">
+          {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
+        </div>
+        <div class="profile-info">
+          <h2>{{ currentUser?.username }}</h2>
+          <p class="profile-role">{{ getRoleLabel(currentUser?.role) }}</p>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button
+          class="action-btn edit-btn"
+          (click)="toggleEdit()"
+          *ngIf="!isEditing"
+        >
+          <lucide-icon name="user" class="w-4 h-4"></lucide-icon>
+          Modifier le profil
+        </button>
+        <button
+          class="action-btn logout-btn"
+          (click)="logout()"
+        >
+          <lucide-icon name="log-out" class="w-4 h-4"></lucide-icon>
+          Déconnexion
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-details" *ngIf="!isEditing">
+      <div class="detail-item">
+        <label>Nom d'utilisateur</label>
+        <p>{{ currentUser?.username }}</p>
+      </div>
+      <div class="detail-item">
+        <label>Email</label>
+        <p>{{ currentUser?.email }}</p>
+      </div>
+      <div class="detail-item">
+        <label>Rôle</label>
+        <p>{{ getRoleLabel(currentUser?.role) }}</p>
+      </div>
+    </div>
+
+    <form *ngIf="isEditing" [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="profile-edit-form">
+      <h3>Modifier le profil</h3>
+
+      <div class="form-group">
+        <label for="username">Nom d'utilisateur</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          class="form-input"
+          placeholder="Votre nom d'utilisateur"
+        />
+        <div class="form-error" *ngIf="profileForm.controls.username.touched && profileForm.controls.username.invalid">
+          Nom d'utilisateur invalide (minimum 3 caractères).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          placeholder="votre@email.com"
+        />
+        <div class="form-error" *ngIf="profileForm.controls.email.touched && profileForm.controls.email.invalid">
+          Email invalide.
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="toggleEdit()">Annuler</button>
+        <button type="submit" class="save-btn" [disabled]="isUpdating">
+          {{ isUpdating ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+
+      <div class="form-message success" *ngIf="updateSuccess">{{ updateSuccess }}</div>
+      <div class="form-message error" *ngIf="updateError">{{ updateError }}</div>
+    </form>
+
+  </div>
+</div>

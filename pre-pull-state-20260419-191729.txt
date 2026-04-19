@@ -1,0 +1,3 @@
+﻿
+Stash list (top 3):
+stash@{0}: On Transport: pre-pull-20260419-191729

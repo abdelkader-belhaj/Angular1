@@ -15,6 +15,8 @@ export interface ForumComment {
   flaggedByAI?: boolean;
   aiStatus?: string;            // ex: 'APPROVED' | 'REJECTED' | 'PENDING'
   aiReason?: string;
+  voiceUrl?: string;            // URL du message vocal
+  voiceDuration?: number;       // Durée en secondes
 
   // Relations
   forum?: { id: number; title?: string };

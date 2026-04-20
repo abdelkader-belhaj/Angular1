@@ -58,6 +58,16 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   // ✅ COMMENTS COLLAPSE/EXPAND
   private expandedCommentsMap: Map<number, boolean> = new Map();
   readonly INITIAL_COMMENTS_COUNT = 3;
+
+  // 🎤 VOICE MESSAGES
+  isRecording = false;
+  recordingTime = 0;
+  recordingTimeFormatted = '00:00';
+  mediaRecorder?: MediaRecorder;
+  audioChunks: Blob[] = [];
+  recordedAudioUrl?: string;
+  recordedAudioBlob?: Blob;
+  selectedForumForVoice?: number;
   
   allEmojis = [
     '😊', '❤️', '😂', '😮', '😢', '😡', '👍', '👎',
@@ -356,21 +366,32 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   }
 
   deleteComment(commentId: number): void {
-  this.forumService.deleteComment(commentId).subscribe({
-    next: () => {
-      this.commentsMap.forEach((comments, forumId) =>
-        this.commentsMap.set(forumId, comments.filter(c => c.id !== commentId)));
-    },
-    error: (err) => {
-      if (err.status === 400 || err.status === 404) {
+    this.forumService.deleteComment(commentId).subscribe({
+      next: (response: any) => {
+        console.log('Comment deleted successfully:', response);
+        // Remove from UI
         this.commentsMap.forEach((comments, forumId) =>
           this.commentsMap.set(forumId, comments.filter(c => c.id !== commentId)));
-      } else {
-        this.errorMessage = 'Erreur lors de la suppression.';
+        // Show success message
+        this.infoMessage = response.message || 'Commentaire supprimé avec succès.';
+      },
+      error: (err: any) => {
+        console.error('Delete error:', err);
+        // Try to get error message from response
+        const errorMessage = err.error?.message || 'Erreur lors de la suppression du commentaire.';
+        
+        if (err.status === 401) {
+          this.errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+        } else if (err.status === 403) {
+          this.errorMessage = 'Accès refusé : vous ne pouvez supprimer que vos propres commentaires.';
+        } else if (err.status === 400 || err.status === 404) {
+          this.errorMessage = errorMessage;
+        } else {
+          this.errorMessage = errorMessage;
+        }
       }
-    }
-  });
-}
+    });
+  }
 
   // ✅ COMMENTS COLLAPSE/EXPAND
   toggleCommentsExpanded(forumId: number): void {
@@ -512,6 +533,7 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   isLocationSharing      = false;
   selectedLocationMinutes = 60;
   locationRemainingTime  = '';
+  locationNote           = '';  // 🎤 Note/texte au-dessus de l'avatar
   locationAiData: { message: string; options: { label: string; minutes: number; description: string }[] } | null = null;
   private locationTimerInterval?: ReturnType<typeof setInterval>;
   locationEndTime: number = 0;
@@ -547,7 +569,7 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
         this.locationTimerInterval = setInterval(() => this.updateLocationTimer(), 1000);
         const token = localStorage.getItem('auth_token') || '';
         this.http.post('http://localhost:8080/api/ai/location-share',
-          { userId: String(this.currentUser!.id), username: this.currentUser!.username, communityId: String(this.community!.id), lat: pos.coords.latitude, lng: pos.coords.longitude, minutes: this.selectedLocationMinutes },
+          { userId: String(this.currentUser!.id), username: this.currentUser!.username, communityId: String(this.community!.id), lat: pos.coords.latitude, lng: pos.coords.longitude, minutes: this.selectedLocationMinutes, note: this.locationNote },
           { headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` }) }
         ).subscribe();
       },
@@ -583,13 +605,14 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   if (!event || (event.target as HTMLElement).style.position === 'fixed'
               || (event.target as HTMLElement) === event.currentTarget) {
     this.locationShareOpen = false;
+    this.locationNote = '';  // Réinitialiser la note
   }
 }
 
   shareAvatarColors = ['#E6F1FB', '#FAEEDA', '#E1F5EE', '#EEEDFE', '#FCEBEB'];
   shareTextColors   = ['#0C447C', '#633806', '#085041', '#3C3489', '#791F1F'];
 
-  activeLocationShares: { userId: number; username: string; lat: number; lng: number; minutes: number; startedAt: number; }[] = [];
+  activeLocationShares: { userId: number; username: string; lat: number; lng: number; minutes: number; startedAt: number; note?: string; }[] = [];
   locationMapOpen  = false;
   selectedShare: any = null;
   locationMapTimer = '';
@@ -673,16 +696,114 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
       { headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` }) }
     ).subscribe({
       next: (shares) => {
-        this.activeLocationShares = shares.map(s => ({ userId: s.userId, username: s.username, lat: s.lat, lng: s.lng, minutes: s.minutes, startedAt: new Date(s.startedAt).getTime() }));
+        this.activeLocationShares = shares.map(s => ({ userId: s.userId, username: s.username, lat: s.lat, lng: s.lng, minutes: s.minutes, note: s.note, startedAt: new Date(s.startedAt).getTime() }));
       },
       error: (e) => console.error('Erreur polling:', e)
     });
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // 🎤 VOICE MESSAGES
+  // ────────────────────────────────────────────────────────────────────────────
+
+  startRecording(forumId: number): void {
+    if (this.isRecording) return;
+    this.selectedForumForVoice = forumId;
+    this.recordingTime = 0;
+    this.recordedAudioUrl = undefined;
+    this.recordedAudioBlob = undefined;
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      this.audioChunks = [];
+      this.isRecording = true;
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        this.audioChunks.push(event.data);
+      };
+
+      this.mediaRecorder.onstop = () => {
+        this.recordedAudioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        this.recordedAudioUrl = URL.createObjectURL(this.recordedAudioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      this.mediaRecorder.start();
+      this.startRecordingTimer();
+    }).catch((error) => {
+      console.error('Erreur accès microphone:', error);
+      this.errorMessage = 'Impossible d\'accéder au microphone.';
+    });
+  }
+
+  private startRecordingTimer(): void {
+    const timerInterval = setInterval(() => {
+      if (!this.isRecording) {
+        clearInterval(timerInterval);
+        return;
+      }
+      this.recordingTime++;
+      const minutes = Math.floor(this.recordingTime / 60);
+      const seconds = this.recordingTime % 60;
+      this.recordingTimeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  stopRecording(): void {
+    if (!this.isRecording || !this.mediaRecorder) return;
+    this.isRecording = false;
+    this.mediaRecorder.stop();
+  }
+
+  cancelRecording(): void {
+    if (this.isRecording && this.mediaRecorder) {
+      this.mediaRecorder.stop();
+      this.isRecording = false;
+    }
+    this.recordedAudioUrl = undefined;
+    this.recordedAudioBlob = undefined;
+    this.audioChunks = [];
+    this.recordingTime = 0;
+    this.recordingTimeFormatted = '00:00';
+    this.selectedForumForVoice = undefined;
+  }
+
+  submitVoiceComment(forumId: number): void {
+    if (!this.recordedAudioBlob || !this.currentUser) return;
+    this.loading = true;
+
+    this.forumService.addVoiceComment(forumId, this.recordedAudioBlob).subscribe({
+      next: (comment) => {
+        const comments = this.commentsMap.get(forumId) || [];
+        comments.push(comment);
+        this.commentsMap.set(forumId, comments);
+        this.cancelRecording();
+        this.loading = false;
+        this.infoMessage = 'Message vocal envoyé!';
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMessage = 'Erreur lors de l\'envoi du message vocal.';
+        console.error(err);
+      }
+    });
+  }
+
+  getDurationFormatted(seconds?: number): string {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
   }
 
   ngOnDestroy(): void {
     if (this.locationPollingInterval) clearInterval(this.locationPollingInterval);
     if (this.locationTimerInterval) clearInterval(this.locationTimerInterval);
     if (this.mapTimerInterval) clearInterval(this.mapTimerInterval);
+    if (this.isRecording && this.mediaRecorder) {
+      this.mediaRecorder.stop();
+      this.isRecording = false;
+    }
   }
 
   // ─── CONDITIONS ───────────────────────────────────────────────────────────────

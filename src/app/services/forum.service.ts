@@ -81,6 +81,24 @@ export class ForumService {
     );
   }
 
+  // 🎤 Voice Comment Upload
+  addVoiceComment(forumId: number, audioBlob: Blob): Observable<ForumComment> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'voice-message.webm');
+    
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+      // Content-Type will be set automatically by browser for multipart/form-data
+    });
+
+    return this.http.post<ForumComment>(
+      `${this.apiUrl}/comments/forum/${forumId}/voice`,
+      formData,
+      { headers }
+    );
+  }
+
   // ─── REVIEWS ────────────────────────────────────────────────────────────────
 
   addReview(forumId: number, user: { id: number; username: string }, rating: number, comment?: string): Observable<Review> {

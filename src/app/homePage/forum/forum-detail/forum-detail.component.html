@@ -143,6 +143,11 @@
         <div class="stories-scroll">
           <div *ngFor="let share of activeLocationShares; let i = index"
                (click)="openLocationMap(share)" class="story-item">
+            <!-- Bulle de note au-dessus de l'avatar -->
+            <div *ngIf="share.note" class="story-note-bubble">
+              {{ share.note }}
+            </div>
+            
             <div class="story-ring"
                  [style.background]="'conic-gradient(#1D9E75 '+getSharePercent(share)+'%, rgba(209,213,219,0.3) 0)'">
               <div class="story-avatar"
@@ -256,9 +261,28 @@
         <!-- Contenu IA -->
         <div *ngIf="!locationAiLoading && locationAiData">
           <div class="share-panel-top">
-            <div class="share-panel-avatar">
-              {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
+            <!-- Avatar avec note/bulle -->
+            <div class="avatar-with-note">
+              <!-- Bulle de note -->
+              <div *ngIf="locationNote" class="location-note-bubble">
+                {{ locationNote }}
+              </div>
+              <!-- Avatar -->
+              <div class="share-panel-avatar">
+                {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
+              </div>
             </div>
+            
+            <!-- Champ de saisie pour la note -->
+            <div class="location-note-input">
+              <input type="text" 
+                     [(ngModel)]="locationNote"
+                     placeholder="Ajouter une note (ex: en déplacement, parking, café...)"
+                     maxlength="50"
+                     class="note-input">
+              <span class="note-count">{{ locationNote.length }}/50</span>
+            </div>
+            
             <p class="share-panel-title">Partager ma position</p>
             <p class="share-panel-sub">{{ locationAiData.message }}</p>
           </div>
@@ -937,6 +961,26 @@
             Commentaires ({{ getComments(forum.id!).length }})
           </div>
 
+          <!-- Voice Recording Controls - Recording State & Preview Only -->
+          <div *ngIf="currentUser && (isRecording || recordedAudioUrl)" class="voice-controls-section" [ngClass]="{'recording-active': isRecording}">
+            <!-- Recording State -->
+            <div *ngIf="isRecording" class="recording-state">
+              <span class="recording-dot" title="Enregistrement en cours..."></span>
+              <span style="font-size:12px;font-weight:600;color:#991b1b;flex:1">En cours d'enregistrement</span>
+              <span class="recording-time" title="Durée">{{ recordingTimeFormatted }}</span>
+              <button (click)="stopRecording()" class="btn-stop" title="Arrêter l'enregistrement">⏹ Arrêter</button>
+              <button (click)="cancelRecording()" class="btn-cancel" title="Annuler l'enregistrement">✕ Annuler</button>
+            </div>
+
+            <!-- Audio Preview -->
+            <div *ngIf="recordedAudioUrl && !isRecording" class="audio-preview">
+              <span style="font-size:12px;font-weight:600;color:#0369a1;white-space:nowrap">Aperçu :</span>
+              <audio [src]="recordedAudioUrl" controls class="audio-player"></audio>
+              <button (click)="submitVoiceComment(forum.id!)" class="btn-submit-voice" title="Envoyer le message vocal">📤 Envoyer</button>
+              <button (click)="cancelRecording()" class="btn-cancel-voice" title="Annuler">✕</button>
+            </div>
+          </div>
+
           <div *ngIf="currentUser" class="comment-input-area">
             <textarea #commentInput rows="2"
                       placeholder="Partagez votre avis sur ce sujet..."
@@ -997,38 +1041,66 @@
   </div>
 </div>
 
-  <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
-          [disabled]="commentInput.value.trim().length < 5"
-          class="btn-comment">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-    </svg>
-    Commenter
-  </button>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button (click)="addComment(forum.id!, commentInput.value); commentInput.value = ''"
+            [disabled]="commentInput.value.trim().length < 5"
+            class="btn-comment">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+      Commenter
+    </button>
+    
+    <!-- Voice Record Button - Icon Only -->
+    <button *ngIf="currentUser && !isRecording && !recordedAudioUrl"
+            (click)="startRecording(forum.id!)"
+            class="btn-voice-icon"
+            title="Enregistrer un message vocal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Microphone capsule -->
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <!-- Microphone stand -->
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <!-- Base -->
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </button>
+  </div>
 </div>
           </div>
 
           <!-- Bouton Afficher/Masquer commentaires -->
-          <div *ngIf="getComments(forum.id!).length > 0" style="margin-bottom:16px">
+          <div *ngIf="getComments(forum.id!).length > 0" style="margin-bottom:20px">
             <button (click)="toggleCommentsExpanded(forum.id!)" 
-                    class="btn-comments-toggle"
-                    style="background:linear-gradient(135deg, #185FA5 0%, #2563eb 100%);border:none;cursor:pointer;color:white;font-weight:600;font-size:14px;padding:10px 16px;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all 0.3s;box-shadow:0 4px 12px rgba(24,95,165,0.3);position:relative;overflow:hidden">
-              <!-- Gradient animé -->
-              <div style="position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.3) 0%,transparent 70%);animation:shimmer 3s infinite;pointer-events:none"></div>
+                    class="btn-comments-toggle-pro"
+                    [class.btn-expanded]="isCommentsExpanded(forum.id!)">
               
-              <span *ngIf="!isCommentsExpanded(forum.id!)" style="display:flex;align-items:center;gap:8px;position:relative;z-index:1;animation:slideInRight 0.4s ease-out">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.3s">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <span>💬 Afficher {{ getComments(forum.id!).length }} commentaires</span>
-              </span>
+              <!-- Background shimmer effect -->
+              <span class="shimmer-effect"></span>
               
-              <span *ngIf="isCommentsExpanded(forum.id!)" style="display:flex;align-items:center;gap:8px;position:relative;z-index:1;animation:slideInLeft 0.4s ease-out">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.3s;transform:rotate(180deg)">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <span>👁️ Masquer tous</span>
-              </span>
+              <!-- Main content -->
+              <div class="toggle-content">
+                <!-- Collapsed state -->
+                <div *ngIf="!isCommentsExpanded(forum.id!)" class="toggle-state collapsed">
+                  <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span class="toggle-text">Afficher commentaires</span>
+                  <span class="toggle-count">{{ getComments(forum.id!).length }}</span>
+                </div>
+                
+                <!-- Expanded state -->
+                <div *ngIf="isCommentsExpanded(forum.id!)" class="toggle-state expanded">
+                  <svg class="toggle-icon rotate-180" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span class="toggle-text">Masquer commentaires</span>
+                </div>
+              </div>
+
+              <!-- Corner accent -->
+              <span class="corner-accent"></span>
             </button>
           </div>
 
@@ -1046,7 +1118,22 @@
                   <span *ngIf="comment.aiStatus === 'PENDING'" class="status-badge status-pending">En attente</span>
                   <span *ngIf="comment.flaggedByAI" class="status-badge status-flagged">Signalé</span>
                 </div>
-<p class="comment-text">{{ getCommentText(comment) }}</p>
+                
+                <p *ngIf="!comment.voiceUrl" class="comment-text">{{ getCommentText(comment) }}</p>
+                
+                <!-- Voice Message Player - ENHANCED -->
+                <div *ngIf="comment.voiceUrl" class="voice-player-item">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#0891b2;font-weight:600;flex-shrink:0">
+                    <span>🎤</span>
+                  </div>
+                  <div class="voice-waveform-container">
+                    <div class="voice-bars">
+                      <div class="bar" *ngFor="let i of [1,2,3,4,5,6,7,8]" [style.--delay]="i * 0.08 + 's'"></div>
+                    </div>
+                    <audio [src]="comment.voiceUrl" controls class="voice-audio" title="Écouter le message vocal"></audio>
+                  </div>
+                  <span class="voice-time" *ngIf="comment.voiceDuration" [title]="'Durée: ' + getDurationFormatted(comment.voiceDuration)">{{ getDurationFormatted(comment.voiceDuration) }}</span>
+                </div>
                 <!-- ✅ Boutons traduction commentaire — ICI dans la boucle *ngFor comment -->
   <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
     <button *ngFor="let lang of languages.slice(0, 4)"

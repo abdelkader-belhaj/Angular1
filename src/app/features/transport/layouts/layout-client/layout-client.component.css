@@ -1,4 +1,8 @@
 .layout-client {
+  --nav-primary: #0d2c66;
+  --nav-primary-2: #1b4ca2;
+  --nav-link-hover: rgba(255, 255, 255, 0.2);
+  --nav-shadow: 0 6px 20px rgba(11, 44, 103, 0.22);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -9,9 +13,13 @@
   align-items: center;
   padding: 0 24px;
   height: 64px;
-  background: linear-gradient(135deg, #7C4DFF 0%, #651FFF 100%);
+  background: linear-gradient(
+    135deg,
+    var(--nav-primary) 0%,
+    var(--nav-primary-2) 100%
+  );
   color: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: var(--nav-shadow);
 }
 
 .logo {
@@ -42,7 +50,7 @@
 
 .nav a:hover,
 .nav a.active {
-  background: rgba(255,255,255,0.2);
+  background: var(--nav-link-hover);
 }
 
 .main-content {

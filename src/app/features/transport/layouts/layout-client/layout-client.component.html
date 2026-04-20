@@ -5,15 +5,18 @@
       <span>TunisiaTour Transport</span>
     </div>
     <nav class="nav">
-      <a routerLink="/transport/courses/client/demander" routerLinkActive="active">
+      <a routerLink="/transport/demander-course" routerLinkActive="active">
         <mat-icon>local_taxi</mat-icon>
         <span>Course</span>
       </a>
-      <a routerLink="/transport/location/client/recherche" routerLinkActive="active">
+      <a
+        routerLink="/transport/location/client/recherche"
+        routerLinkActive="active"
+      >
         <mat-icon>directions_car</mat-icon>
         <span>Location</span>
       </a>
-      <a routerLink="/transport/courses/client/historique" routerLinkActive="active">
+      <a routerLink="/transport/historique-courses" routerLinkActive="active">
         <mat-icon>history</mat-icon>
         <span>Historique</span>
       </a>
@@ -23,7 +26,7 @@
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
-        <button mat-menu-item >
+        <button mat-menu-item>
           <mat-icon>logout</mat-icon>
           <span>Déconnexion</span>
         </button>

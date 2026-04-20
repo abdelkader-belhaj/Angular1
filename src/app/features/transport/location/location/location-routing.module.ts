@@ -1,15 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { LayoutClientComponent } from '../../layouts/layout-client/layout-client.component';
-import { LayoutAgenceComponent } from '../../layouts/layout-agence/layout-agence.component';
 import { estClientGuard } from '../../core/guards/est-client.guard';
 import { estAgenceGuard } from '../../core/guards/est-agence.guard';
+import { LayoutAgenceComponent } from '../../layouts/layout-agence/layout-agence.component';
 
 const routes: Routes = [
   // ========== ESPACE CLIENT ==========
   {
     path: 'client',
-    component: LayoutClientComponent,
     canActivate: [estClientGuard],
     children: [
       { path: '', redirectTo: 'recherche', pathMatch: 'full' },
@@ -54,8 +52,8 @@ const routes: Routes = [
   // ========== ESPACE AGENCE ==========
   {
     path: 'agence',
-    component: LayoutAgenceComponent,
     canActivate: [estAgenceGuard],
+    component: LayoutAgenceComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {

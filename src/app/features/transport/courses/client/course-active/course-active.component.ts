@@ -658,7 +658,7 @@ export class CourseActiveComponent implements OnInit, AfterViewInit, OnDestroy {
           return resolvedUserId;
         }
 
-        // Last-resort fallback for backends that expose chauffeur id but not linked utilisateurId.
+        // Backend now accepts chauffeur id and resolves linked user internally.
         return chauffeurId;
       }),
       catchError(() => of(null)),

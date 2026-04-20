@@ -8,46 +8,83 @@
     <div class="hero-overlay"></div>
 
     <div class="container hero-content">
-      <div class="hero-text">
-        <h1>Voyagez a travers la Tunisie, <span>a votre facon</span></h1>
+      <div class="hero-copy reveal">
+        <p class="eyebrow">TunisiaTour Transport</p>
+        <h1>Votre espace client transport, <span>rapide et elegant</span></h1>
         <p>
-          Un transport premium et fiable pour chaque voyageur. Des ruelles
-          bleues de Sidi Bou Said aux dunes dorees du Sahara.
+          Toutes les actions utiles en premier plan: commander une course,
+          suivre votre chauffeur, et gerer vos locations sans perdre du temps.
         </p>
       </div>
 
-      <div class="service-grid">
-        <article class="glass-card">
-          <div class="icon-box">T</div>
-          <h3>Taxi Instantane</h3>
-          <p>Courses premium a la demande en moins de 10 minutes.</p>
-          <a routerLink="demander-course" class="card-action">Reserver</a>
+      <section class="client-hub reveal reveal-delay-1">
+        <article class="hub-panel courses-panel">
+          <header>
+            <p class="panel-label">Section Client (Courses)</p>
+            <h2>Course avec chauffeur</h2>
+          </header>
+
+          <div class="hub-actions">
+            <a routerLink="demander-course" class="hub-card">
+              <span class="hub-icon">01</span>
+              <strong>Demander une course</strong>
+              <small>Selection du point de depart et confirmation rapide</small>
+            </a>
+
+            <a routerLink="attente-chauffeur" class="hub-card">
+              <span class="hub-icon">02</span>
+              <strong>Attente Chauffeur</strong>
+              <small>Suivi de l'arrivee en temps reel sur votre ecran</small>
+            </a>
+
+            <a routerLink="course-active" class="hub-card">
+              <span class="hub-icon">03</span>
+              <strong>Course Active - Client</strong>
+              <small>Vue complete de la course pendant le trajet</small>
+            </a>
+
+            <a routerLink="historique-courses" class="hub-card">
+              <span class="hub-icon">04</span>
+              <strong>Historique des courses</strong>
+              <small
+                >Retrouvez vos trajets passes, statuts et evaluations</small
+              >
+            </a>
+          </div>
         </article>
 
-        <article class="glass-card">
-          <div class="icon-box">L</div>
-          <h3>Location de Voiture</h3>
-          <p>Flotte moderne de berlines et 4x4 pour votre exploration.</p>
-          <a
-            routerLink="/transport/location/client/recherche"
-            class="card-action"
-          >
-            Reserver
-          </a>
-        </article>
+        <article class="hub-panel rental-panel">
+          <header>
+            <p class="panel-label">Section Location Client</p>
+            <h2>Location de voiture</h2>
+          </header>
 
-        <article class="glass-card">
-          <div class="icon-box">P</div>
-          <h3>Transfert Planifie</h3>
-          <p>Transferts aeroport et trajets interurbains planifies.</p>
-          <a routerLink="course-active" class="card-action">Planifier</a>
+          <div class="hub-actions">
+            <a
+              routerLink="/transport/location/client/recherche"
+              class="hub-card"
+            >
+              <span class="hub-icon">A</span>
+              <strong>Location Client - Recherche</strong>
+              <small>Filtrer les vehicules par ville, date et categorie</small>
+            </a>
+
+            <a
+              routerLink="/transport/location/client/mes-locations"
+              class="hub-card"
+            >
+              <span class="hub-icon">B</span>
+              <strong>Location Client - Mes Locations</strong>
+              <small>Historique, statut, et actions sur vos reservations</small>
+            </a>
+          </div>
         </article>
-      </div>
+      </section>
     </div>
   </section>
 
   <section class="stats-band">
-    <div class="container stats-wrap">
+    <div class="container stats-wrap reveal reveal-delay-2">
       <div>
         <strong>120+</strong>
         <span>CHAUFFEURS PROFESSIONNELS</span>
@@ -57,31 +94,36 @@
         <strong>85+</strong>
         <span>VEHICULES PREMIUM</span>
       </div>
+      <div class="divider hidden-mobile"></div>
+      <div>
+        <strong>24/24</strong>
+        <span>DISPONIBILITE CLIENT</span>
+      </div>
     </div>
   </section>
 
-  <section class="how-it-works container">
+  <section class="how-it-works container reveal">
     <h2>Comment ca marche</h2>
     <div class="steps-grid">
       <article>
         <small>01</small>
-        <h4>Choisir</h4>
-        <p>Selectionnez le service adapte a votre voyage.</p>
+        <h4>Choisir un service</h4>
+        <p>Course immediate ou location: vous choisissez en un clic.</p>
       </article>
       <article>
         <small>02</small>
-        <h4>Indiquer le lieu</h4>
-        <p>Precisez votre depart et votre destination.</p>
+        <h4>Renseigner vos details</h4>
+        <p>Adresse, horaire, vehicule et preferences client.</p>
       </article>
       <article>
         <small>03</small>
-        <h4>Confirmer</h4>
-        <p>Verifiez les details, confirmez puis partez serein.</p>
+        <h4>Suivre et profiter</h4>
+        <p>Statut en direct, chauffeur confirme, depart serein.</p>
       </article>
     </div>
   </section>
 
-  <section class="story container">
+  <section class="story container reveal reveal-delay-1">
     <div class="story-image-wrap">
       <img
         src="https://lh3.googleusercontent.com/aida-public/AB6AXuC40r_vzITQ4gyLThueCndRw_phqbfkgNkuQNVTGZbzl5es5rRwEw_oyKe4M9784X25iTwtmPXRObvqUtrQFydNY7WD3utJHxv4Qljf9mtfDt9pljMbl8ANtrW-JdQVtTcABqmlZlv9_XkNJU9cPD3MtgJpKCvaAE95hZpRlOCL7gpubEiOcrCPA0uDns9cSKzhnGXTDGP8nnKqN0v9O7UCl0J_3WaK50aK1-HgVigS62CNcNWn-JxaHqvv5wAFVSQfEjD8n1OeFcY"
@@ -89,17 +131,20 @@
       />
     </div>
     <div class="story-text">
-      <h2>Au-dela du transport, vivez la Tunisie.</h2>
+      <h2>Une experience transport pensee pour le client</h2>
       <p>
-        Nos chauffeurs sont des experts de la route et des guides locaux.
-        Ponctualite, confort et hospitalite mediterraneenne sont au coeur de
-        chaque trajet.
+        Interface claire, actions prioritaires visibles, et parcours sans bruit.
+        Votre espace client devient un vrai cockpit pour la course et la
+        location.
       </p>
       <div class="story-actions">
-        <a routerLink="chauffeur-dashboard" class="btn">Explorer</a>
-        <a routerLink="profil-chauffeur" class="btn btn-ghost"
-          >Nos chauffeurs</a
+        <a routerLink="demander-course" class="btn">Commencer maintenant</a>
+        <a
+          routerLink="/transport/location/client/recherche"
+          class="btn btn-ghost"
         >
+          Voir les vehicules
+        </a>
       </div>
     </div>
   </section>
@@ -128,6 +173,7 @@
           <a routerLink="demander-course">Demander une course</a>
           <a routerLink="attente-chauffeur">Attente Chauffeur</a>
           <a routerLink="course-active">Course Active - Client</a>
+          <a routerLink="historique-courses">Historique des courses</a>
         </article>
 
         <article>

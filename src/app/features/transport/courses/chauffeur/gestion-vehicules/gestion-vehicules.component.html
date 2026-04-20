@@ -49,19 +49,19 @@
       <section class="stats-grid" *ngIf="!isLoading">
         <article class="stat-card">
           <p>Véhicules Totaux</p>
-          <h3>{{ totalVehicules | number: '2.0-0' }}</h3>
+          <h3>{{ totalVehicules | number: "2.0-0" }}</h3>
         </article>
         <article class="stat-card good">
           <p>En Service</p>
-          <h3>{{ activeVehiculesCount | number: '2.0-0' }}</h3>
+          <h3>{{ activeVehiculesCount | number: "2.0-0" }}</h3>
         </article>
         <article class="stat-card warn">
           <p>Inactifs</p>
-          <h3>{{ inactiveVehiculesCount | number: '2.0-0' }}</h3>
+          <h3>{{ inactiveVehiculesCount | number: "2.0-0" }}</h3>
         </article>
         <article class="stat-card">
           <p>Tarif moyen</p>
-          <h3>{{ averagePrixKm | number: '1.2-2' }} <span>TND/km</span></h3>
+          <h3>{{ averagePrixKm | number: "1.2-2" }} <span>TND/km</span></h3>
         </article>
       </section>
 
@@ -117,7 +117,7 @@
               class="fleet-status"
               [class.active]="v.statut === VehiculeStatut.ACTIVE"
             >
-              {{ v.statut === VehiculeStatut.ACTIVE ? 'ACTIF' : 'INACTIF' }}
+              {{ v.statut === VehiculeStatut.ACTIVE ? "ACTIF" : "INACTIF" }}
             </span>
 
             <span class="photo-count" *ngIf="getVehiculePhotos(v).length > 0">
@@ -204,7 +204,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>
-          {{ editingVehicule ? 'Modifier le véhicule' : 'Ajouter un véhicule' }}
+          {{ editingVehicule ? "Modifier le véhicule" : "Ajouter un véhicule" }}
         </h2>
         <button class="close-btn" type="button" (click)="cancelForm()">
           ✕
@@ -215,42 +215,116 @@
         <div class="form-row">
           <div class="form-group">
             <label>Marque</label>
-            <input type="text" formControlName="marque" required />
+            <input
+              type="text"
+              formControlName="marque"
+              required
+              minlength="3"
+              maxlength="30"
+              (input)="onTextInput('marque')"
+              (blur)="onTextBlur('marque')"
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('marque')">
+              {{ getFieldError("marque") }}
+            </small>
           </div>
           <div class="form-group">
             <label>Modèle</label>
-            <input type="text" formControlName="modele" required />
+            <input
+              type="text"
+              formControlName="modele"
+              required
+              minlength="3"
+              maxlength="30"
+              (input)="onTextInput('modele')"
+              (blur)="onTextBlur('modele')"
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('modele')">
+              {{ getFieldError("modele") }}
+            </small>
           </div>
         </div>
 
         <div class="form-group">
           <label>Numéro de plaque</label>
-          <input type="text" formControlName="numeroPlaque" required />
+          <input
+            type="text"
+            formControlName="numeroPlaque"
+            required
+            minlength="3"
+            maxlength="12"
+            placeholder="Ex: 123 AB 4567"
+            (input)="onNumeroPlaqueInput()"
+            (blur)="onNumeroPlaqueBlur()"
+          />
+          <small
+            >Format Tunisie: 1 à 3 chiffres, 1 à 2 lettres, 1 à 4
+            chiffres.</small
+          >
+          <small class="field-error" *ngIf="isFieldInvalid('numeroPlaque')">
+            {{ getFieldError("numeroPlaque") }}
+          </small>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Type de véhicule</label>
-            <select formControlName="typeVehicule">
+            <select formControlName="typeVehicule" required>
               <option [value]="TypeVehicule.ECONOMY">Économie</option>
               <option [value]="TypeVehicule.PREMIUM">Premium</option>
               <option [value]="TypeVehicule.VAN">Van</option>
             </select>
+            <small class="field-error" *ngIf="isFieldInvalid('typeVehicule')">
+              {{ getFieldError("typeVehicule") }}
+            </small>
           </div>
           <div class="form-group">
             <label>Nombre de places</label>
-            <input type="number" formControlName="capacitePassagers" min="1" />
+            <input
+              type="number"
+              formControlName="capacitePassagers"
+              min="1"
+              max="9"
+              step="1"
+              required
+            />
+            <small
+              class="field-error"
+              *ngIf="isFieldInvalid('capacitePassagers')"
+            >
+              {{ getFieldError("capacitePassagers") }}
+            </small>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Prix par km (TND)</label>
-            <input type="number" step="0.01" formControlName="prixKm" />
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              max="10"
+              formControlName="prixKm"
+              required
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('prixKm')">
+              {{ getFieldError("prixKm") }}
+            </small>
           </div>
           <div class="form-group">
             <label>Prix par minute (TND)</label>
-            <input type="number" step="0.01" formControlName="prixMinute" />
+            <input
+              type="number"
+              step="0.01"
+              min="0.05"
+              max="5"
+              formControlName="prixMinute"
+              required
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('prixMinute')">
+              {{ getFieldError("prixMinute") }}
+            </small>
           </div>
         </div>
 
@@ -315,10 +389,10 @@
           >
             {{
               isSubmitting
-                ? 'Traitement...'
+                ? "Traitement..."
                 : editingVehicule
-                  ? 'Enregistrer les modifications'
-                  : 'Ajouter le véhicule'
+                  ? "Enregistrer les modifications"
+                  : "Ajouter le véhicule"
             }}
           </button>
         </div>

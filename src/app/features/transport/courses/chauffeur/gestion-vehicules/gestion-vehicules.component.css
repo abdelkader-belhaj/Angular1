@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: #f7f9fc;
   color: #191c1e;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
 }
 
 .dashboard-container {
@@ -71,7 +71,7 @@
 
 .dock-brand h2 {
   margin: 0;
-  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   color: #003974;
   font-size: 1.6rem;
   letter-spacing: -0.02em;
@@ -182,7 +182,7 @@
 
 .hero-head h2 {
   margin: 0;
-  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 800;
   color: #003974;
@@ -235,7 +235,7 @@
   margin: 6px 0 0;
   font-size: 2rem;
   color: #003974;
-  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
 }
 
 .stat-card h3 span {
@@ -372,7 +372,7 @@
 .card-header h3 {
   margin: 0;
   color: #003974;
-  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 1.35rem;
 }
 
@@ -480,7 +480,7 @@
 
 .renew-card h4 {
   margin: 0;
-  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 1.55rem;
 }
 
@@ -737,9 +737,23 @@ form {
   border-color: rgba(31, 94, 172, 0.6);
 }
 
+.form-group input.ng-invalid.ng-touched,
+.form-group select.ng-invalid.ng-touched {
+  border-color: #ba1a1a;
+  background: #fff7f7;
+}
+
 .form-group small {
   color: #727782;
   font-size: 0.75rem;
+}
+
+.form-group .field-error {
+  display: block;
+  margin-top: 0.3rem;
+  color: #ba1a1a;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .photos-preview {

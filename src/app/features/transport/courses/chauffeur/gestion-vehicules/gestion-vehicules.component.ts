@@ -16,6 +16,7 @@ import { AuthService } from '../../../../../services/auth.service';
 })
 export class GestionVehiculesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private readonly tunisianPlateRegex = /^\d{1,3}\s?[A-Z]{1,2}\s?\d{1,4}$/;
 
   chauffeurId: number | null = null;
   vehicules: Vehicule[] = [];
@@ -96,16 +97,39 @@ export class GestionVehiculesComponent implements OnInit, OnDestroy {
 
   private initForm(): void {
     this.vehiculeForm = this.fb.group({
-      marque: ['', Validators.required],
-      modele: ['', Validators.required],
+      marque: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(30),
+        ],
+      ],
+      modele: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(30),
+        ],
+      ],
       numeroPlaque: [
         '',
-        [Validators.required, Validators.pattern(/^[A-Za-z0-9-]{5,10}$/)],
+        [Validators.required, Validators.pattern(this.tunisianPlateRegex)],
       ],
       typeVehicule: [TypeVehicule.ECONOMY, Validators.required],
-      capacitePassagers: [4, [Validators.required, Validators.min(1)]],
-      prixKm: [0.8, [Validators.required, Validators.min(0)]],
-      prixMinute: [0.2, [Validators.required, Validators.min(0)]],
+      capacitePassagers: [
+        4,
+        [Validators.required, Validators.min(1), Validators.max(9)],
+      ],
+      prixKm: [
+        0.8,
+        [Validators.required, Validators.min(0.1), Validators.max(10)],
+      ],
+      prixMinute: [
+        0.2,
+        [Validators.required, Validators.min(0.05), Validators.max(5)],
+      ],
       statut: [VehiculeStatut.INACTIVE],
     });
   }
@@ -168,9 +192,9 @@ export class GestionVehiculesComponent implements OnInit, OnDestroy {
     this.editingVehicule = v;
     this.clearSelectedPhotos();
     this.vehiculeForm.patchValue({
-      marque: v.marque,
-      modele: v.modele,
-      numeroPlaque: v.numeroPlaque,
+      marque: this.toTitleCase(v.marque),
+      modele: this.toTitleCase(v.modele),
+      numeroPlaque: this.normalizePlate(v.numeroPlaque),
       typeVehicule: v.typeVehicule,
       capacitePassagers: v.capacitePassagers,
       prixKm: v.prixKm,
@@ -196,7 +220,10 @@ export class GestionVehiculesComponent implements OnInit, OnDestroy {
       formValue: this.vehiculeForm.value,
     });
 
+    this.normalizeFormFields();
+
     if (this.vehiculeForm.invalid || !this.chauffeurId) {
+      this.vehiculeForm.markAllAsTouched();
       console.warn('[Vehicules][Submit] blocked by validation/context', {
         chauffeurId: this.chauffeurId,
         controlStates: this.getFormValidationSnapshot(),
@@ -224,6 +251,9 @@ export class GestionVehiculesComponent implements OnInit, OnDestroy {
       ...formValue,
       statut: enforcedStatut,
       numeroPlaque: normalizedNumeroPlaque,
+      capacitePassagers: Number(formValue.capacitePassagers),
+      prixKm: Number(formValue.prixKm),
+      prixMinute: Number(formValue.prixMinute),
       chauffeur: {
         idChauffeur: this.chauffeurId,
       },
@@ -781,6 +811,120 @@ export class GestionVehiculesComponent implements OnInit, OnDestroy {
       formValid: this.vehiculeForm.valid,
       showAddForm: this.showAddForm,
     });
+  }
+
+  onTextInput(fieldName: 'marque' | 'modele'): void {
+    const control = this.vehiculeForm.get(fieldName);
+    if (!control) {
+      return;
+    }
+
+    const normalized = this.toTitleCase(control.value);
+    if (normalized !== control.value) {
+      control.setValue(normalized, { emitEvent: false });
+    }
+  }
+
+  onTextBlur(fieldName: 'marque' | 'modele'): void {
+    const control = this.vehiculeForm.get(fieldName);
+    if (!control) {
+      return;
+    }
+
+    const normalized = this.toTitleCase(control.value);
+    control.setValue(normalized, { emitEvent: false });
+    control.markAsTouched();
+  }
+
+  onNumeroPlaqueInput(): void {
+    const control = this.vehiculeForm.get('numeroPlaque');
+    if (!control) {
+      return;
+    }
+
+    const normalized = this.normalizePlate(control.value);
+    if (normalized !== control.value) {
+      control.setValue(normalized, { emitEvent: false });
+    }
+  }
+
+  onNumeroPlaqueBlur(): void {
+    const control = this.vehiculeForm.get('numeroPlaque');
+    if (!control) {
+      return;
+    }
+
+    const normalized = this.normalizePlate(control.value);
+    control.setValue(normalized, { emitEvent: false });
+    control.markAsTouched();
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const control = this.vehiculeForm.get(fieldName);
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
+  getFieldError(fieldName: string): string {
+    const control = this.vehiculeForm.get(fieldName);
+    if (!control?.errors) {
+      return '';
+    }
+
+    if (control.errors['required']) {
+      return 'Ce champ est obligatoire.';
+    }
+
+    if (control.errors['minlength']) {
+      return `Minimum ${control.errors['minlength'].requiredLength} caractères.`;
+    }
+
+    if (control.errors['maxlength']) {
+      return `Maximum ${control.errors['maxlength'].requiredLength} caractères.`;
+    }
+
+    if (control.errors['pattern'] && fieldName === 'numeroPlaque') {
+      return 'Format plaque invalide. Exemple: 123 AB 4567';
+    }
+
+    if (control.errors['min']) {
+      const minValue = control.errors['min'].min;
+      return `La valeur minimale est ${minValue}.`;
+    }
+
+    if (control.errors['max']) {
+      const maxValue = control.errors['max'].max;
+      return `La valeur maximale est ${maxValue}.`;
+    }
+
+    return 'Valeur invalide.';
+  }
+
+  private normalizeFormFields(): void {
+    this.vehiculeForm.patchValue(
+      {
+        marque: this.toTitleCase(this.vehiculeForm.get('marque')?.value),
+        modele: this.toTitleCase(this.vehiculeForm.get('modele')?.value),
+        numeroPlaque: this.normalizePlate(
+          this.vehiculeForm.get('numeroPlaque')?.value,
+        ),
+      },
+      { emitEvent: false },
+    );
+  }
+
+  private toTitleCase(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+      .replace(/(^|\s)\S/g, (char) => char.toUpperCase());
+  }
+
+  private normalizePlate(value: unknown): string {
+    return String(value ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, ' ');
   }
 
   private getFormValidationSnapshot(): Record<string, any> {

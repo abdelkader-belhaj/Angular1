@@ -27,7 +27,7 @@ import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
-
+import { TransportStatsComponent } from './dashbord/transport-stats/transport-stats.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -50,6 +50,7 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     AdminUsersPageComponent,
     ResetPasswordComponent,
     WaitingResponsePageComponent,
+    TransportStatsComponent,
   ],
   imports: [
     BrowserModule,

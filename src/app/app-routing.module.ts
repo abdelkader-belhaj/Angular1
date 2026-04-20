@@ -15,7 +15,7 @@ import { ProfilePageComponent } from './profile/profile-page.component';
 import { SecurityPageComponent } from './security/security-page.component';
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
-
+import { TransportStatsComponent } from './dashbord/transport-stats/transport-stats.component';
 const routes: Routes = [
   { path: '', component: HomePageComponent },
   {
@@ -54,6 +54,11 @@ const routes: Routes = [
   {
     path: 'dashboard/users',
     component: AdminUsersPageComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'dashbord/transport-stats',
+    component: TransportStatsComponent,
     canActivate: [adminGuard],
   },
   {

@@ -49,6 +49,31 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   searchQuery = '';
   filteredForums: Forum[] = [];
 
+  // ✅ EMOJI REACTIONS
+  private emojiReactionsMap: Map<number, Map<string, number>> = new Map();
+  private userEmojiReactionsMap: Map<number, string | null> = new Map();
+  openEmojiPickerForForum: number | null = null;
+  emojiSearchQuery = '';
+
+  // ✅ COMMENTS COLLAPSE/EXPAND
+  private expandedCommentsMap: Map<number, boolean> = new Map();
+  readonly INITIAL_COMMENTS_COUNT = 3;
+  
+  allEmojis = [
+    '😊', '❤️', '😂', '😮', '😢', '😡', '👍', '👎',
+    '🔥', '✨', '🎉', '💯', '🙌', '💪', '🚀', '⭐',
+    '🎈', '🎁', '💝', '😍', '😎', '😴', '🤔', '😌',
+    '🙏', '💔', '😱', '🤣', '😘', '😗', '😚', '😙',
+    '🤐', '😬', '🤗', '🤩', '🤔', '😏', '😌', '😔',
+    '😓', '😪', '🤤', '😷', '🤒', '🤕', '🤢', '🤮',
+    '🤧', '🤥', '😳', '😡', '😠', '🤬', '😈', '👿',
+    '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽',
+    '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽',
+    '🙀', '😿', '😾', '❤️', '🧡', '💛', '💚', '💙',
+    '💜', '🖤', '🤍', '🤎', '💔', '💕', '💞', '💓',
+    '💗', '💖', '💘', '💝', '💟', '👋', '🤚', '🖐️'
+  ];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -346,6 +371,16 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
     }
   });
 }
+
+  // ✅ COMMENTS COLLAPSE/EXPAND
+  toggleCommentsExpanded(forumId: number): void {
+    const isExpanded = this.expandedCommentsMap.get(forumId) ?? false;
+    this.expandedCommentsMap.set(forumId, !isExpanded);
+  }
+
+  isCommentsExpanded(forumId: number): boolean {
+    return this.expandedCommentsMap.get(forumId) ?? false;
+  }
 
   // ─── REVIEWS ──────────────────────────────────────────────────────────────────
 
@@ -853,5 +888,86 @@ insertEmojiCreate(emoji: string, event: Event): void {
 closeAllEmojiPickers(): void {
   this.showEmojiPickerForumId = null;
   this.showEmojiPickerCreate = false;
+}
+
+// ─── EMOJI REACTIONS ──────────────────────────────────────────────────────────
+
+toggleEmojiPicker(forumId: number): void {
+  if (this.openEmojiPickerForForum === forumId) {
+    this.openEmojiPickerForForum = null;
+    this.emojiSearchQuery = '';
+  } else {
+    this.openEmojiPickerForForum = forumId;
+    this.emojiSearchQuery = '';
+  }
+}
+
+getFilteredEmojis(): string[] {
+  if (!this.emojiSearchQuery.trim()) return this.allEmojis;
+  
+  const query = this.emojiSearchQuery.toLowerCase().trim();
+  const emojiNames: { [key: string]: string } = {
+    'smile': '😊', 'heart': '❤️', 'laugh': '😂', 'surprise': '😮', 'sad': '😢',
+    'angry': '😡', 'like': '👍', 'dislike': '👎', 'fire': '🔥', 'star': '✨',
+    'party': '🎉', 'hundred': '💯', 'hands': '🙌', 'muscle': '💪', 'rocket': '🚀',
+  };
+
+  return this.allEmojis.filter(emoji => {
+    const name = Object.entries(emojiNames).find(([, e]) => e === emoji)?.[0] || '';
+    return emoji.includes(query) || name.includes(query);
+  });
+}
+
+addEmojiReaction(forumId: number, emoji: string): void {
+  if (!this.currentUser) {
+    this.errorMessage = 'Vous devez être connecté pour réagir.';
+    return;
+  }
+
+  if (!this.emojiReactionsMap.has(forumId)) {
+    this.emojiReactionsMap.set(forumId, new Map());
+  }
+
+  const reactions = this.emojiReactionsMap.get(forumId)!;
+  
+  if (this.userEmojiReactionsMap.get(forumId) === emoji) {
+    const count = reactions.get(emoji) || 0;
+    if (count <= 1) {
+      reactions.delete(emoji);
+    } else {
+      reactions.set(emoji, count - 1);
+    }
+    this.userEmojiReactionsMap.set(forumId, null);
+  } else {
+    const oldEmoji = this.userEmojiReactionsMap.get(forumId);
+    if (oldEmoji && reactions.has(oldEmoji)) {
+      const count = reactions.get(oldEmoji) || 0;
+      if (count <= 1) {
+        reactions.delete(oldEmoji);
+      } else {
+        reactions.set(oldEmoji, count - 1);
+      }
+    }
+
+    const count = reactions.get(emoji) || 0;
+    reactions.set(emoji, count + 1);
+    this.userEmojiReactionsMap.set(forumId, emoji);
+  }
+
+  this.openEmojiPickerForForum = null;
+  this.emojiSearchQuery = '';
+}
+
+getEmojiReactions(forumId: number): Array<{emoji: string, count: number}> {
+  const reactions = this.emojiReactionsMap.get(forumId);
+  if (!reactions) return [];
+  
+  return Array.from(reactions.entries())
+    .map(([emoji, count]) => ({ emoji, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+getUserEmojiReaction(forumId: number): string | null {
+  return this.userEmojiReactionsMap.get(forumId) ?? null;
 }
 }

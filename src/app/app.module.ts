@@ -1,9 +1,13 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
-import { AuthInterceptor } from './interceptors/auth.interceptor';
+
+
+
+
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -27,8 +31,14 @@ import { InventoryCardsComponent } from './dashbord/inventory-cards/inventory-ca
 import { InquiriesPanelComponent } from './dashbord/inquiries-panel/inquiries-panel.component';
 import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.component';
 
+
+
+import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
+
 import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.component';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
+import { AuthInterceptor } from './services/auth.interceptor';
+import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
 
 // Forum & Community
 import { CommunityListComponent } from './homePage/community/community-list/community-list.component';
@@ -60,8 +70,10 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     InventoryCardsComponent,
     InquiriesPanelComponent,
     DashFooterComponent,
+    AdminUsersPageComponent,
     LoginDialogComponent,
     ResetPasswordComponent,
+
 
     // Forum & Community
     CommunityListComponent,
@@ -71,7 +83,10 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     CommentSectionComponent,
     ReviewSectionComponent,
     CommunityAdminComponent,
-    ForumConditionsModalComponent
+    ForumConditionsModalComponent,
+
+    WaitingResponsePageComponent
+
   ],
   imports: [
     BrowserModule,
@@ -87,7 +102,11 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
       multi: true
     }
   ],
+
   bootstrap: [AppComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+
+  
+
 })
 export class AppModule {}

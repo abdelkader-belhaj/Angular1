@@ -7,7 +7,7 @@
       <li><a routerLink="/" fragment="voyages">Voyages</a></li>
       <li><a routerLink="/" fragment="hotels">Hotels</a></li>
       <li><a routerLink="/" fragment="bons-plans">Bons Plans</a></li>
-      <li><a routerLink="/" fragment="contact">Contact</a></li>
+    
 
     <li>
   <a routerLink="/" fragment="community">Community</a>
@@ -18,7 +18,32 @@
 
     </ul>
 
-    <button class="btn" type="button" (click)="openLoginDialog()">Connexion</button>
+    <button *ngIf="!isAuthenticated" class="btn" type="button" (click)="openLoginDialog()">
+      Connexion
+    </button>
+
+    <div *ngIf="isAuthenticated" class="user-menu" (click)="$event.stopPropagation()">
+      <button class="user-trigger" type="button" (click)="toggleUserMenu($event)">
+        <span class="user-avatar">{{ currentUserName.charAt(0) }}</span>
+        <span class="user-meta">
+          <strong>{{ currentUserName }}</strong>
+          <small>{{ currentUserRole }}</small>
+        </span>
+      </button>
+
+      <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu" aria-label="Menu utilisateur">
+        <div class="user-bio-preview">
+          <p>{{ currentUserBio }}</p>
+        </div>
+        <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
+          Gerer mon module
+        </button>
+        <button type="button" role="menuitem" (click)="goToProfile()">Mon profil</button>
+        <button type="button" role="menuitem" (click)="goToSecurity()">Securite et mot de passe</button>
+        <hr />
+        <button type="button" role="menuitem" class="logout-item" (click)="logout()">Deconnexion</button>
+      </div>
+    </div>
   </div>
 </header>
 

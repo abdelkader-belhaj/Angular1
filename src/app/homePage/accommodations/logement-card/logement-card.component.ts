@@ -169,6 +169,11 @@ export class LogementCardComponent implements OnInit, OnDestroy {
 
   private processImageUrl(imageUrl: string): string {
     if (!imageUrl) return 'assets/images/default.jpg';
+
+    const isVideoAsset = /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(imageUrl);
+    if (isVideoAsset) {
+      return 'assets/images/default.jpg';
+    }
     
     // If it's already a full URL (http/https), return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {

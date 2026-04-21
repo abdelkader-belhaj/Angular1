@@ -13,6 +13,32 @@ import { AiPricePredictionService } from '../../services/accommodation/ai-price-
   styleUrl: './hebergeur-logement-create.component.css'
 })
 export class HebergeurLogementCreateComponent implements OnInit {
+  // ────────────────────────────────────────────────────────────
+  // 🏠 COMPOSANT DE CRÉATION DE LOGEMENT (HÉBERGEUR)
+  // ────────────────────────────────────────────────────────────
+  // Permet à un HEBERGEUR authentifié de créer un nouveau logement.
+  //
+  // 🔌 Services utilisés:
+  //   - CategorieService: Récupère les catégories disponibles
+  //   - LogementService: Crée/modifie le logement (protégé par JWT)
+  //   - AuthService: Vérifie l'authentification
+  //   - AiPricePredictionService: Prédiction de prix & correction texte
+  //
+  // 📍 Fonctionnalités:
+  //   ✅ Sélection de catégorie (depuis API /api/categories)
+  //   ✅ Géolocalisation GPS (browser API)
+  //   ✅ Reverse geocoding (Nominatim OpenStreetMap)
+  //   ✅ Correction grammaticale (LanguageTool)
+  //   ✅ Prédiction de prix (IA)
+  //   ✅ Validation avant envoi
+  //   ✅ Gestion d'erreurs avec logs détaillés
+  //
+  // 🔒 Sécurité:
+  //   - Le token JWT est automatiquement ajouté par AuthInterceptor
+  //   - POST /api/logements nécessite JWT valide
+  //   - Les données sont validées côté frontend ET backend
+  // ────────────────────────────────────────────────────────────
+
   private readonly categorieService = inject(CategorieService);
   private readonly logementService = inject(LogementService);
   private readonly authService = inject(AuthService);
@@ -77,13 +103,23 @@ export class HebergeurLogementCreateComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    // Forcer un rechargement FRAIS - pas de cache
+    this.categorieService.clearCache();
+    
     this.categorieService.getCategories().subscribe({
       next: (data) => {
+        console.log('✅ [Hebergeur] Catégories reçues du service:', data);
         this.categories = data;
-        this.formData.idCategorie = data[0]?.idCategorie || 0;
+        if (data.length === 0) {
+          console.warn('⚠️ [Hebergeur] Aucune catégorie reçue !');
+        } else {
+          this.formData.idCategorie = data[0]?.idCategorie || 0;
+          console.log('✅ [Hebergeur] Première catégorie sélectionnée:', this.formData.idCategorie);
+        }
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('❌ [Hebergeur] Erreur chargement catégories:', err);
         this.categories = [];
         this.loading = false;
       }
@@ -197,12 +233,27 @@ export class HebergeurLogementCreateComponent implements OnInit {
 
     const latitude = this.formData.latitude;
     const longitude = this.formData.longitude;
-    if (latitude === undefined || longitude === undefined) {
+    
+    console.log('[Hebergeur] onCoordinatesChange - lat:', latitude, 'lon:', longitude);
+    
+    if (latitude === undefined || longitude === undefined || latitude === null || longitude === null) {
+      console.log('[Hebergeur] Coordonnées vides, pas de geocoding');
+      this.resolvingLocation = false;
+      this.formErrors['gps'] = '';
+      return;
+    }
+
+    // Valider les coordonnées
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      console.warn('[Hebergeur] Coordonnées invalides - lat:', latitude, 'lon:', longitude);
+      this.formErrors['gps'] = 'Coordonnées GPS invalides (lat: -90 à 90, lon: -180 à 180).';
       this.resolvingLocation = false;
       return;
     }
 
+    console.log('[Hebergeur] Coordonnées valides, lancement du geocoding reverse...');
     this.resolvingLocation = true;
+    this.formErrors['gps'] = '';
 
     this.reverseGeocodeTimer = setTimeout(() => {
       this.reverseGeocodeCoordinates(latitude, longitude);
@@ -214,9 +265,12 @@ export class HebergeurLogementCreateComponent implements OnInit {
     const endpoint = 'https://nominatim.openstreetmap.org/reverse';
     const url = `${endpoint}?format=jsonv2&lat=${encodeURIComponent(String(latitude))}&lon=${encodeURIComponent(String(longitude))}&addressdetails=1&zoom=18&accept-language=fr`;
 
+    console.log('[Geocoding] Appel Nominatim:', url);
     this.http.get<any>(url).subscribe({
       next: (response) => {
+        console.log('[Geocoding] ✅ Réponse Nominatim:', response);
         if (requestId !== this.locationRequestId) {
+          console.log('[Geocoding] Request ID mismatch, ignorant');
           return;
         }
         const address = response?.address || {};
@@ -244,18 +298,24 @@ export class HebergeurLogementCreateComponent implements OnInit {
         this.formErrors['adresse'] = '';
         this.formErrors['gps'] = '';
         this.resolvingLocation = false;
+        console.log('[Geocoding] ✅ Succès - Ville:', this.formData.ville, 'Adresse:', this.formData.adresse);
       },
-      error: () => {
+      error: (err) => {
+        console.error('[Geocoding] ❌ Erreur:', err);
         if (requestId !== this.locationRequestId) {
           return;
         }
-        this.formErrors['gps'] = 'Impossible de déterminer automatiquement la ville et l\'adresse depuis ces coordonnées.';
+        this.formErrors['gps'] = 'Impossible de déterminer la ville/adresse. Complétez manuellement.';
         this.resolvingLocation = false;
       }
     });
   }
 
   private validate(): boolean {
+    // ✅ Validation complète AVANT d'envoyer au backend
+    // Si une erreur est trouvée, elle s'affiche dans le formulaire
+    // Le backend fera aussi sa propre validation (ne pas faire confiance au client)
+    
     this.formErrors = {};
     if (this.formData.idCategorie <= 0) this.formErrors['idCategorie'] = 'Choisissez une catégorie.';
     if (!this.formData.nom.trim()) this.formErrors['nom'] = 'Nom obligatoire.';
@@ -270,11 +330,13 @@ export class HebergeurLogementCreateComponent implements OnInit {
     if (this.surfaceM2 < 0) this.formErrors['surfaceM2'] = 'Surface invalide.';
     const latitude = this.formData.latitude;
     const longitude = this.formData.longitude;
-    if (latitude === undefined || longitude === undefined) {
-      this.formErrors['gps'] = 'Indispensable : Cliquez sur "Utiliser ma position GPS" pour configurer la serrure connectée.';
+    if (latitude === undefined || longitude === undefined || latitude === null || longitude === null) {
+      this.formErrors['gps'] = 'Position GPS obligatoire. Cliquez sur "Obtenir ma position actuelle" ou entrez les coordonnées.';
     } else if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      this.formErrors['gps'] = 'Coordonnées GPS invalides.';
+      this.formErrors['gps'] = 'Coordonnées GPS invalides (lat: -90 à 90, lon: -180 à 180).';
     }
+    
+    console.log('[Validation] Erreurs:', this.formErrors);
     return Object.keys(this.formErrors).length === 0;
   }
 
@@ -309,42 +371,51 @@ export class HebergeurLogementCreateComponent implements OnInit {
   }
 
   enhanceDescription() {
-    if (!this.formData.description) {
+    if (!this.formData.description || this.formData.description.trim().length === 0) {
       this.formErrors['description'] = 'Veuillez rédiger une description avant de la corriger.';
       return;
     }
 
+    console.log('[Enhance] Lancement de la correction avec:', this.formData.description.substring(0, 50) + '...');
     this.enhancingDescription = true;
     this.formErrors['description'] = '';
 
     this.predictorService.enhanceDescription(this.formData.description).subscribe({
       next: (enhancedText) => {
+        console.log('[Enhance] ✅ Texte amélioré:', enhancedText.substring(0, 50) + '...');
         this.formData.description = enhancedText;
         this.enhancingDescription = false;
+        // Message de succès temporaire
+        setTimeout(() => {
+          console.log('[Enhance] Description corrigée avec succès');
+        }, 100);
       },
       error: (err) => {
+        console.error('[Enhance] ❌ Erreur:', err);
         this.enhancingDescription = false;
-        this.formErrors['description'] = 'Erreur IA: ' + err.message;
+        const errorMsg = typeof err === 'string' ? err : (err?.message || 'Erreur lors de la correction.');
+        this.formErrors['description'] = '⚠️ ' + errorMsg;
       }
     });
   }
 
   getLocation(): void {
     if (!navigator.geolocation) {
-      alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+      this.formErrors['gps'] = 'La géolocalisation n\'est pas supportée par votre navigateur.';
       return;
     }
     
-    // Pour la soutenance, si vous voulez tricher sans bouger,
-    // commentez ceci et écrivez this.formData.latitude = 36.4 ; this.formData.longitude = 10.1;
+    console.log('[Geolocation] Demande de position GPS...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        this.formData.latitude = position.coords.latitude;
-        this.formData.longitude = position.coords.longitude;
+        this.formData.latitude = parseFloat(position.coords.latitude.toFixed(6));
+        this.formData.longitude = parseFloat(position.coords.longitude.toFixed(6));
+        console.log('[Geolocation] ✅ Position obtenue - lat:', this.formData.latitude, 'lon:', this.formData.longitude);
         this.onCoordinatesChange();
       },
       (error) => {
-        alert('Impossible de récupérer la position. Veuillez autoriser l\'accès GPS ou entrer manuellement.');
+        console.error('[Geolocation] ❌ Erreur:', error);
+        this.formErrors['gps'] = 'Impossible d\'accéder à votre position. Vérifiez les permissions du navigateur.';
       }
     );
   }

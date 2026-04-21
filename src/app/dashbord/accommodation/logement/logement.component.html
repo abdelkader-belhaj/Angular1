@@ -62,7 +62,7 @@
         class="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
         <div class="relative h-48 overflow-hidden bg-slate-100">
           <img
-            [src]="getImage(logement.imageUrl || '')"
+            [src]="getImage(getPrimaryImage(logement))"
             [alt]="logement.nom"
             class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             (error)="$any($event.target).src = 'assets/images/default.jpg'" />
@@ -298,23 +298,38 @@
         </label>
         <label class="block md:col-span-2">
           <span class="mb-2 block text-sm font-medium text-slate-700">Images (plusieurs possibles)</span>
-          <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition">
-            <span class="material-symbols-outlined text-slate-400 text-4xl">upload</span>
-            <span class="text-sm text-slate-500 mt-1">Cliquez pour ajouter une image</span>
-            <span class="text-xs text-slate-400">JPG, PNG, WEBP</span>
-            <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event, 'imageUrls')"/>
-          </label>
-          <div *ngIf="formData.imageUrls.length > 0" class="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div *ngFor="let image of formData.imageUrls; let i = index" class="relative group">
-              <img [src]="getImage(image)"
-                   class="w-full h-24 object-cover rounded-lg border border-slate-200"
-                   alt="Aperçu {{ i + 1 }}"/>
-              <button type="button"
-                      (click)="removeImage(i)"
-                      class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
-                ×
+          <div class="space-y-3">
+            <select
+              [ngModel]="selectedAssetImage"
+              (ngModelChange)="selectedAssetImage = $event"
+              name="selectedAssetImage"
+              class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+              <option value="">Sélectionner une image de assets/images</option>
+              <option *ngFor="let img of imageOptions" [value]="img">{{ img }}</option>
+            </select>
+            <div class="flex gap-2">
+              <input
+                [(ngModel)]="selectedAssetImage"
+                name="selectedAssetImageManual"
+                placeholder="Ou saisir un nom exact de fichier"
+                class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+              <button type="button" (click)="addImageFromAssets()" class="rounded-3xl bg-blue-900 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-800">
+                Ajouter
               </button>
             </div>
+            <div *ngIf="formData.imageUrls.length > 0" class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <div *ngFor="let image of formData.imageUrls; let i = index" class="relative group">
+                <img [src]="getImage(image)"
+                     class="w-full h-24 object-cover rounded-lg border border-slate-200"
+                     alt="Aperçu {{ i + 1 }}"/>
+                <button type="button"
+                        (click)="removeImage(i)"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
+                  ×
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">Les images ajoutées sont enregistrées en base par leur nom exact puis rechargées depuis assets/images.</p>
           </div>
         </label>
         <label class="block md:col-span-2">

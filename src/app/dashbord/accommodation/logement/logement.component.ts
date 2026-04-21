@@ -57,9 +57,47 @@ export class LogementComponent implements OnInit {
   formErrors: any = {};
   requestError = '';
   loadError = '';
+  selectedAssetImage = '';
   
   actionReason = '';
   reasonError = '';
+
+  imageOptions = [
+    '3d-rendering-loft-scandinavian-living-room-with-working-table-bookshelf.jpg',
+    '3d-rendering-modern-dining-room-living-room-with-luxury-decor.jpg',
+    '3d-rendering-white-minimal-kitchen-with-wood-decoration.jpg',
+    'angry-man-looking-football-competition-tv-outraged-by-events.jpg',
+    'appartement.jpg',
+    'beautiful-farmhouse-countryside-sunset.jpg',
+    'chalet.jpg',
+    'default.jpg',
+    'futurism-perspective-digital-nomads-lifestyle.jpg',
+    'high-angle-shot-homey-cabin-alpe-d-huez-ski-resort-french-alps-france.jpg',
+    'houses-river-dikes-near-sleeuwijk.jpg',
+    'long-shot-facade-cabin-alpe-d-huez-ski-resort-french-alps-sunrise.jpg',
+    'loungers-sunny-day.jpg',
+    'maison.jpg',
+    'minimalist-black-interior-with-black-sofa.jpg',
+    'modern-apartment-architecture.jpg',
+    'modern-luxury-house-with-swimming-pool.jpg',
+    'pool-hammocks.jpg',
+    'riad.jpg',
+    'small-bathroom-with-modern-design.jpg',
+    'small-bathroom-with-modern-design-style.jpg',
+    'stair-swimming-pool-beautiful-luxury-hotel-pool-resort.jpg',
+    'student-online-cute-guy-checked-shirt-with-glasses-studying-computer-thinking-concentrated.jpg',
+    'villa.jpg'
+  ];
+
+  private readonly imageAliases: Record<string, string> = {
+    'farm.avif': 'beautiful-farmhouse-countryside-sunset.jpg',
+    'cui.avif': '3d-rendering-white-minimal-kitchen-with-wood-decoration.jpg',
+    'maison.avif': 'maison.jpg',
+    'villa.avif': 'villa.jpg',
+    'appartement.avif': 'appartement.jpg',
+    'riad.avif': 'riad.jpg',
+    'chalet.avif': 'chalet.jpg'
+  };
 
   hostHubMode = false;
   searchQuery = '';
@@ -218,7 +256,7 @@ export class LogementComponent implements OnInit {
       idCategorie: logement.idCategorie,
       nom: logement.nom,
       description: stripHostHubMeta(logement.description || ''),
-      imageUrls: logement.imageUrl ? [logement.imageUrl] : [],
+      imageUrls: this.extractImageNames(logement),
       videoUrl: logement.videoUrl || '',
       adresse: logement.adresse || '',
       ville: logement.ville || '',
@@ -226,6 +264,7 @@ export class LogementComponent implements OnInit {
       capacite: logement.capacite,
       disponible: logement.disponible
     };
+    this.selectedAssetImage = this.formData.imageUrls[0] || '';
     this.showEditModal = true;
   }
 
@@ -270,9 +309,10 @@ export class LogementComponent implements OnInit {
     const descriptionOut = mergeDescriptionWithMeta(this.formData.description, this.editMeta);
     const requestData = {
       ...this.formData,
+      imageUrls: this.formData.imageUrls.map((name) => this.normalizeImageName(name)).filter(Boolean),
       description: descriptionOut,
       disponible: this.editMeta.maintenance ? false : this.formData.disponible,
-      imageUrl: this.formData.imageUrls.length > 0 ? this.formData.imageUrls[0] : ''
+      imageUrl: this.formData.imageUrls.length > 0 ? this.normalizeImageName(this.formData.imageUrls[0]) : ''
     };
 
     if (this.selectedLogement) {
@@ -449,21 +489,101 @@ export class LogementComponent implements OnInit {
     if (!file) return;
 
     if (field === 'imageUrls') {
-      this.formData.imageUrls.push(file.name);
+      this.formData.imageUrls.push(this.normalizeImageName(file.name));
+      this.selectedAssetImage = this.formData.imageUrls[this.formData.imageUrls.length - 1] || '';
     } else {
       this.formData[field] = file.name;
     }
   }
 
+  addImageFromAssets(): void {
+    const imageName = this.normalizeImageName(this.selectedAssetImage);
+    if (!imageName) return;
+    if (!this.formData.imageUrls.includes(imageName)) {
+      this.formData.imageUrls.push(imageName);
+    }
+    this.selectedAssetImage = imageName;
+    this.requestError = '';
+  }
+
   removeImage(index: number): void {
     this.formData.imageUrls.splice(index, 1);
+    this.selectedAssetImage = this.formData.imageUrls[0] || '';
   }
 
   getImage(imageName: string): string {
-    if (!imageName) return '/assets/images/default.jpg';
-    if (imageName.startsWith('http')) return imageName;
-    if (imageName.startsWith('data:')) return imageName;
-    return `/assets/images/${imageName}`;
+    const normalized = this.normalizeImageName(imageName);
+    if (!normalized) return '/assets/images/default.jpg';
+    if (normalized.startsWith('http')) return normalized;
+    if (normalized.startsWith('data:')) return normalized;
+    return `/assets/images/${normalized}`;
+  }
+
+  getPrimaryImage(logement: Logement): string {
+    const images = this.extractImageNames(logement);
+    return images[0] || this.normalizeImageName(logement.imageUrl || '') || 'default.jpg';
+  }
+
+  private normalizeImageName(raw: string): string {
+    if (!raw) return '';
+    const clean = String(raw).trim();
+    if (!clean) return '';
+    if (clean.startsWith('http') || clean.startsWith('data:')) return clean;
+    const normalized = clean.replace(/\\/g, '/').split('?')[0].split('#')[0];
+    const baseName = normalized.split('/').pop() || '';
+    return this.resolveImageAlias(baseName);
+  }
+
+  private resolveImageAlias(imageName: string): string {
+    const lower = imageName.toLowerCase();
+    const aliased = this.imageAliases[lower] || imageName;
+    return this.imageOptions.includes(aliased) ? aliased : 'default.jpg';
+  }
+
+  private extractImageNames(logement: Logement): string[] {
+    const out: string[] = [];
+    const dynamicImages = (logement as any).imageUrls;
+
+    if (Array.isArray(dynamicImages)) {
+      for (const item of dynamicImages) {
+        const name = this.normalizeImageName(String(item || ''));
+        if (name && !out.includes(name)) {
+          out.push(name);
+        }
+      }
+    } else if (typeof dynamicImages === 'string') {
+      const raw = dynamicImages.trim();
+      if (raw.startsWith('[') && raw.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            for (const item of parsed) {
+              const name = this.normalizeImageName(String(item || ''));
+              if (name && !out.includes(name)) {
+                out.push(name);
+              }
+            }
+          }
+        } catch {
+          // Ignore malformed JSON and continue with CSV fallback.
+        }
+      }
+      if (!out.length) {
+        for (const item of raw.split(',')) {
+          const name = this.normalizeImageName(item);
+          if (name && !out.includes(name)) {
+            out.push(name);
+          }
+        }
+      }
+    }
+
+    const primary = this.normalizeImageName(logement.imageUrl || '');
+    if (primary && !out.includes(primary)) {
+      out.unshift(primary);
+    }
+
+    return out;
   }
 
   getVideo(videoName: string): string {

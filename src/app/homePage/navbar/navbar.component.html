@@ -5,7 +5,7 @@
     <ul class="menu">
       <li><a routerLink="/" fragment="accueil">Accueil</a></li>
       <li><a routerLink="/" fragment="voyages">Voyages</a></li>
-      <li><a routerLink="/" fragment="Categories">Hotels</a></li>
+      <li><a routerLink="/" fragment="hotels">Hotels</a></li>
       <li><a routerLink="/" fragment="bons-plans">Bons Plans</a></li>
       <li><a routerLink="/" fragment="contact">Contact</a></li>
     </ul>
@@ -16,30 +16,45 @@
       </ng-container>
 
       <ng-container *ngIf="isAuthenticated">
-        <div class="user-menu-container" style="display: flex; align-items: center; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
           
-          <button *ngIf="isTouristUser()" routerLink="/mes-reservations" class="user-profile-btn" style="padding: 8px; position: relative; margin-right: 15px;" title="Mes Réservations">
+          <!-- ========== SECTION SPÉCIFIQUE: MES RÉSERVATIONS ========== -->
+          <!-- Bouton Mes Réservations visible uniquement pour les touristes -->
+          <button 
+            *ngIf="isTouristUser()" 
+            routerLink="/mes-reservations" 
+            class="reservations-btn" 
+            style="padding: 8px; position: relative; margin-right: 15px;" 
+            title="Mes Réservations">
             <lucide-icon name="calendar" class="w-5 h-5 text-slate-700"></lucide-icon>
+            <!-- Badge de notifications pour les nouvelles réservations -->
             <span *ngIf="unreadNotifsCount > 0" class="notif-badge">{{ unreadNotifsCount }}</span>
             <span *ngIf="unreadNotifsCount > 0" class="notif-badge-ping" aria-hidden="true"></span>
           </button>
+          <!-- ========== FIN SECTION: MES RÉSERVATIONS ========== -->
 
-          <div style="position: relative;">
-            <button class="user-profile-btn" (click)="toggleUserMenu()">
-              <img [src]="getProfileImage()" alt="profile" class="profile-avatar">
-              <span>{{ getUserDisplayName() }}</span>
+          <div class="user-menu" (click)="$event.stopPropagation()">
+            <button class="user-trigger" type="button" (click)="toggleUserMenu($event)">
+              <span class="user-avatar">{{ currentUserName.charAt(0) }}</span>
+              <span class="user-meta">
+                <strong>{{ currentUserName }}</strong>
+                <small>{{ currentUserRole }}</small>
+              </span>
             </button>
 
-            <div class="user-menu" *ngIf="showUserMenu">
-              <button class="menu-option" (click)="editProfile(); toggleUserMenu()">
-                Mon Profil
+            <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu" aria-label="Menu utilisateur">
+              <div class="user-bio-preview">
+                <p>{{ currentUserBio }}</p>
+              </div>
+              <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
+                Gerer mon module
               </button>
-              <button class="menu-option" (click)="logout(); toggleUserMenu()">
-                Déconnexion
-              </button>
+              <button type="button" role="menuitem" (click)="goToProfile()">Mon profil</button>
+              <button type="button" role="menuitem" (click)="goToSecurity()">Securite et mot de passe</button>
+              <hr />
+              <button type="button" role="menuitem" class="logout-item" (click)="logout()">Deconnexion</button>
             </div>
           </div>
-
         </div>
       </ng-container>
     </div>

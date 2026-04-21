@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, shareReplay, tap } from 'rxjs/operators';
+import { categories as localCategories } from '../../data/mockData';
 
 export interface Logement {
   id: number;
@@ -19,23 +21,50 @@ export interface Categorie {
   logements?: Logement[];
 }
 
+const LOCAL_CATEGORY_FALLBACK: Categorie[] = localCategories.map((category, index) => ({
+  idCategorie: category.idCategorie,
+  nomCategorie: category.nom,
+  description: category.description,
+  icone: index === 0 ? 'default.jpg' : 'appartement.jpg',
+  statut: true,
+  dateCreation: new Date().toISOString(),
+  nbLogements: 0,
+  logements: []
+}));
+
 @Injectable({
   providedIn: 'root'
 })
 export class CategorieService {
+  // ────────────────────────────────────────────────────────────
+  // 📋 SERVICE DE GESTION DES CATÉGORIES
+  // ────────────────────────────────────────────────────────────
+  // Ce service gère toutes les opérations liées aux catégories:
+  //   - GET /api/categories (PUBLIC - sans auth)
+  //   - POST /api/categories (ADMIN/HEBERGEUR - avec JWT)
+  //   - PUT /api/categories/{id} (ADMIN/HEBERGEUR - avec JWT)
+  //   - DELETE /api/categories/{id} (ADMIN/HEBERGEUR - avec JWT)
+  //
+  // 🔒 Sécurité: Les en-têtes Authorization sont ajoutés auto
+  //    si un token JWT existe dans localStorage['auth_token']
+  // ────────────────────────────────────────────────────────────
 
   private apiUrl = 'http://localhost:8080/api/categories';
   private logementsApiUrl = 'http://localhost:8080/api/logements';
+  private categoriesCache$?: Observable<Categorie[]>;
 
   constructor(private http: HttpClient) {}
 
   // ── GET token depuis localStorage ──────────────
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
+    let headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 
   private getReadHeaders(): HttpHeaders {
@@ -48,16 +77,48 @@ export class CategorieService {
   }
 
   // ── PUBLIC — sans token ─────────────────────────
+  clearCache(): void {
+    this.categoriesCache$ = undefined;
+  }
+
   getCategories(): Observable<Categorie[]> {
-    return this.http.get<Categorie[]>(this.apiUrl);
+    if (this.categoriesCache$) {
+      console.log('[CategorieService] Retournant les catégories du cache');
+      return this.categoriesCache$;
+    }
+
+    console.log('[CategorieService] Récupération des catégories depuis le backend...');
+    // D'ABORD essayer SANS headers (pas d'auth)
+    this.categoriesCache$ = this.http.get<Categorie[]>(this.apiUrl).pipe(
+      tap(response => {
+        console.log('[CategorieService] ✅ Réponse du backend (sans headers):', response);
+        console.log('[CategorieService] Nombre de catégories reçues:', Array.isArray(response) ? response.length : 0);
+      }),
+      catchError(err => {
+        console.error('[CategorieService] ❌ Erreur sans headers:', err);
+        console.log('[CategorieService] Tentative avec headers...');
+        const headers = this.getReadHeaders();
+        return this.http.get<Categorie[]>(this.apiUrl, { headers }).pipe(
+          tap(response => console.log('[CategorieService] ✅ Réponse (avec headers):', response)),
+          catchError(err2 => {
+            console.error('[CategorieService] ❌ Erreur aussi avec headers:', err2);
+            console.log('[CategorieService] Utilisation du fallback local...');
+            return of([...LOCAL_CATEGORY_FALLBACK]);
+          })
+        );
+      }),
+      shareReplay(1)
+    );
+
+    return this.categoriesCache$;
   }
 
   getCategorieById(id: number): Observable<Categorie> {
-    return this.http.get<Categorie>(`${this.apiUrl}/${id}`, { headers: this.getReadHeaders() });
+    return this.http.get<Categorie>(`${this.apiUrl}/${id}`);
   }
 
   getLogementsByCategorie(idCategorie: number): Observable<Logement[]> {
-    return this.http.get<Logement[]>(`${this.logementsApiUrl}/categorie/${idCategorie}`, { headers: this.getReadHeaders() });
+    return this.http.get<Logement[]>(`${this.logementsApiUrl}/categorie/${idCategorie}`);
   }
 
   // ── ADMIN — avec token ──────────────────────────
@@ -66,6 +127,10 @@ export class CategorieService {
       this.apiUrl,
       data,
       { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        this.categoriesCache$ = undefined;
+      })
     );
   }
 
@@ -77,6 +142,10 @@ export class CategorieService {
       `${this.apiUrl}/${id}`,
       data,
       { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        this.categoriesCache$ = undefined;
+      })
     );
   }
 
@@ -84,6 +153,10 @@ export class CategorieService {
     return this.http.delete<void>(
       `${this.apiUrl}/${id}`,
       { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        this.categoriesCache$ = undefined;
+      })
     );
   }
 }

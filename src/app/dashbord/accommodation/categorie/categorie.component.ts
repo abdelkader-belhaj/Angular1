@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CategorieService, Categorie, Logement } from '../../../services/accommodation/categorie.service';
 import { AuthService } from '../../../services/auth.service';
 import { AiPricePredictionService } from '../../../services/accommodation/ai-price-prediction.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-categorie',
@@ -33,6 +34,8 @@ export class CategorieComponent implements OnInit {
   enhancingDescription = false;
   isAdminUser = false;
   isHebergeurUser = false;
+  selectedAssetIcon = '';
+  imagePreviewUrl = '';
 
   imageOptions = ['maison.jpg', 'villa.jpg', 'appartement.jpg', 'riad.jpg', 'chalet.jpg']; // Ajoutez vos images ici
 
@@ -75,6 +78,8 @@ export class CategorieComponent implements OnInit {
   openAddModal(): void {
     this.selectedCategorie = null;
     this.formData = { nomCategorie: '', description: '', icone: '', statut: true };
+    this.selectedAssetIcon = '';
+    this.imagePreviewUrl = '';
     this.formErrors = {};
     this.showModal = true;
   }
@@ -87,6 +92,8 @@ export class CategorieComponent implements OnInit {
       icone:        cat.icone,
       statut:       cat.statut
     };
+    this.selectedAssetIcon = cat.icone;
+    this.imagePreviewUrl = this.getImage(cat.icone);
     this.formErrors = {};
     this.showModal = true;
   }
@@ -124,7 +131,21 @@ export class CategorieComponent implements OnInit {
     });
   }
 
-  closeModal(): void { this.showModal = false; this.selectedCategorie = null; }
+  closeModal(): void { 
+    this.showModal = false; 
+    this.selectedCategorie = null;
+    this.selectedAssetIcon = '';
+    this.imagePreviewUrl = '';
+  }
+
+  selectImageFromAssets(imageName: string): void {
+    this.formData.icone = imageName;
+    if (imageName) {
+      this.imagePreviewUrl = this.getImage(imageName);
+    } else {
+      this.imagePreviewUrl = '';
+    }
+  }
   closeDeleteModal(): void {
     this.showDeleteModal = false;
     this.categorieToDelete = null;
@@ -136,6 +157,8 @@ export class CategorieComponent implements OnInit {
     this.deleteErrorMessage = '';
     this.deleteBlockerLogements = [];
     this.deleteBlockerCount = 0;
+    this.selectedAssetIcon = '';
+    this.imagePreviewUrl = '';
   }
 
   saveCategorie(): void {
@@ -212,7 +235,7 @@ export class CategorieComponent implements OnInit {
   }
 
   async logout(): Promise<void> {
-    this.authService.logout();
+     await firstValueFrom(this.authService.logout());
     await this.router.navigate(['/']);
   }
 
@@ -239,6 +262,7 @@ export class CategorieComponent implements OnInit {
     if (!icone) return '/assets/images/default.jpg';
     if (icone.startsWith('http')) return icone;
     if (icone.startsWith('data:')) return icone;
+    if (!this.imageOptions.includes(icone)) return '/assets/images/default.jpg';
     return `/assets/images/${icone}`;
   }
 

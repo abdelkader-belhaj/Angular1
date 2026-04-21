@@ -22,10 +22,13 @@ export class NotificationClientService {
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token');
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json'
     });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 
   getMyNotifications(): Observable<BackendNotification[]> {

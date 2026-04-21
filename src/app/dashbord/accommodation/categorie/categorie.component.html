@@ -96,26 +96,32 @@
 
     <div class="p-6 space-y-4">
 
-      <!-- Nom — Select liste déroulante -->
+      <!-- Nom — liste déroulante -->
       <div>
         <label class="block text-sm font-semibold text-slate-700 mb-1">
           Nom de la catégorie *
         </label>
-        <select [(ngModel)]="formData.nomCategorie"
-                [class]="formErrors.nom
-                  ? 'w-full px-4 py-2 border border-red-500 rounded-lg focus:outline-none bg-white text-slate-700'
-                  : 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-slate-700'">
-          <option value="" disabled>🏠 Sélectionnez un type de catégorie</option>
-          <option value="Appartements">Appartements</option>
-          <option value="Villas">Villas</option>
-          <option value="Maisons">Maisons</option>
-          <option value="Studios">Studios</option>
-          <option value="Chalets">Chalets</option>
-          <option value="Riads">Riads</option>
-          <option value="Duplexes">Duplexes</option>
-          <option value="Penthouses">Penthouses</option>
-          <option value="Bungalows">Bungalows</option>
-          <option value="Fermes">Fermes</option>
+        <select
+          [(ngModel)]="formData.nomCategorie"
+          [class]="formErrors.nom
+            ? 'w-full px-4 py-2 border border-red-500 rounded-lg focus:outline-none bg-white text-slate-700'
+            : 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-slate-700'">
+          <option value="" disabled selected>— Choisir un nom —</option>
+          <option>Hôtel</option>
+          <option>Appartement</option>
+          <option>Villa</option>
+          <option>Studio</option>
+          <option>Chambre d'hôtes</option>
+          <option>Riad</option>
+          <option>Maison de vacances</option>
+          <option>Bungalow</option>
+          <option>Camping</option>
+          <option>Auberge de jeunesse</option>
+          <option>Résidence touristique</option>
+          <option>Chalet</option>
+          <option>Loft</option>
+          <option>Duplex</option>
+          <option>Ferme</option>
         </select>
         <p *ngIf="formErrors.nom" class="text-red-500 text-xs mt-1">{{ formErrors.nom }}</p>
       </div>
@@ -153,14 +159,22 @@
       <!-- Image locale -->
       <div>
         <label class="block text-sm font-semibold text-slate-700 mb-1">Image *</label>
-        <label [class]="formErrors.icone
-          ? 'flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-red-500 rounded-lg cursor-pointer hover:bg-slate-50 transition'
-          : 'flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition'">
-          <span class="material-symbols-outlined text-slate-400 text-4xl">upload</span>
-          <span class="text-sm text-slate-500 mt-1">Cliquez pour choisir une image</span>
-          <span class="text-xs text-slate-400">JPG, PNG, WEBP</span>
-          <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)"/>
-        </label>
+        <div class="space-y-3">
+          <select
+            [ngModel]="selectedAssetIcon"
+            (ngModelChange)="selectImageFromAssets($event)"
+            name="selectedAssetIconSelect"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-slate-700">
+            <option value="">Sélectionner une image de assets/images</option>
+            <option *ngFor="let img of imageOptions" [value]="img">{{ img }}</option>
+          </select>
+          <input
+            [ngModel]="formData.icone"
+            (ngModelChange)="selectImageFromAssets($event)"
+            name="selectedAssetIconManual"
+            placeholder="Ou saisir le nom exact du fichier"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-slate-700" />
+        </div>
         <p *ngIf="formErrors.icone" class="text-red-500 text-xs mt-1">{{ formErrors.icone }}</p>
         <img *ngIf="formData.icone"
              [src]="getImage(formData.icone)"

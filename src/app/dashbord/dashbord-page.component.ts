@@ -28,6 +28,11 @@ export class DashbordPageComponent implements OnInit {
   checkRoute(url: string): void {
     this.isChildRoute = url !== '/dashbord' && url !== '/dashboard';
     this.isCategoriePage = url.includes('/categorie');
-    this.isFooterHidden = url.includes('/categorie') || url.includes('/logements');
+    this.isFooterHidden =
+      url.includes('/categorie') ||
+      url.includes('/logements') ||
+      url.includes('/reservations') ||
+      url.includes('/notifications') ||
+      url.includes('/reclamations');
   }
 }

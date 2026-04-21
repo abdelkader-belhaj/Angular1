@@ -1,26 +1,25 @@
-<header *ngIf="!isCategoriePage" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-  <div>
-    <h1 *ngIf="pageTitle" class="text-3xl font-extrabold tracking-tight text-primary">{{ pageTitle }}</h1>
-    <p *ngIf="pageSubtitle" class="text-on-surface-variant">{{ pageSubtitle }}</p>
+<header class="admin-header flex flex-col gap-4 mb-10 lg:flex-row lg:items-start lg:justify-between">
+  <div *ngIf="showContextBlock">
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Tableau de Bord</h1>
+    <p class="text-on-surface-variant">Espace administrateur pour gerer le compte courant et la session.</p>
   </div>
 
-  <div class="flex items-center gap-3">
-    <button class="bg-red-600 text-white px-4 py-2.5 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2" type="button" (click)="logout()">
-      <span class="material-symbols-outlined text-sm">logout</span>
-      <span>Deconnexion</span>
+  <div class="admin-menu" (click)="$event.stopPropagation()">
+    <button class="admin-trigger" type="button" (click)="toggleAccountMenu($event)">
+      <span class="admin-avatar material-symbols-outlined">admin_panel_settings</span>
+      <span class="admin-meta">
+        <strong>{{ currentUserName }}</strong>
+        <small>Compte admin</small>
+      </span>
+      <span class="material-symbols-outlined text-sm">expand_more</span>
     </button>
-  </div>
-</header>
 
-<header *ngIf="isCategoriePage" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-  <div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Gestion des Catégories</h1>
-  </div>
-
-  <div class="flex items-center gap-3">
-    <button class="bg-red-600 text-white px-4 py-2.5 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2" type="button" (click)="logout()">
-      <span class="material-symbols-outlined text-sm">logout</span>
-      <span>Deconnexion</span>
-    </button>
+    <ul *ngIf="isAccountMenuOpen" class="admin-dropdown" role="menu" aria-label="Menu admin">
+      <li>
+        <button type="button" role="menuitem" class="logout-item" (click)="logout()">
+          Deconnexion
+        </button>
+      </li>
+    </ul>
   </div>
 </header>

@@ -1,7 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+// ========== IMPORT SPÉCIFIQUE: MES RÉSERVATIONS ==========
 import { NotificationClientService, BackendNotification } from '../../services/accommodation/notification-client.service';
+// ========== FIN IMPORT: MES RÉSERVATIONS ==========
 
 @Component({
   selector: 'app-navbar',
@@ -9,25 +12,55 @@ import { NotificationClientService, BackendNotification } from '../../services/a
   styleUrl: './navbar.component.css'
 })
 export class NavbarComponent implements OnInit {
-  isLoginDialogOpen = false;
-  showUserMenu = false;
-  profileImage: string = '';
-  backendNotifs: BackendNotification[] = [];
-
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  // ========== SERVICE SPÉCIFIQUE: MES RÉSERVATIONS ==========
   private readonly notificationClientService = inject(NotificationClientService);
+  // ========== FIN SERVICE: MES RÉSERVATIONS ==========
 
+  isLoginDialogOpen = false;
+  isUserMenuOpen = false;
+  
+  // ========== PROPRIÉTÉS SPÉCIFIQUES: MES RÉSERVATIONS ==========
+  // Stockage des notifications backend pour les réservations
+  backendNotifs: BackendNotification[] = [];
+  // ========== FIN PROPRIÉTÉS: MES RÉSERVATIONS ==========
+
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  get currentUserName(): string {
+    return this.authService.getCurrentUser()?.username ?? 'Utilisateur';
+  }
+
+  get currentUserRole(): string {
+    const role = this.authService.getCurrentUser()?.role ?? '';
+    return role.replaceAll('_', ' ');
+  }
+
+  get isAdminUser(): boolean {
+    return this.authService.getCurrentUser()?.role === 'ADMIN';
+  }
+
+  get currentUserBio(): string {
+    const bio = this.authService.getCurrentUser()?.bio?.trim();
+    return bio && bio.length > 0 ? bio : 'Ajoutez une bio depuis Mon profil';
+  }
+
+  // ========== MÉTHODES SPÉCIFIQUES: MES RÉSERVATIONS ==========
+  // Méthode pour charger les notifications de réservations
   ngOnInit(): void {
-    this.profileImage = this.getRandomProfileImage();
-    if (this.isAuthenticated) {
+    if (this.isAuthenticated && this.isTouristUser()) {
       this.loadNotifications();
+      // S'abonner aux mises à jour des notifications
       this.notificationClientService.notificationsUpdated$.subscribe(() => {
         this.loadNotifications();
       });
     }
   }
 
+  // Charger les notifications depuis le backend
   loadNotifications(): void {
     this.notificationClientService.getMyNotifications().subscribe({
       next: (ns) => {
@@ -40,19 +73,16 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  // Compter les notifications non lues pour le badge
   get unreadNotifsCount(): number {
     return this.backendNotifs.filter(n => !n.isRead).length;
   }
 
-
-
-  get isAuthenticated(): boolean {
-    return this.authService.isAuthenticated();
+  // Vérifier si l'utilisateur est un touriste (pour afficher le bouton Mes Réservations)
+  isTouristUser(): boolean {
+    return this.authService.getCurrentUser()?.role === 'CLIENT_TOURISTE';
   }
-
-  get currentUser() {
-    return this.authService.getCurrentUser();
-  }
+  // ========== FIN MÉTHODES: MES RÉSERVATIONS ==========
 
   openLoginDialog(): void {
     this.isLoginDialogOpen = true;
@@ -62,72 +92,43 @@ export class NavbarComponent implements OnInit {
     this.isLoginDialogOpen = false;
   }
 
-  toggleUserMenu(): void {
-    this.showUserMenu = !this.showUserMenu;
+  toggleUserMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isUserMenuOpen = !this.isUserMenuOpen;
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.showUserMenu = false;
+  async goToProfile(): Promise<void> {
+    this.isUserMenuOpen = false;
+    await this.router.navigate(['/profile']);
+  }
+
+  async goToSecurity(): Promise<void> {
+    this.isUserMenuOpen = false;
+    await this.router.navigate(['/security']);
+  }
+
+  async goToRoleModule(): Promise<void> {
+    const role = this.authService.getCurrentUser()?.role;
+    this.isUserMenuOpen = false;
+    await this.router.navigateByUrl(this.authService.getRouteForRole(role));
+  }
+
+  async logout(): Promise<void> {
+    this.isUserMenuOpen = false;
+    // ========== NETTOYAGE SPÉCIFIQUE: MES RÉSERVATIONS ==========
+    // Vider les notifications lors de la déconnexion
     this.backendNotifs = [];
-  }
-
-  getRoleLabel(role?: string): string {
-    switch (role) {
-      case 'CLIENT_TOURISTE': return 'Client Touriste';
-      case 'HEBERGEUR': return 'Hébergeur';
-      case 'ADMIN': return 'Administrateur';
-      case 'TRANSPORTEUR': return 'Transporteur';
-      case 'AIRLINE_PARTNER': return 'Partenaire Aérien';
-      case 'ORGANISATEUR': return 'Organisateur';
-      case 'VENDEUR_ARTI': return 'Vendeur Artisan';
-      case 'SOCIETE': return 'Société';
-      default: return 'Utilisateur';
+    // ========== FIN NETTOYAGE: MES RÉSERVATIONS ==========
+    try {
+      await firstValueFrom(this.authService.logout());
+    } catch {
+      this.authService.clearLocalAuth();
     }
+    await this.router.navigate(['/homePage']);
   }
 
-  getUserAvatar(role?: string): string {
-    const avatars: { [key: string]: string } = {
-      'CLIENT_TOURISTE': 'assets/images/avatar-tourist.svg',
-      'HEBERGEUR': 'assets/images/avatar-host.svg',
-      'ADMIN': 'assets/images/avatar-admin.svg',
-      'TRANSPORTEUR': 'assets/images/avatar-transport.svg',
-      'AIRLINE_PARTNER': 'assets/images/avatar-airline.svg',
-      'ORGANISATEUR': 'assets/images/avatar-organizer.svg',
-      'VENDEUR_ARTI': 'assets/images/avatar-artisan.svg',
-      'SOCIETE': 'assets/images/avatar-company.svg'
-    };
-    return avatars[role || 'CLIENT_TOURISTE'] || 'assets/images/avatar-default.svg';
-  }
-
-  isHostUser(): boolean {
-    return this.currentUser?.role === 'HEBERGEUR';
-  }
-
-  isTouristUser(): boolean {
-    return this.currentUser?.role === 'CLIENT_TOURISTE';
-  }
-
-  editProfile(): void {
-    this.showUserMenu = false;
-    this.router.navigate(['/profile']);
-  }
-
-  getProfileImage(): string {
-    return this.profileImage;
-  }
-
-  private getRandomProfileImage(): string {
-    const profileImages = [
-      'assets/images/profile1.jpg',
-      'assets/images/profile2.jpg',
-      'assets/images/profile3.jpg'
-    ];
-    const randomIndex = Math.floor(Math.random() * profileImages.length);
-    return profileImages[randomIndex];
-  }
-
-  getUserDisplayName(): string {
-    return this.currentUser?.username || this.currentUser?.email || 'Utilisateur';
+  @HostListener('document:click')
+  closeUserMenuOnOutsideClick(): void {
+    this.isUserMenuOpen = false;
   }
 }

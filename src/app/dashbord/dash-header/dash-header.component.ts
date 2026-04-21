@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Component, HostListener, Input, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -8,45 +8,36 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './dash-header.component.html',
   styleUrl: './dash-header.component.css'
 })
-export class DashHeaderComponent implements OnInit {
+export class DashHeaderComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  isCategoriePage = false;
-  isLogementsPage = false;
-  pageTitle = 'Tableau de Bord';
-  pageSubtitle = '';
+  @Input() showContextBlock = true;
 
-  ngOnInit(): void {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      this.updateRoute(event.urlAfterRedirects);
-    });
-    this.updateRoute(this.router.url);
+  isAccountMenuOpen = false;
+
+  get currentUserName(): string {
+    return this.authService.getCurrentUser()?.username ?? 'Administrateur';
   }
 
-  updateRoute(url: string): void {
-    this.isCategoriePage = url.includes('/categorie');
-    this.isLogementsPage = url.includes('/logements');
+  toggleAccountMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isAccountMenuOpen = !this.isAccountMenuOpen;
+  }
 
-    if (url.includes('/reservations')) {
-      this.pageTitle = '';
-      this.pageSubtitle = '';
-      return;
-    }
-
-    if (this.isLogementsPage) {
-      this.pageTitle = 'Hébergement';
-      this.pageSubtitle = '';
-    } else {
-      this.pageTitle = 'Tableau de Bord';
-      this.pageSubtitle = '';
-    }
+  async goToProfile(): Promise<void> {
+    this.isAccountMenuOpen = false;
+    await this.router.navigate(['/profile']);
   }
 
   async logout(): Promise<void> {
-    this.authService.logout();
+    this.isAccountMenuOpen = false;
+    await firstValueFrom(this.authService.logout());
     await this.router.navigate(['/']);
+  }
+
+  @HostListener('document:click')
+  closeAccountMenuOnOutsideClick(): void {
+    this.isAccountMenuOpen = false;
   }
 }

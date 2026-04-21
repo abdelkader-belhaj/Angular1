@@ -135,14 +135,11 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
         })
       );
 
-      // Navigation basée sur le rôle
-      if (auth.user?.role === 'ADMIN') {
-        await this.router.navigate(['/dashbord']);
-        //hebergeuuuuur
-      } else if (auth.user?.role === 'HEBERGEUR') {
-        await this.router.navigate(['/hebergeur']);
+      if (this.authService.isPendingApproval(auth.user)) {
+        await this.router.navigate(['/waiting-approval']);
       } else {
-        await this.router.navigate(['/']);
+        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+        await this.router.navigate([targetRoute]);
       }
 
       this.close();

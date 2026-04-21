@@ -47,7 +47,7 @@ export class AccommodationsComponent implements OnInit {
     this.loading = true;
 
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
+    if (currentUser?.role === 'CLIENT_TOURISTE') {
       this.logementService.getRecommendations(currentUser.id).subscribe({
         next: (recs) => {
           this.recommendations = recs;

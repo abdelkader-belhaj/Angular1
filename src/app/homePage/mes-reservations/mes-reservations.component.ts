@@ -81,7 +81,7 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
-    if (!user || user.role !== 'CLIENT_TOURISTE') {
+    if (!this.authService.isAuthenticated() || !user || user.role !== 'CLIENT_TOURISTE') {
       this.router.navigate(['/']);
       return;
     }
@@ -89,7 +89,6 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
     this.loadHiddenReservations();
     this.loadPaidReservationIds();
     this.loadReservations();
-    this.loadNotifications();
 
     this.route.queryParams.subscribe(params => {
       const paymentParam = params['payment'];

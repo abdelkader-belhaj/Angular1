@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError } from 'rxjs';
+import { Observable, map, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -30,9 +31,11 @@ export class AiPricePredictionService {
     sauna: 17
   };
 
-  // Gemini API Configuration
-  private readonly GEMINI_API_KEY = 'AIzaSyAHVYwX-lbmfeLw36piy5mBSfLMQXMGFWY';
-  private readonly API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+  // Gemini API configuration from environment (empty key disables frontend calls)
+  private readonly GEMINI_API_KEY = environment.geminiApiKey;
+  private readonly API_URL = this.GEMINI_API_KEY
+    ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.GEMINI_API_KEY}`
+    : '';
 
   constructor(private http: HttpClient) { }
 
@@ -52,6 +55,12 @@ export class AiPricePredictionService {
   }
 
   predictBasePrice(description: string, capacity: number, categoryName: string): Observable<number> {
+
+    if (!this.API_URL) {
+      // Local fallback to avoid noisy network failures when Gemini is not configured.
+      const base = 70 + Math.max(capacity, 1) * 12;
+      return of(Math.round(base / 5) * 5);
+    }
 
     const prompt = `Tu es un expert en évaluation immobilière et touristique en Tunisie.
 Je veux que tu estimes un prix PAR NUIT logique pour un logement avec les données suivantes :
@@ -93,9 +102,9 @@ IMPORTANT : Je veux UNIQUEMENT et STRICTEMENT un nombre entier renvoyé, représ
           throw new Error("L'IA a renvoyé un format illisible.");
         }
       }),
-      catchError(error => {
-        // We throw an error to the component without logging a massive red stack trace in the console.
-        throw new Error("Serveur IA surchargé ou indisponible dans votre région.");
+      catchError(() => {
+        const base = 70 + Math.max(capacity, 1) * 12;
+        return of(Math.round(base / 5) * 5);
       })
     );
   }
@@ -124,6 +133,10 @@ IMPORTANT : Je veux UNIQUEMENT et STRICTEMENT un nombre entier renvoyé, représ
    * Corrects and enhances the text of a lodging description using Gemini.
    */
   enhanceDescription(description: string): Observable<string> {
+    if (!this.API_URL) {
+      return of((description || '').trim());
+    }
+
     const prompt = `Tu es un correcteur/rédacteur professionnel francophone pour des annonces d'hébergement.
 Voici le texte original de l'hébergeur : "${description}"
 
@@ -159,8 +172,8 @@ IMPORTANT :
           throw new Error("L'IA a renvoyé un format illisible.");
         }
       }),
-      catchError(error => {
-        throw new Error("Service d'amélioration IA indisponible.");
+      catchError(() => {
+        return of((description || '').trim());
       })
     );
   }

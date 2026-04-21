@@ -59,6 +59,11 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
   private expandedCommentsMap: Map<number, boolean> = new Map();
   readonly INITIAL_COMMENTS_COUNT = 3;
 
+  // 🎨 Forum cards motion
+  private forumCardsObserver?: IntersectionObserver;
+  private motionCleanupCallbacks: Array<() => void> = [];
+  private motionInitRaf: number | null = null;
+
   // 🎤 VOICE MESSAGES
   isRecording = false;
   recordingTime = 0;
@@ -190,6 +195,75 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
     }
 
     this.filteredForums = result;
+    this.queueForumCardsMotion();
+  }
+
+  private queueForumCardsMotion(): void {
+    if (typeof window === 'undefined') return;
+    if (this.motionInitRaf !== null) {
+      cancelAnimationFrame(this.motionInitRaf);
+    }
+    this.motionInitRaf = requestAnimationFrame(() => {
+      this.initForumCardsMotion();
+      this.motionInitRaf = null;
+    });
+  }
+
+  private initForumCardsMotion(): void {
+    this.destroyForumCardsMotion();
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.forum-card'));
+    if (!cards.length) return;
+
+    this.forumCardsObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const card = entry.target as HTMLElement;
+            card.classList.add('is-visible');
+            this.forumCardsObserver?.unobserve(card);
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -8% 0px' }
+    );
+
+    cards.forEach((card, index) => {
+      card.classList.remove('is-visible');
+      card.style.setProperty('--stagger-index', `${index}`);
+      card.style.setProperty('--mx', '0px');
+      card.style.setProperty('--my', '0px');
+      this.forumCardsObserver?.observe(card);
+
+      const onMouseMove = (event: MouseEvent) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        card.style.setProperty('--mx', `${(x * 10).toFixed(2)}px`);
+        card.style.setProperty('--my', `${(y * 8).toFixed(2)}px`);
+      };
+
+      const onMouseLeave = () => {
+        card.style.setProperty('--mx', '0px');
+        card.style.setProperty('--my', '0px');
+      };
+
+      card.addEventListener('mousemove', onMouseMove);
+      card.addEventListener('mouseleave', onMouseLeave);
+
+      this.motionCleanupCallbacks.push(() => {
+        card.removeEventListener('mousemove', onMouseMove);
+        card.removeEventListener('mouseleave', onMouseLeave);
+      });
+    });
+  }
+
+  private destroyForumCardsMotion(): void {
+    this.forumCardsObserver?.disconnect();
+    this.forumCardsObserver = undefined;
+
+    this.motionCleanupCallbacks.forEach((cleanup) => cleanup());
+    this.motionCleanupCallbacks = [];
   }
 
   // ─── FORUM CRUD ───────────────────────────────────────────────────────────────
@@ -800,6 +874,11 @@ export class ForumDetailComponent implements OnInit, OnDestroy {
     if (this.locationPollingInterval) clearInterval(this.locationPollingInterval);
     if (this.locationTimerInterval) clearInterval(this.locationTimerInterval);
     if (this.mapTimerInterval) clearInterval(this.mapTimerInterval);
+    if (this.motionInitRaf !== null) {
+      cancelAnimationFrame(this.motionInitRaf);
+      this.motionInitRaf = null;
+    }
+    this.destroyForumCardsMotion();
     if (this.isRecording && this.mediaRecorder) {
       this.mediaRecorder.stop();
       this.isRecording = false;

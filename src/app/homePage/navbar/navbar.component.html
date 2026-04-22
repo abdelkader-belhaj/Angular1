@@ -1,0 +1,66 @@
+<header class="navbar">
+  <div class="navbar-inner">
+    <a (click)="goToHome()" class="brand" style="cursor: pointer;">TunisiaTour</a>
+
+    <!-- NAVBAR NORMALE (hors organisateur) -->
+    <div class="menu" *ngIf="showDefaultMenu">
+      <a routerLink="/">Accueil</a>
+      <a routerLink="/events">Événements</a>
+      <a href="#">Hébergements</a>
+      <a href="#">Mobilité</a>
+      <a href="#">Marketplace</a>
+    </div>
+
+    <!-- NAVBAR ÉVÉNEMENTS (hors organisateur) -->
+    <div class="menu events-menu" *ngIf="showEventsMenu">
+      <a routerLink="/events" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+         Tous les événements
+      </a>
+      <a routerLink="/events/promos" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Nos promos
+      </a>
+      <a routerLink="/mes-reservations" *ngIf="isClientTouriste" routerLinkActive="active">
+         Mes réservations
+      </a>
+    </div>
+
+    <!-- NAVBAR ORGANISATEUR: uniquement module événements -->
+    <div class="menu events-menu" *ngIf="showOrganisateurMenu">
+      <a routerLink="/organisateur" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Espace organisateur
+      </a>
+    </div>
+
+    <button *ngIf="!isAuthenticated" class="btn" type="button" (click)="openLoginDialog()">
+      Connexion
+    </button>
+
+    <div *ngIf="isAuthenticated" class="user-menu" (click)="$event.stopPropagation()">
+      <button class="user-trigger" type="button" (click)="toggleUserMenu($event)">
+        <span class="user-avatar">{{ currentUserName.charAt(0) }}</span>
+        <span class="user-meta">
+          <strong>{{ currentUserName }}</strong>
+          <small>{{ currentUserRole }}</small>
+        </span>
+      </button>
+
+      <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu">
+        <div class="user-bio-preview">
+          <p>{{ currentUserBio }}</p>
+        </div>
+        <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
+          Gérer mon module
+        </button>
+        <button type="button" role="menuitem" (click)="goToProfile()">Mon profil</button>
+        <button type="button" role="menuitem" (click)="goToSecurity()">Sécurité et mot de passe</button>
+        <hr />
+        <button type="button" role="menuitem" class="logout-item" (click)="logout()">Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<app-login-dialog
+  [isOpen]="isLoginDialogOpen"
+  (closed)="closeLoginDialog()"
+></app-login-dialog>

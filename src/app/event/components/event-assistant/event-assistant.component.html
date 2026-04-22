@@ -1,0 +1,47 @@
+<div class="assistant-panel" [class.open]="isOpen">
+  <div class="asst-header">
+    <div class="asst-title">
+      <span>🤖</span>
+      <div>
+        <b>Assistant TunisiaTour</b>
+        <small>Recommandations personnalisées</small>
+      </div>
+    </div>
+    <button class="asst-close" (click)="close()">✕</button>
+  </div>
+
+  <div class="asst-messages">
+    <div *ngFor="let msg of messages"
+         class="msg"
+         [class.user]="msg.role==='user'"
+         [class.bot]="msg.role==='assistant'">
+      <div class="msg-bubble">{{ msg.text }}</div>
+      <div *ngIf="msg.events && msg.events.length > 0" class="rec-list">
+        <div class="rec-card" *ngFor="let ev of msg.events" (click)="selectEvent(ev.id)">
+          <img [src]="ev.imageUrl || 'https://images.unsplash.com/photo-1470229722913-7c0e8916d60a?w=80&q=80'"
+               class="rec-img" alt=""/>
+          <div class="rec-info">
+            <b>{{ ev.title | slice:0:40 }}{{ ev.title.length > 40 ? '…' : '' }}</b>
+            <span>📍 {{ ev.city }} · {{ ev.price | number:'1.0-0' }} TND</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="msg bot">
+      <div class="msg-bubble typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="asst-input">
+    <textarea
+      [(ngModel)]="userInput"
+      (keydown)="onKey($event)"
+      placeholder="Décrivez vos intérêts… (musique, mer, aventure…)"
+      rows="2">
+    </textarea>
+    <button (click)="send()" [disabled]="!userInput.trim() || loading">→</button>
+  </div>
+</div>

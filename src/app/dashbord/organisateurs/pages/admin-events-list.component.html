@@ -1,0 +1,257 @@
+<!-- admin-events-list.component.html -->
+<div class="events-container">
+
+  <!-- Toast -->
+  <div *ngIf="toastMessage" [class]="'toast toast-' + toastType">
+    {{ toastMessage }}
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <h2 class="section-title">Événements</h2>
+      <span class="events-count">{{ filteredEvents.length }} résultat(s)</span>
+    </div>
+    <div class="toolbar-right">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher par titre, organisateur ou ville…"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          class="search-input"
+        />
+      </div>
+      <select
+        [(ngModel)]="selectedStatus"
+        (change)="onStatusChange()"
+        class="filter-select"
+      >
+        <option *ngFor="let option of statusOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Error Banner -->
+  <div *ngIf="error" class="error-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="banner-icon">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ error }}
+    <button class="banner-close" (click)="error = ''">✕</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des événements…</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredEvents.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <p class="empty-title">Aucun événement trouvé</p>
+    <p class="empty-sub">Essayez de modifier vos filtres ou votre recherche</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && filteredEvents.length > 0" class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Événement</th>
+          <th>Organisateur</th>
+          <th>Lieu</th>
+          <th>Date</th>
+          <th class="text-center">Places</th>
+          <th class="text-center">Statut</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let event of paginatedEvents" class="table-row">
+
+          <!-- Titre & Prix -->
+          <td>
+            <div class="event-cell">
+              <span class="event-title">{{ event.title }}</span>
+              <span class="event-meta">
+                <span class="price-tag">{{ event.price }} TND</span>
+                <span class="separator">·</span>
+                {{ event.type }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Organisateur -->
+          <td>
+            <div class="organizer-cell">
+              <div class="avatar">{{ event.organizerName.charAt(0) }}</div>
+              <span>{{ event.organizerName }}</span>
+            </div>
+          </td>
+
+          <!-- Lieu -->
+          <td>
+            <div class="location-cell">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loc-icon">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ event.city }}
+            </div>
+          </td>
+
+          <!-- Date -->
+          <td class="date-cell">{{ formatDate(event.startDate) }}</td>
+
+          <!-- Places -->
+          <td class="text-center">
+            <div class="seats-wrapper">
+              <div class="seats-bar">
+                <div
+                  class="seats-fill"
+                  [style.width.%]="((event.capacity - event.availableSeats) / event.capacity) * 100"
+                ></div>
+              </div>
+              <span class="seats-label">{{ event.availableSeats }}/{{ event.capacity }}</span>
+            </div>
+          </td>
+
+          <!-- Statut -->
+          <td class="text-center">
+            <span [class]="'status-badge status-' + event.status.toLowerCase()">
+              <span class="status-dot"></span>
+              {{ getStatusLabel(event.status) }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="text-center actions-cell">
+            <div class="action-wrapper" (clickOutside)="showActionMenu = null">
+              <button
+                class="action-btn"
+                (click)="toggleActionMenu(event.id)"
+                [class.active]="showActionMenu === event.id"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" class="dots-icon">
+                  <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
+
+              <div *ngIf="showActionMenu === event.id" class="dropdown">
+                <ng-container *ngFor="let action of getAvailableActions(event)">
+                  <button
+                    class="dropdown-item"
+                    [class]="'dropdown-item item-' + action"
+                    (click)="performAction(action, event)"
+                    [disabled]="!!actionInProgress[event.id]"
+                  >
+                    <span class="item-spinner" *ngIf="actionInProgress[event.id] === action"></span>
+                    <span class="item-label">{{ getActionLabel(action) }}</span>
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div *ngIf="!loading && filteredEvents.length > 0" class="table-footer">
+    Affichage de <strong>{{ pageStartItem }}</strong> à <strong>{{ pageEndItem }}</strong>
+    sur <strong>{{ filteredEvents.length }}</strong> événement(s) filtré(s) / <strong>{{ events.length }}</strong> total
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Précédent</button>
+      <span class="page-indicator">Page {{ currentPage }} / {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">Suivant</button>
+    </div>
+  </div>
+
+  <!-- Event Details Modal -->
+  <div *ngIf="selectedEvent" class="event-modal-backdrop" (click)="closeEventDetails()">
+    <div class="event-modal" (click)="$event.stopPropagation()">
+      <div class="event-modal-header">
+        <div class="event-modal-title-wrap">
+          <h3>{{ selectedEvent.title }}</h3>
+          <span [class]="'status-badge status-' + selectedEvent.status.toLowerCase()">
+            <span class="status-dot"></span>
+            {{ getStatusLabel(selectedEvent.status) }}
+          </span>
+        </div>
+        <button type="button" class="event-modal-close" (click)="closeEventDetails()">✕</button>
+      </div>
+
+      <div class="event-modal-content">
+        <div class="event-modal-grid">
+          <div><span class="label">Type</span><span>{{ getTypeLabel(selectedEvent.type) }}</span></div>
+          <div><span class="label">Prix</span><span>{{ selectedEvent.price }} TND</span></div>
+          <div><span class="label">Places disponibles</span><span>{{ selectedEvent.availableSeats }}/{{ selectedEvent.capacity }}</span></div>
+          <div><span class="label">Catégorie</span><span>{{ selectedEvent.categoryName || '-' }}</span></div>
+          <div><span class="label">Organisateur</span><span>{{ selectedEvent.organizerName }}</span></div>
+          <div><span class="label">Ville</span><span>{{ selectedEvent.city }}</span></div>
+          <div><span class="label">Adresse</span><span>{{ selectedEvent.address || '-' }}</span></div>
+          <div><span class="label">Date début</span><span>{{ formatDate(selectedEvent.startDate) }}</span></div>
+          <div><span class="label">Date fin</span><span>{{ formatDate(selectedEvent.endDate) }}</span></div>
+        </div>
+
+        <div class="event-modal-description" *ngIf="selectedEvent.status === 'REJECTED' && selectedEvent.moderationReason">
+          <p class="label">Motif de rejet</p>
+          <p>{{ selectedEvent.moderationReason }}</p>
+        </div>
+
+        <div class="event-modal-description" *ngIf="selectedEvent.status === 'CANCELLED' && selectedEvent.cancellationReason">
+          <p class="label">Motif d'annulation</p>
+          <p>{{ selectedEvent.cancellationReason }}</p>
+        </div>
+
+        <div class="event-modal-description">
+          <p class="label">Description</p>
+          <p>{{ selectedEvent.description || 'Aucune description.' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div *ngIf="showRejectModal" class="event-modal-backdrop" (click)="closeRejectModal()">
+    <div class="event-modal reject-modal" (click)="$event.stopPropagation()">
+      <div class="event-modal-header">
+        <h3>Rejeter l'événement</h3>
+        <button type="button" class="event-modal-close" (click)="closeRejectModal()">✕</button>
+      </div>
+
+      <div class="event-modal-content">
+        <p class="reject-target" *ngIf="rejectTargetEvent">Event: <strong>{{ rejectTargetEvent.title }}</strong></p>
+        <label class="label" for="rejectReason">Motif (optionnel)</label>
+        <textarea
+          id="rejectReason"
+          class="reject-textarea"
+          [(ngModel)]="rejectReason"
+          rows="5"
+          placeholder="Saisir la raison du rejet (facultatif)..."
+        ></textarea>
+
+        <div class="reject-actions">
+          <button class="page-btn" (click)="closeRejectModal()">Annuler</button>
+          <button class="page-btn danger" (click)="submitReject()">Confirmer le rejet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

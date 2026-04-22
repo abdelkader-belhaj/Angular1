@@ -1,0 +1,59 @@
+<section class="es">
+  <div class="es-inner">
+
+    <div class="es-head">
+      <span class="es-label">Découvrir</span>
+      <h2 class="es-title">Événements &amp; Activités</h2>
+      <p class="es-sub">Laissez la Tunisie vous surprendre — du désert au festival, de la mer aux médinas.</p>
+    </div>
+
+    <div class="es-grid" *ngIf="loading">
+      <div class="skel" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <div class="es-photo-grid" *ngIf="!loading">
+      <article
+        class="es-photo-card"
+        *ngFor="let ev of featuredEvents"
+        (click)="goToEvent(ev.id)">
+        <img
+          [src]="ev.imageUrl || 'assets/placeholder.jpg'"
+          [alt]="ev.title"
+          class="es-photo-img" />
+        <div class="es-photo-overlay"></div>
+        <button
+          class="es-fav-btn"
+          (click)="$event.stopPropagation(); toggleFavorite(ev.id)"
+          [class.active]="isFavorite(ev.id)">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 15s-6-4.35-6-8.25A3.75 3.75 0 0 1 9 4.72a3.75 3.75 0 0 1 6 2.03C15 10.65 9 15 9 15z"
+              [attr.fill]="isFavorite(ev.id) ? '#ef4444' : 'none'"
+              stroke="white" stroke-width="1.5"/>
+          </svg>
+        </button>
+        <div class="es-photo-body">
+          <span class="es-photo-cat">{{ getCategoryName(ev.categoryId) }}</span>
+          <h3 class="es-photo-title">{{ ev.title }}</h3>
+          <p class="es-photo-loc">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;margin-right:3px">
+              <path d="M6 1a3.5 3.5 0 0 1 3.5 3.5C9.5 7.5 6 11 6 11S2.5 7.5 2.5 4.5A3.5 3.5 0 0 1 6 1z"
+                stroke="rgba(255,255,255,0.8)" stroke-width="1.2"/>
+            </svg>
+            {{ ev.city }}
+          </p>
+          <div class="es-photo-footer">
+            <span class="es-photo-price">
+              {{ ev.price === 0 ? 'Gratuit' : (ev.price | number:'1.0-0') + ' TND' }}
+            </span>
+            <span class="es-photo-date">
+              {{ ev.startDate | date:'d MMM' }}
+            </span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    
+
+  </div>
+</section>

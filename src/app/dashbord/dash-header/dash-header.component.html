@@ -1,0 +1,25 @@
+<header class="admin-header flex flex-col gap-4 mb-10 lg:flex-row lg:items-start lg:justify-between">
+  <div *ngIf="showContextBlock">
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Tableau de Bord</h1>
+    <p class="text-on-surface-variant">Espace administrateur pour gerer le compte courant et la session.</p>
+  </div>
+
+  <div class="admin-menu" (click)="$event.stopPropagation()">
+    <button class="admin-trigger" type="button" (click)="toggleAccountMenu($event)">
+      <span class="admin-avatar material-symbols-outlined">admin_panel_settings</span>
+      <span class="admin-meta">
+        <strong>{{ currentUserName }}</strong>
+        <small>Compte admin</small>
+      </span>
+      <span class="material-symbols-outlined text-sm">expand_more</span>
+    </button>
+
+    <ul *ngIf="isAccountMenuOpen" class="admin-dropdown" role="menu" aria-label="Menu admin">
+      <li>
+        <button type="button" role="menuitem" class="logout-item" (click)="logout()">
+          Deconnexion
+        </button>
+      </li>
+    </ul>
+  </div>
+</header>

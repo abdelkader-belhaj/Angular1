@@ -1,0 +1,88 @@
+<nav class="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r border-slate-100 bg-white/95 shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-4 gap-4 z-50 backdrop-blur-sm">
+  <div class="rounded-[1.75rem] bg-gradient-to-br from-blue-950 via-blue-900 to-sky-800 p-5 text-white shadow-lg shadow-blue-950/20">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-2xl font-black tracking-tighter font-headline">TunisiaTour</div>
+        <p class="mt-2 text-xs uppercase tracking-[0.28em] text-blue-100/80">Admin Control</p>
+      </div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-sm font-black backdrop-blur">
+        AD
+      </div>
+    </div>
+
+    <div class="mt-5 rounded-2xl border border-white/10 bg-white/10 p-3">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-100/75">Workspace</p>
+      <p class="mt-1 text-sm font-semibold">Pilotage des comptes et du contenu</p>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <a
+      routerLink="/dashbord"
+      routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      </span>
+      <span class="text-sm">Dashboard</span>
+    </a>
+
+    <a
+      routerLink="/dashbord/users"
+      routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+      class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">group</span>
+      </span>
+      <span class="flex-1 text-sm">Gérer les utilisateurs</span>
+      <span class="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-700">New</span>
+    </a>
+
+    <a
+      routerLink="/dashbord/events"
+      routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+      class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">event_note</span>
+      </span>
+      <span class="flex-1 text-sm">Gérer les événements</span>
+    </a>
+
+    <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+      </span>
+      <span class="text-sm">Bookings</span>
+    </a>
+    <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+      </span>
+      <span class="text-sm">Inventory</span>
+    </a>
+    <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">analytics</span>
+      </span>
+      <span class="text-sm">Analytics</span>
+    </a>
+    <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+      </span>
+      <span class="text-sm">Settings</span>
+    </a>
+  </div>
+
+  <div class="mt-auto rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Monthly Goal</p>
+    <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+      <div class="h-full w-3/4 rounded-full bg-gradient-to-r from-blue-900 to-sky-500"></div>
+    </div>
+    <p class="mt-3 text-[10px] leading-relaxed text-slate-500">75% of revenue target reached</p>
+  </div>
+</nav>

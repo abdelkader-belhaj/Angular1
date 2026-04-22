@@ -1,0 +1,286 @@
+<div class="min-h-screen bg-surface text-on-surface">
+  <app-dash-side-nav></app-dash-side-nav>
+
+  <main class="md:ml-64 min-h-screen p-6 lg:p-10">
+    <app-dash-header [showContextBlock]="false"></app-dash-header>
+
+    <section class="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(30,64,175,0.12),_transparent_36%),radial-gradient(circle_at_bottom_left,_rgba(14,165,233,0.12),_transparent_30%)]"></div>
+
+      <div class="relative p-6 lg:p-8 space-y-8">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div class="space-y-3 max-w-3xl">
+            <div class="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-blue-900">
+              <span class="material-symbols-outlined text-base">group</span>
+              Gestion des utilisateurs
+            </div>
+            <div>
+              <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-blue-950 font-headline">
+                Contrôler les comptes, les rôles et l'activité
+              </h1>
+              <p class="mt-3 text-sm lg:text-base text-slate-600 max-w-2xl">
+                Suivez les comptes enregistrés, ajustez les rôles et activez ou désactivez un utilisateur depuis un espace admin clair et rapide.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              (click)="refresh()"
+              class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-900"
+            >
+              <span class="material-symbols-outlined text-[18px]">refresh</span>
+              Actualiser
+            </button>
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total comptes</p>
+            <p class="mt-3 text-3xl font-black text-blue-950">{{ users.length }}</p>
+            <p class="mt-2 text-sm text-slate-500">Tous les profils visibles sur la plateforme</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Comptes actifs</p>
+            <p class="mt-3 text-3xl font-black text-emerald-600">{{ activeUsersCount }}</p>
+            <p class="mt-2 text-sm text-slate-500">Utilisateurs pouvant se connecter</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rôles couverts</p>
+            <p class="mt-3 text-3xl font-black text-blue-950">{{ roleCount }}</p>
+            <p class="mt-2 text-sm text-slate-500">Répartition métier de votre plateforme</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50/90 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <label class="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <span class="material-symbols-outlined text-slate-400">search</span>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              placeholder="Rechercher un utilisateur, un email ou un role"
+              class="w-full border-none bg-transparent text-sm outline-none placeholder:text-slate-400"
+            />
+          </label>
+
+          <div class="flex items-center gap-3 overflow-x-auto pb-1 lg:pb-0">
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Filtrer</span>
+            <select
+              [(ngModel)]="roleFilter"
+              class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition focus:border-blue-300"
+            >
+              <option *ngFor="let role of roleOptions" [value]="role">
+                {{ role === 'ALL' ? 'Tous les rôles' : formatRole(role) }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div *ngIf="errorMessage" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div *ngFor="let placeholder of [1, 2, 3]" class="h-40 animate-pulse rounded-3xl border border-slate-200 bg-slate-100"></div>
+        </div>
+
+        <div *ngIf="!loading" class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Tableau utilisateurs</p>
+              <p class="text-sm text-slate-500">{{ filteredUsers.length }} résultat(s) affiché(s)</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+              <thead class="bg-slate-50 text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th class="px-5 py-4 font-bold">Utilisateur</th>
+                  <th class="px-5 py-4 font-bold">Rôle</th>
+                  <th class="px-5 py-4 font-bold">Statut</th>
+                  <th class="px-5 py-4 font-bold">Dates</th>
+                  <th class="px-5 py-4 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let user of filteredUsers; trackBy: trackByUserId" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <button
+                        type="button"
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-900 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200"
+                        (click)="openUserDetails(user)"
+                        [attr.aria-label]="'Voir les details de ' + user.username"
+                        title="Voir les details"
+                      >
+                        {{ getUserInitial(user) }}
+                      </button>
+                      <div>
+                        <p class="font-semibold text-slate-900">{{ user.username }}</p>
+                        <p class="text-xs text-slate-500">{{ user.email }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-5 py-4">
+                    <select
+                      [ngModel]="user.role"
+                      (ngModelChange)="updateRole(user, $event)"
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-900 outline-none transition focus:border-blue-300"
+                    >
+                      <option *ngFor="let role of roleOptions" [value]="role" [disabled]="role === 'ALL'">
+                        {{ role === 'ALL' ? 'Tous les rôles' : formatRole(role) }}
+                      </option>
+                    </select>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span
+                      class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.18em]"
+                      [ngClass]="user.enabled ? 'bg-emerald-50 text-emerald-700' : (isPendingApproval(user) ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700')"
+                    >
+                      <span class="h-2 w-2 rounded-full" [ngClass]="user.enabled ? 'bg-emerald-500' : (isPendingApproval(user) ? 'bg-amber-500' : 'bg-rose-500')"></span>
+                      {{ getStatusLabel(user) }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-xs text-slate-500">
+                    <p>Créé: {{ user.createdAt ? (user.createdAt | date:'dd MMM yyyy') : 'N/A' }}</p>
+                    <p>Maj: {{ user.updatedAt ? (user.updatedAt | date:'dd MMM yyyy') : 'N/A' }}</p>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        (click)="toggleStatus(user)"
+                        class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-900"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">{{ user.enabled ? 'lock' : 'lock_open' }}</span>
+                        {{ getToggleActionLabel(user) }}
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteUser(user)"
+                        class="inline-flex items-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:border-red-200 hover:bg-red-100"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="filteredUsers.length === 0" class="border-t border-slate-200 px-6 py-12 text-center">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-900">
+              <span class="material-symbols-outlined">group_off</span>
+            </div>
+            <p class="mt-4 text-lg font-semibold text-slate-900">Aucun utilisateur trouvé</p>
+            <p class="mt-2 text-sm text-slate-500">Ajustez la recherche ou le filtre de rôle pour afficher des comptes.</p>
+          </div>
+        </div>
+      </div>
+
+      <section
+        *ngIf="selectedUser"
+        class="user-detail-backdrop"
+        (click)="closeUserDetails()"
+        aria-label="Boite de dialogue details utilisateur"
+      >
+        <div class="user-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="user-detail-title" (click)="$event.stopPropagation()">
+          <div class="user-detail-head">
+            <div class="flex items-center gap-4">
+              <div class="user-detail-avatar">
+                {{ getUserInitial(selectedUser) }}
+              </div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Profil utilisateur</p>
+                <h2 id="user-detail-title" class="mt-1 text-2xl font-black text-slate-950">{{ selectedUser.username }}</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ selectedUser.email }}</p>
+              </div>
+            </div>
+
+            <button type="button" class="user-detail-close" (click)="closeUserDetails()" aria-label="Fermer">×</button>
+          </div>
+
+          <div class="user-detail-grid">
+            <div class="detail-card">
+              <p class="detail-label">Role</p>
+              <p class="detail-value">{{ formatRole(selectedUser.role) }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Statut</p>
+              <p class="detail-value">{{ getStatusLabel(selectedUser) }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">2FA</p>
+              <p class="detail-value" [ngClass]="selectedUser.twoFactorEnabled ? 'security-ok' : 'security-off'">
+                {{ getTwoFactorStatusLabel(selectedUser) }}
+              </p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Activation 2FA</p>
+              <p class="detail-value">{{ formatDateTime(selectedUser.twoFactorActivatedAt) }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Face ID</p>
+              <p class="detail-value" [ngClass]="selectedUser.hasFaceId ? 'security-ok' : 'security-off'">
+                {{ getFaceIdStatusLabel(selectedUser) }}
+              </p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Modele Face</p>
+              <p class="detail-value">{{ selectedUser.faceModelName || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Detector</p>
+              <p class="detail-value">{{ selectedUser.faceDetectorBackend || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card" *ngIf="selectedUser.hasFaceId">
+              <p class="detail-label">Seuil Face</p>
+              <p class="detail-value">{{ selectedUser.faceThreshold ?? 'N/A' }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Telephone</p>
+              <p class="detail-value">{{ selectedUser.phone || 'Non renseigne' }}</p>
+            </div>
+
+            <div class="detail-card detail-span-2">
+              <p class="detail-label">Bio</p>
+              <p class="detail-value detail-text">{{ selectedUser.bio || 'Aucune bio renseignee.' }}</p>
+            </div>
+
+            <div class="detail-card detail-span-2" *ngIf="selectedUser.profileImage">
+              <p class="detail-label">Photo de profil</p>
+              <p class="detail-value detail-text break-all">{{ selectedUser.profileImage }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Creé le</p>
+              <p class="detail-value">{{ formatDateTime(selectedUser.createdAt) }}</p>
+            </div>
+
+            <div class="detail-card">
+              <p class="detail-label">Mis a jour</p>
+              <p class="detail-value">{{ formatDateTime(selectedUser.updatedAt) }}</p>
+            </div>
+          </div>
+
+          <div class="user-detail-actions">
+            <button type="button" class="detail-action secondary-action" (click)="closeUserDetails()">Fermer</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+</div>

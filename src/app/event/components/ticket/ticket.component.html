@@ -1,0 +1,71 @@
+<div class="ticket-page">
+  <button class="btn-back no-print" (click)="location.back()">← Retour</button>
+
+  <div *ngIf="loading" class="skel-tick"></div>
+  <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+  <div *ngIf="!loading && reservation" class="ticket-wrap">
+
+    <!-- TICKET -->
+    <div class="ticket" [class.cancelled]="reservation.status === 'CANCELLED'">
+
+      <!-- HEADER TICKET -->
+      <div class="ticket-header">
+        <div class="brand">🌍 TunisiaTour</div>
+        <span class="ticket-label">BILLET ÉLECTRONIQUE</span>
+      </div>
+
+      <!-- BODY -->
+      <div class="ticket-body">
+        <div class="ticket-info">
+          <h2 class="event-name">{{ reservation.eventTitle }}</h2>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-ico">👤</span><div><small>Nom</small><b>{{ reservation.userName }}</b></div></div>
+            <div class="info-item"><span class="info-ico">🎫</span><div><small>Billets</small><b>{{ reservation.numberOfTickets }}</b></div></div>
+            <div class="info-item"><span class="info-ico">💰</span><div><small>Total payé</small><b>{{ reservation.totalPrice | number:'1.0-0' }} TND</b></div></div>
+            <div class="info-item"><span class="info-ico">📅</span><div><small>Réservé le</small><b>{{ reservation.reservationDate | date:'d MMM y':'':'fr' }}</b></div></div>
+          </div>
+
+          <!-- STATUT -->
+          <div class="status-block" [class.confirmed]="reservation.status==='CONFIRMED'" [class.pending]="reservation.status==='PENDING'" [class.cancelled]="reservation.status==='CANCELLED'">
+            <span *ngIf="reservation.status==='CONFIRMED' && !isEntryValidated">Paiement confirmé</span>
+            <span *ngIf="reservation.status==='CONFIRMED' && isEntryValidated">Billet confirmé — Entrée validée par l'organisateur</span>
+            <span *ngIf="reservation.status==='PENDING'">⏳ En attente de paiement</span>
+            <span *ngIf="reservation.status==='CANCELLED'">❌ Billet Annulé</span>
+          </div>
+        </div>
+
+        <!-- QR CODES: 1 billet = 1 ticket/QR -->
+        <div class="qr-section" *ngIf="reservation.status === 'CONFIRMED'">
+          <ng-container *ngIf="tickets.length > 0; else fallbackQr">
+            <div class="ticket-list">
+              <div class="ticket-unit" *ngFor="let t of tickets">
+                <img [src]="qrUrl(t.ticketCode)" alt="QR Code" class="qr-img" crossorigin="anonymous"/>
+                <p class="qr-hint">Ticket #{{ t.ticketNumber }} - {{ t.status }}</p>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #fallbackQr>
+            <img [src]="qrUrl()" alt="QR Code" class="qr-img" crossorigin="anonymous"/>
+            <p class="qr-hint">Présentez ce QR à l'entrée</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- PERFORATION -->
+      <div class="ticket-tear"></div>
+
+      <!-- FOOTER TICKET -->
+      <div class="ticket-footer">
+        <span>Billet numérique sécurisé</span>
+        <span>TunisiaTour © 2026</span>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="ticket-actions no-print" *ngIf="canPrint">
+      <button class="btn-print" (click)="print()">🖨️ Imprimer / Télécharger</button>
+    </div>
+
+  </div>
+</div>

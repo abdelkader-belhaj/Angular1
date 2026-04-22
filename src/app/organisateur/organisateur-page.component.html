@@ -1,0 +1,978 @@
+<main class="org-page">
+  <section class="org-hero">
+    <h1>Tableau de bord</h1>
+    <p>Gerez vos evenements, suivez les reservations et validez les billets QR en un clic.</p>
+
+    <div class="kpi-row" *ngIf="!loading">
+      <div class="kpi-card">
+        <span>Total events</span>
+        <strong>{{ events.length }}</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Reservations</span>
+        <strong>{{ totalReservations }}</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Billets confirmes</span>
+        <strong>{{ confirmedReservations }}</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Occupation moyenne</span>
+        <strong>{{ occupancyRate }}%</strong>
+      </div>
+      <div class="kpi-card">
+        <span>Revenu confirme</span>
+        <strong>{{ projectedRevenue | number:'1.0-0' }} TND</strong>
+      </div>
+    </div>
+  </section>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'events'" (click)="switchTab('events')">
+      Mes evenements
+    </button>
+    <button class="tab" [class.active]="activeTab === 'create'" (click)="switchTab('create')">
+      Creer event
+    </button>
+    <button class="tab" [class.active]="activeTab === 'carte'" (click)="switchTab('carte')">
+      Carte events
+    </button>
+    <button class="tab" [class.active]="activeTab === 'calendar'" (click)="switchTab('calendar')">
+      Calendrier
+    </button>
+    <button class="tab" [class.active]="activeTab === 'reservations'" (click)="switchTab('reservations')">
+      Reservations
+    </button>
+    <button class="tab" [class.active]="activeTab === 'qr'" (click)="switchTab('qr')">
+      Validation QR
+    </button>
+    <button class="tab" [class.active]="activeTab === 'stats'" (click)="switchTab('stats')">
+      Statistiques
+    </button>
+  </div>
+
+  <section class="org-content single" *ngIf="activeTab === 'events'">
+    <article class="panel panel-events">
+      <div class="panel-head">
+        <h2>Mes evenements</h2>
+        <div class="event-toolbar">
+          <button class="btn-primary" (click)="startCreate()">+ Creer event</button>
+          <button class="btn-ghost" (click)="ngOnInit()">Actualiser</button>
+        </div>
+      </div>
+
+      <div class="loading" *ngIf="loading">Chargement des donnees...</div>
+      <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <div class="event-list" *ngIf="!loading && !errorMsg && events.length > 0">
+        <article class="event-item" *ngFor="let ev of events">
+          <div>
+            <h3>
+              {{ ev.title }}
+              <span class="status-pill" [class]="'status-pill ' + statusClass(ev.status)">
+                {{ ev.status }}
+              </span>
+            </h3>
+            <p>{{ ev.city }} · {{ ev.startDate | date:'dd/MM/yyyy HH:mm' }}</p>
+            <small>
+              {{ getEventReservationsCount(ev.id) }} reservations ·
+              {{ getEventConfirmedCount(ev.id) }} confirmees ·
+              {{ getEventRevenue(ev.id) | number:'1.0-0' }} TND
+            </small>
+          </div>
+          <div class="event-actions">
+            <button class="btn-primary" *ngIf="canEditEvent(ev)" (click)="startEdit(ev)">Modifier</button>
+            <span class="edit-lock" *ngIf="!canEditEvent(ev)">Modification: brouillon uniquement</span>
+            <button class="btn-danger" *ngIf="canCancelEvent(ev)" (click)="cancelEvent(ev)">Annuler</button>
+            <span class="edit-lock" *ngIf="ev.status === 'PUBLISHED' && !canCancelEvent(ev)">Annulation verrouillée dans les 24h</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="empty" *ngIf="!loading && !errorMsg && events.length === 0">
+        <p>Aucun evenement lie a ce compte organisateur.</p>
+        <small>Connecte avec: {{ organizerEmail }}</small>
+        <small>Si tes events sont crees par un autre organisateur en base, ils ne s'affichent pas ici.</small>
+      </div>
+    </article>
+  </section>
+
+  <section class="org-content single" *ngIf="activeTab === 'create'">
+    <article class="panel panel-form">
+      <div class="form-header">
+        <div class="form-header-left">
+        </div>
+        <button class="btn-ghost" (click)="switchTab('events')">Retour à la liste</button>
+      </div>
+
+      <div class="form-stepper">
+        <div class="step-item" [class.active]="formStep === 1" [class.done]="formStep > 1" (click)="goFormStep(1)">
+          <div class="step-circle"><span *ngIf="formStep <= 1">1</span><span *ngIf="formStep > 1">✓</span></div>
+          <span class="step-name">Informations</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" [class.active]="formStep === 2" [class.done]="formStep > 2" (click)="goFormStep(2)">
+          <div class="step-circle"><span *ngIf="formStep <= 2">2</span><span *ngIf="formStep > 2">✓</span></div>
+          <span class="step-name">Lieu & Date</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" [class.active]="formStep === 3" [class.done]="formStep > 3" (click)="goFormStep(3)">
+          <div class="step-circle"><span *ngIf="formStep <= 3">3</span><span *ngIf="formStep > 3">✓</span></div>
+          <span class="step-name">Médias</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" [class.active]="formStep === 4" (click)="goFormStep(4)">
+          <div class="step-circle"><span>4</span></div>
+          <span class="step-name">Intelligence</span>
+        </div>
+      </div>
+
+      <div class="form-progress"><div class="form-progress-fill" [style.width.%]="formProgressPct"></div></div>
+
+      <div class="form-step-content" *ngIf="formStep === 1">
+        <div class="type-switch-modern">
+          <button type="button" class="type-btn" [class.active]="form.type === 'EVENT'" (click)="setType('EVENT')">
+            <span class="type-icon">🎭</span><span class="type-label">Événement</span><span class="type-desc">Concert, conférence, festival...</span>
+          </button>
+          <button type="button" class="type-btn" [class.active]="form.type === 'ACTIVITY'" (click)="setType('ACTIVITY')">
+            <span class="type-icon">🏄</span><span class="type-label">Activité</span><span class="type-desc">Sport, atelier, excursion...</span>
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label required">Titre</label>
+            <input class="form-input" [(ngModel)]="form.title" name="title" maxlength="80" placeholder="Ex : Festival Jazz de Tunis 2025" (ngModelChange)="onFormTextChange()" />
+            <span class="form-hint">{{ form.title.length }}/80 caractères</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Catégorie</label>
+            <div class="select-wrapper">
+              <select class="form-select" [(ngModel)]="form.categoryId" name="categoryId" (ngModelChange)="onFormTextChange()">
+                <option [ngValue]="0" disabled>Choisir une catégorie</option>
+                <option *ngFor="let c of categoriesForType" [ngValue]="c.id">{{ c.name }}</option>
+              </select>
+              <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,4 6,8 10,4" stroke="currentColor" stroke-width="1.4"/></svg>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Prix</label>
+            <div class="input-addon-wrapper">
+              <input class="form-input has-addon" [(ngModel)]="form.price" name="price" type="number" min="0" placeholder="0" (ngModelChange)="onManualPriceChange()" />
+              <span class="input-addon">TND</span>
+            </div>
+            <span class="form-hint">Le prix se remplit automatiquement quand titre, type, catégorie et description sont renseignés.</span>
+            <div class="ai-hint" *ngIf="priceAiLoading">Suggestion IA en cours...</div>
+            <div class="ai-hint" *ngIf="!priceAiLoading && suggestedPriceInfo as suggestion">
+              Prix estimé par IA: <strong>{{ suggestion.price | number:'1.0-0' }} TND</strong>
+              <span>({{ suggestion.label }})</span>
+              <small>· {{ suggestion.rationale }}</small>
+            </div>
+            <div class="ai-hint" *ngIf="!priceAiLoading && priceAiError">{{ priceAiError }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Capacité</label>
+            <div class="input-addon-wrapper">
+              <input class="form-input has-addon" [(ngModel)]="form.capacity" name="capacity" type="number" min="1" placeholder="100" />
+              <span class="input-addon">places</span>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label required">Description</label>
+            <textarea class="form-textarea" [(ngModel)]="form.description" name="description" rows="4" (ngModelChange)="onFormTextChange()"></textarea>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <span class="step-nav-info">Étape 1 sur 4</span>
+          <button class="btn-next" (click)="goFormStep(2)" [disabled]="!canGoStep2">Lieu & Date</button>
+        </div>
+      </div>
+
+      <div class="form-step-content" *ngIf="formStep === 2">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label required">Ville</label><input class="form-input" [(ngModel)]="form.city" name="city" (blur)="geocodeAddress()" /></div>
+          <div class="form-group"><label class="form-label required">Adresse</label><input class="form-input" [(ngModel)]="form.address" name="address" (blur)="geocodeAddress()" /></div>
+          <div class="form-group"><label class="form-label required">Date de début</label><input class="form-input" [(ngModel)]="form.startDate" name="startDate" type="datetime-local" /></div>
+          <div class="form-group"><label class="form-label required">Date de fin</label><input class="form-input" [(ngModel)]="form.endDate" name="endDate" type="datetime-local" /></div>
+        </div>
+
+        <div class="location-block">
+          <div class="location-block-header">
+            <div class="location-block-title"><strong>Localisation GPS</strong></div>
+            <span class="location-status" *ngIf="form.latitude && form.longitude">Localisé</span>
+            <span class="location-status missing" *ngIf="!form.latitude || !form.longitude">Non localisé</span>
+          </div>
+          <div class="location-actions">
+            <button class="btn-loc" (click)="geocodeAddress()" [disabled]="geoLoading">{{ geoLoading ? 'Géolocalisation...' : 'Localiser depuis l\'adresse' }}</button>
+            <button class="btn-loc" (click)="openFormMapPicker()">Choisir sur la carte</button>
+            <button class="btn-loc btn-loc-close" *ngIf="showFormMapPicker" (click)="closeFormMapPicker()">Fermer la carte</button>
+          </div>
+          <div class="map-picker-wrapper" *ngIf="showFormMapPicker"><div id="organisateur-form-map-picker" class="map-picker-canvas"></div></div>
+          <div class="coords-row" *ngIf="form.latitude && form.longitude">
+            <div class="coord-chip"><span class="coord-label">Lat</span><span class="coord-val">{{ form.latitude | number:'1.6-6' }}</span></div>
+            <div class="coord-chip"><span class="coord-label">Lng</span><span class="coord-val">{{ form.longitude | number:'1.6-6' }}</span></div>
+          </div>
+          <div class="map-embed" *ngIf="mapEmbedUrl as safeMap"><iframe [src]="safeMap" loading="lazy"></iframe></div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-prev" (click)="goFormStep(1)">Informations</button>
+          <span class="step-nav-info">Étape 2 sur 4</span>
+          <button class="btn-next" (click)="goFormStep(3)" [disabled]="!canGoStep3">Médias</button>
+        </div>
+      </div>
+
+      <div class="form-step-content" *ngIf="formStep === 3">
+        <div class="upload-zone" (click)="triggerFileInput()">
+          <input #fileInput type="file" accept="image/*" style="display:none" (change)="onImageSelected($event)" />
+          <div *ngIf="!localImagePreview && !form.imageUrl" class="upload-placeholder"><p class="upload-label">Cliquez pour uploader une image</p></div>
+          <div *ngIf="localImagePreview || form.imageUrl" class="upload-preview"><img [src]="localImagePreview || form.imageUrl || ''" alt="Prévisualisation" /></div>
+        </div>
+        <div class="divider-or"><span>ou renseignez une URL</span></div>
+        <div class="form-group">
+          <label class="form-label">URL de l'image</label>
+          <input class="form-input" [(ngModel)]="form.imageUrl" name="imageUrl" (input)="onImageUrlChange()" />
+        </div>
+
+        <div class="event-summary-card">
+          <div class="summary-header">Récapitulatif</div>
+          <div class="summary-grid">
+            <div class="summary-item"><span class="summary-label">Type</span><span class="summary-val">{{ form.type }}</span></div>
+            <div class="summary-item"><span class="summary-label">Titre</span><span class="summary-val">{{ form.title || '—' }}</span></div>
+            <div class="summary-item"><span class="summary-label">Ville</span><span class="summary-val">{{ form.city || '—' }}</span></div>
+            <div class="summary-item"><span class="summary-label">Prix</span><span class="summary-val">{{ form.price | number:'1.0-0' }} TND</span></div>
+            <div class="summary-item"><span class="summary-label">Capacité</span><span class="summary-val">{{ form.capacity }} places</span></div>
+            <div class="summary-item"><span class="summary-label">Début</span><span class="summary-val">{{ form.startDate ? (form.startDate | date:'dd/MM/yyyy') : '—' }}</span></div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-prev" (click)="goFormStep(2)">Lieu & Date</button>
+          <span class="step-nav-info">Étape 3 sur 4</span>
+          <button class="btn-next" (click)="goFormStep(4)">Intelligence</button>
+        </div>
+      </div>
+
+      <div class="form-step-content" *ngIf="formStep === 4">
+        <div class="intelligence-hint" *ngIf="!canRunIntelligence">Complétez type, catégorie, ville, adresse et date pour activer l'analyse.</div>
+        <div class="intelligence-trigger" *ngIf="canRunIntelligence">
+          <button class="btn-analyze" (click)="refreshWeatherAndInsights()" [disabled]="weatherLoading">
+            {{ weatherLoading ? 'Analyse en cours...' : 'Lancer l\'analyse météo & prédiction' }}
+            <span class="analyze-badge" *ngIf="!weatherLoading">IA</span>
+          </button>
+        </div>
+
+        <div class="insight-grid">
+
+  <!-- Prédiction de succès -->
+  <div class="insight-card-v2 success">
+    <div class="insight-v2-header">
+      <div class="insight-v2-icon success-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3 10l4 4 8-8" stroke="#0b6b47" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <p class="insight-v2-label">Prédiction de succès</p>
+        <span class="insight-v2-pill success-pill">{{ successPrediction.label }}</span>
+      </div>
+    </div>
+
+    <div class="insight-v2-score-row">
+      <span class="insight-v2-score success-score">{{ successPrediction.score }}<span class="insight-v2-unit">%</span></span>
+      <div class="insight-v2-bar-wrap">
+        <div class="insight-v2-bar-track">
+          <div class="insight-v2-bar-fill success-bar" [style.width.%]="successPrediction.score"></div>
+        </div>
+        <span class="insight-v2-bar-label">{{ successPrediction.score >= 70 ? 'Bon niveau' : successPrediction.score >= 50 ? 'Moyen' : 'Faible' }}</span>
+      </div>
+    </div>
+
+    <p class="insight-v2-reason">{{ successPrediction.reason }}</p>
+
+    <div class="insight-v2-reco" [class.reco-warn]="successPrediction.score < 55">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0;margin-top:1px">
+        <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M6.5 5.5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="6.5" cy="4.5" r="0.6" fill="currentColor"/>
+      </svg>
+      <span class="reco-label">Recommandation</span>
+      <strong>{{ successPrediction.recommendation }}</strong>
+    </div>
+
+    <div class="factors-block" *ngIf="successPrediction.factors.length > 0">
+      <p class="factors-title">Détail de l'analyse</p>
+      <div class="factor-row" *ngFor="let f of successPrediction.factors">
+        <div class="factor-left">
+          <span class="factor-label">{{ f.label }}</span>
+          <span class="factor-comment">{{ f.comment }}</span>
+        </div>
+        <div class="factor-right">
+          <div class="factor-bar-track">
+            <div class="factor-bar-fill"
+              [style.width.%]="(f.score / f.max) * 100"
+              [class.bar-good]="(f.score / f.max) >= 0.7"
+              [class.bar-mid]="(f.score / f.max) >= 0.4 && (f.score / f.max) < 0.7"
+              [class.bar-bad]="(f.score / f.max) < 0.4">
+            </div>
+          </div>
+          <span class="factor-pts">{{ f.score }}/{{ f.max }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+        <div class="weather-card" *ngIf="canRunIntelligence">
+          <div class="weather-card-header"><div class="weather-card-title">Météo & recommandation</div><span class="weather-loading-tag" *ngIf="weatherLoading">Chargement...</span></div>
+          <div class="weather-main" *ngIf="formWeather">
+            <span class="weather-glyph">{{ weatherGlyph }}</span>
+            <div class="weather-main-text">
+              <div class="weather-location">{{ formWeatherLabel }}</div>
+              <small class="weather-source">{{ weatherSourceLabel }}</small>
+            </div>
+          </div>
+          <div class="weather-forecast-time" *ngIf="weatherForecastTime">Prévision pour: {{ weatherForecastTime | date:'dd/MM/yyyy HH:mm' }}</div>
+          <div class="weather-location empty" *ngIf="!formWeather && !weatherLoading">Aucune météo chargée</div>
+          <p class="weather-advice">{{ weatherAdvice }}</p>
+          <div class="weather-chips" *ngIf="formWeather">
+            <span class="weather-chip">{{ formWeather.humidity }}% humidité</span>
+            <span class="weather-chip">{{ formWeather.windSpeed | number:'1.0-1' }} m/s vent</span>
+            <span class="weather-chip">{{ formWeather.description }}</span>
+          </div>
+        </div>
+
+        <div class="action-msg info" *ngIf="actionMsg && !saving">{{ actionMsg }}</div>
+
+        <div class="save-zone">
+          <div class="save-zone-left"><button class="btn-prev" (click)="goFormStep(3)">Médias</button></div>
+          <div class="save-zone-right">
+            <span class="save-hint" *ngIf="!canSubmit">Complétez les champs obligatoires</span>
+            <button class="btn-save" [disabled]="saving || !canSubmit" (click)="saveEvent()">
+              {{ saving ? 'Enregistrement...' : (formMode === 'create' ? 'Créer l\'événement' : 'Sauvegarder') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+    <section class="org-content single" *ngIf="activeTab === 'carte'">
+    <article class="panel panel-map">
+
+      <div class="map-head">
+        <div>
+          <p class="map-kicker">Tunisie</p>
+          <h2>Carte géolocalisée des événements</h2>
+          <p class="map-description">
+            Vue restreinte et précise sur la Tunisie avec les événements positionnés correctement.
+          </p>
+        </div>
+        <div class="map-badge">
+          <span>📍</span>
+          <strong>{{ geolocatedEventsCount }}</strong>
+          <small>lieux placés</small>
+        </div>
+      </div>
+
+      <div class="map-stats-bar">
+        <div class="map-stat">
+          <span class="map-stat-val">{{ events.length }}</span>
+          <span class="map-stat-lbl">Total events</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-val pub">{{ publishedEventCount }}</span>
+          <span class="map-stat-lbl">Publiés</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-val dft">{{ draftEventCount }}</span>
+          <span class="map-stat-lbl">Brouillons</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-val geo">{{ geolocatedEventsCount }}</span>
+          <span class="map-stat-lbl">Géolocalisés</span>
+        </div>
+        <div class="map-stat">
+          <span class="map-stat-val res">{{ totalReservations }}</span>
+          <span class="map-stat-lbl">Réservations</span>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <span class="legend-item">
+          <span class="legend-dot pub"></span> Publié
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot dft"></span> Brouillon
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot oth"></span> Annulé / Rejeté
+        </span>
+      </div>
+
+      <div class="map-filters">
+        <button class="map-filter-btn" [class.active]="mapFilter === 'ALL'" (click)="setMapFilter('ALL')">Tous</button>
+        <button class="map-filter-btn" [class.active]="mapFilter === 'PUBLISHED'" (click)="setMapFilter('PUBLISHED')">Publiés</button>
+        <button class="map-filter-btn" [class.active]="mapFilter === 'DRAFT'" (click)="setMapFilter('DRAFT')">Brouillons</button>
+        <div *ngIf="geolocatingInProgress" class="geo-loading">
+          <span class="spinner"></span> Géolocalisation en cours...
+        </div>
+      </div>
+
+      <div class="map-wrapper">
+        <!-- Carte Leaflet restreinte à la Tunisie -->
+        <div class="leaflet-map-container" id="organisateur-leaflet-map"></div>
+
+        <!-- Liste des événements -->
+        <div class="map-event-list">
+          <div class="mel-header">
+            <h3>Mes événements</h3>
+            <span class="mel-count">{{ filteredMapEvents.length }}</span>
+          </div>
+
+          <div class="mel-empty" *ngIf="filteredMapEvents.length === 0">
+            Aucun événement créé.
+          </div>
+
+          <div class="mel-scroll" *ngIf="filteredMapEvents.length > 0">
+            <div class="mel-item"
+              *ngFor="let ev of filteredMapEvents"
+              [class.highlighted]="highlightedId === ev.id"
+              (click)="onMapListItemClick(ev)"
+              (mouseenter)="highlightPin(ev.id)"
+              (mouseleave)="highlightPin(null)">
+              <div class="mel-dot"
+                [style.background]="ev.status==='PUBLISHED'?'#0077b6':ev.status==='DRAFT'?'#f4a100':'#c0392b'">
+              </div>
+              <div class="mel-info">
+                <span class="mel-title">
+                  {{ ev.title | slice:0:34 }}{{ ev.title.length > 34 ? '…' : '' }}
+                </span>
+                <span class="mel-meta">
+                  {{ ev.city }}
+                  <span class="mel-sep">·</span>
+                  {{ ev.startDate | date:'d MMM y' }}
+                </span>
+                <span class="mel-res" *ngIf="getEventReservationsCount(ev.id) > 0">
+                  {{ getEventConfirmedCount(ev.id) }} / {{ getEventReservationsCount(ev.id) }} réservations
+                </span>
+              </div>
+              <div class="mel-right">
+                <span class="mel-price">{{ ev.price | number:'1.0-0' }} TND</span>
+                <span class="mel-arrow">›</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mel-footer">
+            <span>Revenu total confirmé</span>
+            <strong>{{ projectedRevenue | number:'1.0-0' }} TND</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="org-content single" *ngIf="activeTab === 'calendar'">
+    <article class="panel panel-calendar full">
+      <div class="panel-head">
+        <h2>Calendrier organisateur</h2>
+        <div class="calendar-toolbar">
+          <button class="btn-ghost" (click)="previousCalendarMonth()">← Mois précédent</button>
+          <button class="btn-ghost" (click)="goToCurrentCalendarMonth()">Aujourd'hui</button>
+          <button class="btn-ghost" (click)="nextCalendarMonth()">Mois suivant →</button>
+        </div>
+      </div>
+
+      <div class="calendar-layout">
+        <div class="calendar-board">
+          <div class="calendar-board-head">
+            <div>
+              <p class="calendar-kicker">Vue mensuelle</p>
+              <h3>{{ calendarMonthLabel }}</h3>
+            </div>
+            <div class="calendar-legend">
+              <span><i class="legend-dot pub"></i> Publié</span>
+              <span><i class="legend-dot dft"></i> Brouillon</span>
+              <span><i class="legend-dot oth"></i> Annulé</span>
+            </div>
+          </div>
+
+          <div class="calendar-weekdays">
+            <span>Lun</span>
+            <span>Mar</span>
+            <span>Mer</span>
+            <span>Jeu</span>
+            <span>Ven</span>
+            <span>Sam</span>
+            <span>Dim</span>
+          </div>
+
+          <div class="calendar-grid">
+            <button
+              type="button"
+              class="calendar-cell"
+              *ngFor="let cell of calendarCells"
+              [class.empty]="!cell.inMonth"
+              [class.today]="cell.isToday"
+              [class.selected]="cell.isSelected"
+              (click)="selectCalendarDay(cell.date)">
+              <div class="calendar-cell-top">
+                <span class="calendar-day-number">{{ cell.label }}</span>
+                <span class="calendar-day-count" *ngIf="cell.events.length > 0">{{ cell.events.length }}</span>
+              </div>
+              <div class="calendar-cell-events" *ngIf="cell.events.length > 0">
+                <span class="calendar-event-chip" *ngFor="let ev of cell.events | slice:0:2">{{ ev.title | slice:0:18 }}{{ ev.title.length > 18 ? '…' : '' }}</span>
+                <small *ngIf="cell.events.length > 2">+{{ cell.events.length - 2 }} autres</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <aside class="calendar-side">
+          <div class="calendar-side-card">
+            <p class="calendar-side-kicker">Jour sélectionné</p>
+            <h3>{{ calendarSelectedDateLabel }}</h3>
+            <div class="calendar-side-count">{{ calendarSelectedDateEvents.length }} événement(s)</div>
+          </div>
+
+          <div class="calendar-event-list" *ngIf="calendarSelectedDateEvents.length > 0; else noCalendarEvents">
+            <article class="calendar-event-card" *ngFor="let ev of calendarSelectedDateEvents">
+              <div class="calendar-event-title-row">
+                <strong>{{ ev.title }}</strong>
+                <span class="status-pill" [class]="'status-pill ' + statusClass(ev.status)">{{ ev.status }}</span>
+              </div>
+              <p>{{ ev.city }} · {{ ev.startDate | date:'HH:mm' }}</p>
+              <small>{{ getEventConfirmedCount(ev.id) }} confirmés · {{ getEventReservationsCount(ev.id) }} réservations</small>
+            </article>
+          </div>
+
+          <ng-template #noCalendarEvents>
+            <div class="calendar-empty">Aucun événement sur ce jour.</div>
+          </ng-template>
+        </aside>
+      </div>
+    </article>
+  </section>
+
+  <section class="org-content single" *ngIf="activeTab === 'reservations'">
+    <article class="panel panel-events full">
+      <div class="panel-head">
+        <h2>Reservations de mes events</h2>
+        <div class="filters">
+          <select [(ngModel)]="filtreStatutReservation" (change)="filtrerReservations()">
+            <option value="">Tous statuts</option>
+            <option value="PENDING">PENDING</option>
+            <option value="CONFIRMED">CONFIRMED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+          <select [(ngModel)]="filtreEventId" (change)="filtrerReservations()">
+            <option value="">Tous events</option>
+            <option *ngFor="let ev of events" [value]="ev.id">{{ ev.title }}</option>
+          </select>
+          <select [(ngModel)]="filtreQrReservation" (change)="filtrerReservations()">
+            <option value="">Tous QR</option>
+            <option value="USED">QR validé</option>
+            <option value="NOT_USED">QR non validé</option>
+          </select>
+          <button class="btn-ghost" (click)="clearFilters()">Reset</button>
+        </div>
+      </div>
+
+      <div class="loading" *ngIf="loading">Chargement des reservations...</div>
+
+      <div class="table-wrap" *ngIf="!loading && reservationsFiltrees.length > 0">
+        <table class="res-table">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Client</th>
+              <th>Date reservation</th>
+              <th>Billets</th>
+              <th>Total</th>
+              <th>Statut</th>
+              <th>QR</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of reservationsFiltrees">
+              <td>{{ r.eventTitle }}</td>
+              <td>{{ r.userName }}</td>
+              <td>{{ r.reservationDate | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ r.numberOfTickets }}</td>
+              <td>{{ r.totalPrice | number:'1.0-2' }} TND</td>
+              <td>
+                <span class="status-pill" [class]="'status-pill ' + statusClass(r.status)">{{ r.status }}</span>
+              </td>
+              <td>
+                <span class="status-pill" [class]="'status-pill ' + (r.qrUsed ? 'CONFIRMED' : 'PENDING')">
+                  {{ r.qrUsed ? 'QR validé' : 'QR en attente' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-ghost" (click)="goToTicket(r.id)">Voir ticket</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty" *ngIf="!loading && reservationsFiltrees.length === 0">
+        Aucune reservation trouvee.
+      </div>
+    </article>
+  </section>
+
+  <section class="org-content single" *ngIf="activeTab === 'qr'">
+    <article class="panel panel-scan full">
+      <h2>Validation QR</h2>
+      <p>Scannez le QR avec la caméra. La validation IA Groq se lance automatiquement.</p>
+
+      <div class="ai-qr-tools">
+        <button class="btn-ghost" *ngIf="!cameraScanning" [disabled]="!cameraSupported" (click)="startAiQrCamera()">
+          📷 Lancer scan caméra
+        </button>
+        <button class="btn-danger" *ngIf="cameraScanning" (click)="stopAiQrCamera()">❌ Arrêter caméra</button>
+      </div>
+
+      <div class="qr-camera-box" *ngIf="cameraScanning">
+        <video #qrVideo autoplay muted playsinline></video>
+        <canvas #qrCanvas class="qr-hidden-canvas"></canvas>
+        <div class="qr-camera-overlay">Cadrez le QR dans la zone</div>
+      </div>
+
+      <small class="ai-hint" *ngIf="!cameraSupported">⚠️ Caméra non supportée sur cet appareil.</small>
+
+      <div *ngIf="scanResult" class="scan-result" [class.ok]="scanResult.valid" [class.ko]="!scanResult.valid">
+        {{ scanResult.message }}
+      </div>
+      <div class="info" *ngIf="aiQrHint">{{ aiQrHint }}</div>
+    </article>
+  </section>
+
+  <section class="org-content single" *ngIf="activeTab === 'stats'">
+  <article class="panel panel-events full">
+
+    <div class="panel-head">
+      <h2>Statistiques organisateur</h2>
+      <button class="btn-ghost" (click)="ngOnInit()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M12 7A5 5 0 1 1 7 2a5 5 0 0 1 3.5 1.5L12 2v4H8l1.5-1.5A3 3 0 1 0 10 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+
+    <!-- KPI row -->
+    <div class="stats-kpi-grid premium">
+      <div class="stats-kpi-card kpi-blue">
+        <div class="kpi-icon-wrap kpi-icon-blue">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="4" width="12" height="10" rx="2" stroke="#185FA5" stroke-width="1.4"/>
+            <path d="M5 2v4M11 2v4" stroke="#185FA5" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>Événements publiés</span>
+        <strong>{{ publishedEventCount }}</strong>
+        <small>actifs sur la plateforme</small>
+      </div>
+      <div class="stats-kpi-card kpi-gray">
+        <div class="kpi-icon-wrap kpi-icon-gray">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 4h10M3 8h7M3 12h5" stroke="#5F5E5A" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>Brouillons</span>
+        <strong>{{ draftEventCount }}</strong>
+        <small>en cours de rédaction</small>
+      </div>
+      <div class="stats-kpi-card kpi-green">
+        <div class="kpi-icon-wrap kpi-icon-green">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="5.5" stroke="#3B6D11" stroke-width="1.4"/>
+            <path d="M8 5v3l2 1.5" stroke="#3B6D11" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>À venir</span>
+        <strong>{{ upcomingEventsCount }}</strong>
+        <small>événements planifiés</small>
+      </div>
+      <div class="stats-kpi-card kpi-pink">
+        <div class="kpi-icon-wrap kpi-icon-pink">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2a3 3 0 1 1 0 6A3 3 0 0 1 8 2zm0 8c-3.3 0-6 1.3-6 3h12c0-1.7-2.7-3-6-3z" stroke="#993556" stroke-width="1.3"/>
+          </svg>
+        </div>
+        <span>Réservations</span>
+        <strong>{{ totalReservations }}</strong>
+        <small>au total</small>
+      </div>
+    </div>
+
+    <!-- Rings row -->
+    <div class="stats-rings-grid">
+      <article class="ring-card">
+        <h3>Taux de confirmation</h3>
+        <div class="ring-outer">
+          <svg viewBox="0 0 36 36" class="ring-svg">
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#E1F5EE" stroke-width="4"/>
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#1D9E75" stroke-width="4"
+              stroke-linecap="round" pathLength="100"
+              [style.strokeDasharray]="confirmRate + ' ' + (100 - confirmRate)"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="ring-center" style="color:#0F6E56">{{ confirmRate }}%</div>
+        </div>
+        <span class="kpi-badge badge-green">{{ confirmRate >= 70 ? 'Bon taux' : 'À améliorer' }}</span>
+      </article>
+
+      <article class="ring-card">
+        <h3>Taux d'occupation</h3>
+        <div class="ring-outer">
+          <svg viewBox="0 0 36 36" class="ring-svg">
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#E6F1FB" stroke-width="4"/>
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#378ADD" stroke-width="4"
+              stroke-linecap="round" pathLength="100"
+              [style.strokeDasharray]="occupancyRate + ' ' + (100 - occupancyRate)"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="ring-center" style="color:#185FA5">{{ occupancyRate }}%</div>
+        </div>
+        <span class="kpi-badge badge-blue">Capacité remplie</span>
+      </article>
+
+      <article class="ring-card">
+        <h3>Catégories</h3>
+        <div class="category-donut-wrap" *ngIf="categoryDonutSegments.length > 0; else noCategoryDonut">
+          <svg class="category-donut" viewBox="0 0 42 42">
+            <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#E6F1FB" stroke-width="7"/>
+            <circle
+              *ngFor="let seg of categoryDonutSegments"
+              cx="21" cy="21" r="15.915"
+              fill="transparent" stroke-width="7"
+              pathLength="100"
+              class="donut-segment"
+              [attr.stroke]="seg.color"
+              [attr.stroke-dasharray]="seg.pct + ' ' + (100 - seg.pct)"
+              [attr.stroke-dashoffset]="-seg.start"
+              (mouseenter)="onCategorySegmentEnter(seg)"
+              (mouseleave)="onCategorySegmentLeave()"/>
+          </svg>
+          <div class="category-donut-hint">{{ categoryDonutHint || 'Survolez un segment' }}</div>
+        </div>
+        <ng-template #noCategoryDonut><p class="empty">Aucune catégorie.</p></ng-template>
+      </article>
+    </div>
+
+    <!-- Stat cards 2-col -->
+    <div class="stats-grid-2">
+      <article class="stats-card">
+        <h3>Répartition par statut</h3>
+        <div class="stats-list" *ngIf="(eventsByStatus | keyvalue).length > 0; else noStatusStats">
+          <div class="stats-row" *ngFor="let item of eventsByStatus | keyvalue">
+            <span>{{ item.key }}</span>
+            <div class="bar-track"><div class="bar-fill" [style.width.%]="(item.value / publishedEventCount) * 100"></div></div>
+            <strong>{{ item.value }}</strong>
+          </div>
+        </div>
+        <ng-template #noStatusStats><p class="empty">Aucune donnée</p></ng-template>
+      </article>
+
+      <article class="stats-card">
+        <h3>Événements par catégorie</h3>
+        <div class="stats-list" *ngIf="(eventsByCategory | keyvalue).length > 0; else noCatStats">
+          <div class="stats-row" *ngFor="let item of eventsByCategory | keyvalue">
+            <span>{{ item.key }}</span>
+            <div class="bar-track"><div class="bar-fill bar-fill-teal" [style.width.%]="(item.value / publishedEventCount) * 100"></div></div>
+            <strong>{{ item.value }}</strong>
+          </div>
+        </div>
+        <ng-template #noCatStats><p class="empty">Aucune donnée</p></ng-template>
+      </article>
+    </div>
+
+    <div class="stats-grid-2">
+      <article class="stats-card">
+        <h3>Revenu confirmé par catégorie</h3>
+        <div class="stats-list" *ngIf="(revenueByCategory | keyvalue).length > 0; else noRevStats">
+          <div class="stats-row" *ngFor="let item of revenueByCategory | keyvalue">
+            <span>{{ item.key }}</span>
+            <strong class="val-accent">{{ item.value | number:'1.0-0' }} TND</strong>
+          </div>
+        </div>
+        <ng-template #noRevStats><p class="empty">Aucune donnée</p></ng-template>
+      </article>
+
+      <article class="stats-card">
+        <h3>Prix moyen par catégorie</h3>
+        <div class="stats-list" *ngIf="(averagePriceByCategory | keyvalue).length > 0; else noAvgStats">
+          <div class="stats-row" *ngFor="let item of averagePriceByCategory | keyvalue">
+            <span>{{ item.key }}</span>
+            <strong>{{ item.value }} TND</strong>
+          </div>
+        </div>
+        <ng-template #noAvgStats><p class="empty">Aucune donnée</p></ng-template>
+      </article>
+    </div>
+
+    <!-- Monthly chart -->
+    <article class="stats-card monthly-wide">
+      <h3>Tendance réservations — 6 mois</h3>
+      <div class="spark-bars wide" *ngIf="monthlyPerformance.length > 0; else noMonthlyWide">
+        <div class="spark-col" *ngFor="let m of monthlyPerformance">
+          <small class="spark-rev">{{ m.revenue | number:'1.0-0' }} TND</small>
+          <div class="spark-bar" [style.height.px]="m.heightPct * 1.2 + 12"></div>
+          <span class="spark-label">{{ m.label }}</span>
+          <small class="spark-res">{{ m.reservations }} rés.</small>
+        </div>
+      </div>
+      <ng-template #noMonthlyWide><p class="empty">Aucune donnée mensuelle.</p></ng-template>
+    </article>
+
+  </article>
+</section>
+<div class="modal-overlay" *ngIf="showConfirm" (click)="cancelConfirm()">
+  <div class="modal modal-cancel" (click)="$event.stopPropagation()">
+
+    <div class="modal-danger-header">
+      <div class="modal-danger-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 3L17 16H3L10 3Z" stroke="#A32D2D" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M10 9v3.5" stroke="#A32D2D" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="10" cy="14.5" r="0.9" fill="#A32D2D"/>
+        </svg>
+      </div>
+      <div>
+        <p class="modal-danger-title">Annuler l'événement</p>
+        <p class="modal-danger-subtitle">Cette action est irréversible et notifiera tous les participants.</p>
+      </div>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="modal-event-card">
+  <div class="modal-event-icon">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="4" width="12" height="10" rx="2" stroke="#185FA5" stroke-width="1.3"/>
+      <path d="M5 2v4M11 2v4" stroke="#185FA5" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <p class="modal-event-title">{{ confirmTitle }}</p>
+    <p class="modal-event-meta">{{ confirmMessage }}</p>
+  </div>
+</div>
+
+<div class="modal-risk-block">
+  <div class="modal-risk-header">
+    <span class="modal-risk-label">Risque d'annulation estimé</span>
+    <span class="modal-risk-pill"
+      [class.risk-high]="confirmCancellationRisk.score >= 70"
+      [class.risk-med]="confirmCancellationRisk.score >= 40 && confirmCancellationRisk.score < 70"
+      [class.risk-low]="confirmCancellationRisk.score < 40">
+      {{ confirmCancellationRisk.label }}
+    </span>
+  </div>
+
+  <div class="modal-risk-score-row">
+    <span class="modal-risk-score"
+      [class.risk-high]="confirmCancellationRisk.score >= 70"
+      [class.risk-med]="confirmCancellationRisk.score >= 40 && confirmCancellationRisk.score < 70"
+      [class.risk-low]="confirmCancellationRisk.score < 40">
+      {{ confirmCancellationRisk.score }}<span class="modal-risk-unit">%</span>
+    </span>
+    <div class="modal-risk-bar-wrap">
+      <div class="modal-risk-bar-track">
+        <div class="modal-risk-bar-fill"
+          [class.bar-high]="confirmCancellationRisk.score >= 70"
+          [class.bar-med]="confirmCancellationRisk.score >= 40 && confirmCancellationRisk.score < 70"
+          [class.bar-low]="confirmCancellationRisk.score < 40"
+          [style.width.%]="confirmCancellationRisk.score">
+        </div>
+      </div>
+      <span class="modal-risk-bar-label">
+        {{ confirmCancellationRisk.score >= 70 ? 'Risque élevé' : confirmCancellationRisk.score >= 40 ? 'Risque modéré' : 'Risque faible' }}
+      </span>
+    </div>
+  </div>
+
+  <p class="modal-risk-reason">{{ confirmCancellationRisk.reason }}</p>
+</div>
+
+      <div class="cancel-impact-grid">
+        <div class="cancel-impact-item">
+          <span class="impact-label">Clients impactés</span>
+          <strong class="impact-value">{{ confirmImpactedClients }}</strong>
+        </div>
+        <div class="cancel-impact-item">
+          <span class="impact-label">Remboursement estimé</span>
+          <strong class="impact-value">{{ confirmEstimatedRefund | number:'1.0-0' }} TND</strong>
+        </div>
+      </div>
+
+      <div class="cancel-reason-box">
+        <label class="cancel-reason-label" for="cancelReason">Motif d'annulation (obligatoire)</label>
+        <textarea
+          id="cancelReason"
+          [(ngModel)]="confirmCancellationReason"
+          rows="3"
+          placeholder="Ex: conditions météo critiques, problème logistique majeur, indisponibilité prestataire..."
+        ></textarea>
+        <small class="cancel-reason-hint">Minimum 10 caractères.</small>
+      </div>
+
+<div class="modal-warnings">
+        <div class="modal-warning-item">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="modal-warn-icon">
+            <circle cx="7" cy="7" r="5.5" stroke="#A32D2D" stroke-width="1.2"/>
+            <path d="M7 4.5v3" stroke="#A32D2D" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="7" cy="9.5" r="0.6" fill="#A32D2D"/>
+          </svg>
+          <p>Tous les participants seront remboursés automatiquement sous 3–5 jours ouvrables.</p>
+        </div>
+        
+      </div>
+
+    </div>
+
+    <div class="modal-actions modal-actions-cancel">
+      <button class="btn-ghost btn-ghost-cancel" (click)="cancelConfirm()">Retour</button>
+      <button class="btn-confirm-cancel" (click)="executeConfirm()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Confirmer l'annulation
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCancelBlockedModal" (click)="closeCancelBlockedModal()">
+  <div class="modal modal-blocked" (click)="$event.stopPropagation()">
+    <div class="modal-blocked-header">
+      <div class="modal-blocked-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#a65a00" stroke-width="1.6"/>
+          <path d="M10 6.8v4.4" stroke="#a65a00" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="10" cy="14.1" r="1" fill="#a65a00"/>
+        </svg>
+      </div>
+      <div>
+        <p class="modal-blocked-title">{{ cancelBlockedTitle }}</p>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-blocked-message">{{ cancelBlockedMessage }}</p>
+    </div>
+
+    <div class="modal-actions modal-actions-blocked">
+      <button class="btn-blocked-ok" (click)="closeCancelBlockedModal()">J'ai compris</button>
+    </div>
+  </div>
+</div>
+
+</main>

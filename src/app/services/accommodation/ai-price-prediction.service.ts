@@ -31,9 +31,9 @@ export class AiPricePredictionService {
     sauna: 17
   };
 
-  // Gemini API configuration from environment (empty key disables frontend calls)
+  // Gemini API configuration from environment
   private readonly GEMINI_API_KEY = environment.geminiApiKey;
-  private readonly API_URL = this.GEMINI_API_KEY
+  private readonly GEMINI_API_URL = this.GEMINI_API_KEY
     ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.GEMINI_API_KEY}`
     : '';
 
@@ -56,7 +56,7 @@ export class AiPricePredictionService {
 
   predictBasePrice(description: string, capacity: number, categoryName: string): Observable<number> {
 
-    if (!this.API_URL) {
+    if (!this.GEMINI_API_URL) {
       // Local fallback to avoid noisy network failures when Gemini is not configured.
       const base = 70 + Math.max(capacity, 1) * 12;
       return of(Math.round(base / 5) * 5);
@@ -83,7 +83,7 @@ IMPORTANT : Je veux UNIQUEMENT et STRICTEMENT un nombre entier renvoyé, représ
       }
     };
 
-    return this.http.post<any>(this.API_URL, body).pipe(
+    return this.http.post<any>(this.GEMINI_API_URL, body).pipe(
       map(response => {
         try {
           const rawText = response.candidates[0].content.parts[0].text;
@@ -130,50 +130,72 @@ IMPORTANT : Je veux UNIQUEMENT et STRICTEMENT un nombre entier renvoyé, représ
   }
 
   /**
-   * Corrects and enhances the text of a lodging description using Gemini.
+   * Simple local fallback: normalize spaces and basic accents only
    */
-  enhanceDescription(description: string): Observable<string> {
-    if (!this.API_URL) {
-      return of((description || '').trim());
+  private localCorrectDescription(text: string): string {
+    if (!text) return text;
+
+    let corrected = text;
+
+    // Normalize multiple spaces
+    corrected = corrected.replace(/\s+/g, ' ');
+
+    // Fix spacing around French punctuation
+    corrected = corrected.replace(/\s+([.,!?;:])/g, '$1');
+    corrected = corrected.replace(/([.,!?;:])\s*/g, '$1 ');
+
+    // Capitalize first letter
+    if (corrected.length > 0) {
+      corrected = corrected.charAt(0).toUpperCase() + corrected.slice(1);
     }
 
-    const prompt = `Tu es un correcteur/rédacteur professionnel francophone pour des annonces d'hébergement.
-Voici le texte original de l'hébergeur : "${description}"
+    return corrected.trim();
+  }
 
-Ta mission stricte :
-1. Corriger toutes les fautes d'orthographe, de grammaire, de conjugaison et de ponctuation.
-2. Reformuler légèrement pour améliorer la fluidité et le style.
-3. Rester TRÈS proche du texte d'origine: même sens, mêmes informations, même intention.
-4. Ne rien inventer: n'ajoute aucun équipement, aucun service, aucun chiffre, aucune promesse absente du texte.
-5. Ne pas changer le contexte du logement ni le ton global.
-6. Conserver une longueur similaire (environ +/- 20%).
+  /**
+   * Corrects and enhances description using Google Gemini API
+   */
+  enhanceDescription(description: string): Observable<string> {
+    // Fallback if no API key
+    if (!this.GEMINI_API_URL) {
+      console.warn('[Enhance] No Gemini API key - using local correction');
+      return of(this.localCorrectDescription(description));
+    }
 
-IMPORTANT :
-- Réponds uniquement avec la version corrigée finale.
-- N'ajoute aucun titre, aucun commentaire, aucune explication.`;
+    const prompt = `Tu es un correcteur professionnel pour des annonces d'hébergement en français.
+Corrige UNIQUEMENT les fautes d'orthographe, grammaire, ponctuation et conjugaison.
+Reformule légèrement pour plus de fluidité.
+IMPORTANT: Ne change pas le sens, n'ajoute aucune information, reste très proche de l'original.
+Ne réponds que avec le texte corrigé, rien d'autre.
+
+Texte original: "${description}"`;
 
     const body = {
       contents: [{
-        parts: [{ text: prompt }]
+        parts: [{
+          text: prompt
+        }]
       }],
       generationConfig: {
-        temperature: 0.1
+        temperature: 0.3,
+        maxOutputTokens: 1024
       }
     };
 
-    return this.http.post<any>(this.API_URL, body).pipe(
+    return this.http.post<any>(this.GEMINI_API_URL, body).pipe(
       map(response => {
         try {
-          let correctedText = response.candidates[0].content.parts[0].text;
-          // Clean quotes if Gemini wraps it
-          correctedText = correctedText.trim().replace(/^["']|["']$/g, '');
+          const correctedText = response.candidates[0].content.parts[0].text.trim();
+          console.log('[Enhance] ✅ Texte corrigé par Gemini API');
           return correctedText;
         } catch (error) {
-          throw new Error("L'IA a renvoyé un format illisible.");
+          console.warn('[Enhance] Erreur parsing Gemini API');
+          return this.localCorrectDescription(description);
         }
       }),
-      catchError(() => {
-        return of((description || '').trim());
+      catchError((err) => {
+        console.warn('[Enhance] Gemini API indisponible:', err.message);
+        return of(this.localCorrectDescription(description));
       })
     );
   }

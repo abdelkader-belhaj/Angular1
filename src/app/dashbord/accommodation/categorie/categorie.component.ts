@@ -32,6 +32,8 @@ export class CategorieComponent implements OnInit {
   formData = { nomCategorie: '', description: '', icone: '', statut: true };
   formErrors: any = {};
   enhancingDescription = false;
+  requestError = '';
+  requestSuccess = '';
   isAdminUser = false;
   isHebergeurUser = false;
   selectedAssetIcon = '';
@@ -262,7 +264,7 @@ export class CategorieComponent implements OnInit {
     if (!icone) return '/assets/images/default.jpg';
     if (icone.startsWith('http')) return icone;
     if (icone.startsWith('data:')) return icone;
-    if (!this.imageOptions.includes(icone)) return '/assets/images/default.jpg';
+    // Accepte n'importe quel fichier dans assets/images (pas de whitelist)
     return `/assets/images/${icone}`;
   }
 
@@ -277,12 +279,20 @@ export class CategorieComponent implements OnInit {
 
     this.predictorService.enhanceDescription(this.formData.description).subscribe({
       next: (enhancedText) => {
-        this.formData.description = enhancedText;
+        if (enhancedText !== this.formData.description) {
+          this.formData.description = enhancedText;
+          this.requestSuccess = '✅ Description corrigée et améliorée';
+          setTimeout(() => this.requestSuccess = '', 5000);
+        } else {
+          this.requestSuccess = 'ℹ️ Description déjà correcte';
+          setTimeout(() => this.requestSuccess = '', 3000);
+        }
         this.enhancingDescription = false;
       },
       error: (err) => {
         this.enhancingDescription = false;
-        this.formErrors.description = typeof err === 'string' ? err : (err.message || "Impossible de joindre l'IA pour le moment.");
+        this.requestError = typeof err === 'string' ? err : (err.message || "Impossible de corriger la description.");
+        setTimeout(() => this.requestError = '', 5000);
       }
     });
   }

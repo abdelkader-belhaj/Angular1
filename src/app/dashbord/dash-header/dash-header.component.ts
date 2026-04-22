@@ -12,7 +12,7 @@ export class DashHeaderComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  @Input() showContextBlock = true;
+  @Input() showContextBlock = false;
 
   isAccountMenuOpen = false;
 

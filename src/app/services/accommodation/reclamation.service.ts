@@ -395,4 +395,26 @@ export class ReclamationService {
   private uuid(): string {
     return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
+
+  archiveReclamation(reclamationId: string): void {
+    const all = this.getAllInternal();
+    const item = all.find((r) => r.id === reclamationId);
+    if (!item) {
+      throw new Error('Réclamation non trouvée.');
+    }
+    // Archive = move to end with resolved status
+    item.status = 'resolue';
+    item.updatedAt = new Date().toISOString();
+    this.persist(all);
+  }
+
+  deleteReclamation(reclamationId: string): void {
+    const all = this.getAllInternal();
+    const index = all.findIndex((r) => r.id === reclamationId);
+    if (index === -1) {
+      throw new Error('Réclamation non trouvée.');
+    }
+    all.splice(index, 1);
+    this.persist(all);
+  }
 }

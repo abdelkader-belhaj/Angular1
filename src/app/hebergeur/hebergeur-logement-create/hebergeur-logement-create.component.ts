@@ -57,6 +57,7 @@ export class HebergeurLogementCreateComponent implements OnInit {
   enhancingDescription = false;
   resolvingLocation = false;
   requestError = '';
+  requestSuccess = '';
   formErrors: Record<string, string> = {};
 
   equipementOptions = [
@@ -383,18 +384,25 @@ export class HebergeurLogementCreateComponent implements OnInit {
     this.predictorService.enhanceDescription(this.formData.description).subscribe({
       next: (enhancedText) => {
         console.log('[Enhance] ✅ Texte amélioré:', enhancedText.substring(0, 50) + '...');
-        this.formData.description = enhancedText;
+        
+        // Show improvement if text actually changed
+        if (enhancedText !== this.formData.description) {
+          this.formData.description = enhancedText;
+          this.requestSuccess = '✅ Description corrigée et améliorée';
+          setTimeout(() => this.requestSuccess = '', 5000);
+        } else {
+          this.requestSuccess = 'ℹ️ Description déjà correcte';
+          setTimeout(() => this.requestSuccess = '', 3000);
+        }
+        
         this.enhancingDescription = false;
-        // Message de succès temporaire
-        setTimeout(() => {
-          console.log('[Enhance] Description corrigée avec succès');
-        }, 100);
       },
       error: (err) => {
         console.error('[Enhance] ❌ Erreur:', err);
         this.enhancingDescription = false;
         const errorMsg = typeof err === 'string' ? err : (err?.message || 'Erreur lors de la correction.');
-        this.formErrors['description'] = '⚠️ ' + errorMsg;
+        this.requestError = '⚠️ Erreur de correction: ' + errorMsg;
+        setTimeout(() => this.requestError = '', 5000);
       }
     });
   }

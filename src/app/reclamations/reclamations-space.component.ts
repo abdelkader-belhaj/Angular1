@@ -41,6 +41,7 @@ export class ReclamationsSpaceComponent implements OnInit {
   requestError = '';
   requestSuccess = '';
   clientReplyNotice = '';
+  private errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   reclamations: ReclamationItem[] = [];
   reservationOptions: ReservationOption[] = [];
@@ -55,6 +56,7 @@ export class ReclamationsSpaceComponent implements OnInit {
   replyDrafts: Record<string, string> = {};
   private readonly openedConversationIds = new Set<string>();
   private requestedReclamationId: string | null = null;
+  readonly statusOptions: ReclamationStatus[] = ['ouverte', 'en_cours', 'resolue'];
 
   get currentUser() {
     return this.authService.getCurrentUser();
@@ -95,6 +97,25 @@ export class ReclamationsSpaceComponent implements OnInit {
   get canCreateReclamation(): boolean {
     if (!this.isClient || !this.currentReservationOption) return false;
     return this.reclamationService.canClientCreateReclamation(this.currentUser?.id ?? 0);
+  }
+
+  get reclamationsEnCours(): number {
+    return this.reclamations.filter(r => r.status === 'en_cours').length;
+  }
+
+  get reclamationsResolues(): number {
+    return this.reclamations.filter(r => r.status === 'resolue').length;
+  }
+
+  private setError(msg: string): void {
+    if (this.errorTimeoutId) {
+      clearTimeout(this.errorTimeoutId);
+    }
+    this.requestError = msg;
+    this.errorTimeoutId = setTimeout(() => {
+      this.requestError = '';
+      this.errorTimeoutId = null;
+    }, 5000);
   }
 
   ngOnInit(): void {
@@ -242,19 +263,19 @@ export class ReclamationsSpaceComponent implements OnInit {
   createReclamation(): void {
     if (!this.canCreateReclamation) {
       this.requestSuccess = '';
-      this.requestError = this.createBlockedReason;
+      this.setError(this.createBlockedReason);
       return;
     }
     if (!this.formData.title.trim() || !this.formData.description.trim()) {
       this.requestSuccess = '';
-      this.requestError = 'Titre et description sont obligatoires.';
+      this.setError('Titre et description sont obligatoires.');
       return;
     }
 
     const selected = this.currentReservationOption;
     if (!selected) {
       this.requestSuccess = '';
-      this.requestError = 'Aucune réservation active trouvée pour déposer une réclamation.';
+      this.setError('Aucune réservation active trouvée pour déposer une réclamation.');
       return;
     }
 
@@ -276,7 +297,7 @@ export class ReclamationsSpaceComponent implements OnInit {
       });
     } catch (error) {
       this.requestSuccess = '';
-      this.requestError = error instanceof Error ? error.message : 'Impossible de créer la réclamation.';
+      this.setError(error instanceof Error ? error.message : 'Impossible de créer la réclamation.');
       this.saving = false;
       return;
     }
@@ -506,5 +527,33 @@ export class ReclamationsSpaceComponent implements OnInit {
     const username = (this.currentUser?.username || '').trim();
     if (username) return username;
     return 'Client';
+  }
+
+  archiveReclamation(item: ReclamationItem): void {
+    if (confirm('Êtes-vous sûr de vouloir archiver cette réclamation ?')) {
+      try {
+        this.reclamationService.archiveReclamation(item.id);
+        this.requestSuccess = 'Réclamation archivée avec succès.';
+        this.requestError = '';
+        this.refreshReclamations();
+      } catch (error) {
+        this.requestSuccess = '';
+        this.setError(error instanceof Error ? error.message : 'Impossible d\'archiver la réclamation.');
+      }
+    }
+  }
+
+  deleteReclamation(item: ReclamationItem): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette réclamation ? Cette action est irréversible.')) {
+      try {
+        this.reclamationService.deleteReclamation(item.id);
+        this.requestSuccess = 'Réclamation supprimée avec succès.';
+        this.requestError = '';
+        this.refreshReclamations();
+      } catch (error) {
+        this.requestSuccess = '';
+        this.setError(error instanceof Error ? error.message : 'Impossible de supprimer la réclamation.');
+      }
+    }
   }
 }

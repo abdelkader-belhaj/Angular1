@@ -56,6 +56,7 @@ export class LogementComponent implements OnInit {
 
   formErrors: any = {};
   requestError = '';
+  requestSuccess = '';
   loadError = '';
   selectedAssetImage = '';
   
@@ -648,12 +649,20 @@ export class LogementComponent implements OnInit {
 
     this.predictorService.enhanceDescription(this.formData.description).subscribe({
       next: (enhancedText) => {
-        this.formData.description = enhancedText;
+        if (enhancedText !== this.formData.description) {
+          this.formData.description = enhancedText;
+          this.requestSuccess = '✅ Description corrigée et améliorée';
+          setTimeout(() => this.requestSuccess = '', 5000);
+        } else {
+          this.requestSuccess = 'ℹ️ Description déjà correcte';
+          setTimeout(() => this.requestSuccess = '', 3000);
+        }
         this.enhancingDescription = false;
       },
       error: (err) => {
         this.enhancingDescription = false;
-        this.formErrors.description = typeof err === 'string' ? err : (err.message || "Impossible de joindre l'IA pour le moment.");
+        this.requestError = typeof err === 'string' ? err : (err.message || "Impossible de corriger la description.");
+        setTimeout(() => this.requestError = '', 5000);
       }
     });
   }
@@ -669,12 +678,20 @@ export class LogementComponent implements OnInit {
 
     this.predictorService.enhanceDescription(this.actionReason).subscribe({
       next: (enhancedText) => {
-        this.actionReason = enhancedText;
+        if (enhancedText !== this.actionReason) {
+          this.actionReason = enhancedText;
+          this.requestSuccess = '✅ Motif corrigé et amélioré';
+          setTimeout(() => this.requestSuccess = '', 5000);
+        } else {
+          this.requestSuccess = 'ℹ️ Motif déjà correct';
+          setTimeout(() => this.requestSuccess = '', 3000);
+        }
         this.enhancingReason = false;
       },
       error: (err) => {
         this.enhancingReason = false;
-        this.reasonError = typeof err === 'string' ? err : (err.message || "Impossible de joindre l'IA pour le moment.");
+        this.requestError = typeof err === 'string' ? err : (err.message || "Impossible de corriger le motif.");
+        setTimeout(() => this.requestError = '', 5000);
       }
     });
   }

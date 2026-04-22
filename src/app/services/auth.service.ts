@@ -19,6 +19,10 @@ interface UserResponse {
   phone?: string;
   bio?: string;
   profileImage?: string;
+  hasFaceId?: boolean;
+  faceModelName?: string;
+  faceDetectorBackend?: string;
+  faceThreshold?: number;
 }
 
 interface AuthResponse {
@@ -56,6 +60,10 @@ interface LoginRequest {
   password: string;
 }
 
+interface GoogleLoginRequest {
+  idToken: string;
+}
+
 interface RegisterRequest {
   username: string;
   email: string;
@@ -89,7 +97,6 @@ interface ResetPasswordRequest {
 
 interface UpdateCurrentUserRequest {
   username: string;
-  email: string;
   phone?: string;
   bio?: string;
   profileImage?: string;
@@ -100,7 +107,7 @@ interface UpdateCurrentFaceIdRequest {
 }
 
 interface ChangeCurrentPasswordRequest {
-  oldPassword: string;
+  oldPassword?: string;
   newPassword: string;
   confirmPassword: string;
 }
@@ -118,6 +125,15 @@ export class AuthService {
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((auth) => this.persistAuth(auth))
+      );
+  }
+
+  loginWithGoogle(payload: GoogleLoginRequest): Observable<AuthResponse> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login-google`, payload)
       .pipe(
         map((response) => response.data),
         tap((auth) => this.persistAuth(auth))

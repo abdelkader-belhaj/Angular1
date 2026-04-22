@@ -26,6 +26,8 @@ export class ProfilePageComponent implements OnDestroy {
   faceError = '';
   faceCameraOpen = false;
   faceImageBase64 = '';
+  activeSection: 'profile' | 'bio' | 'faceId' = 'profile';
+  private initialProfileSnapshot = '';
   private faceCameraStream: MediaStream | null = null;
 
   readonly form = this.fb.nonNullable.group({
@@ -45,10 +47,70 @@ export class ProfilePageComponent implements OnDestroy {
         bio: currentUser.bio ?? ''
       });
     }
+
+    this.initialProfileSnapshot = this.buildProfileSnapshot();
   }
 
   ngOnDestroy(): void {
     this.stopFaceCamera();
+  }
+
+  get currentUser() {
+    return this.authService.getCurrentUser();
+  }
+
+  get hasBio(): boolean {
+    return !!this.form.controls.bio.value?.trim();
+  }
+
+  get hasPhone(): boolean {
+    return !!this.form.controls.phone.value?.trim();
+  }
+
+  get profileCompletion(): number {
+    let score = 45;
+
+    if (this.form.controls.username.value.trim()) {
+      score += 20;
+    }
+
+    if (this.hasPhone) {
+      score += 15;
+    }
+
+    if (this.hasBio) {
+      score += 20;
+    }
+
+    return Math.min(score, 100);
+  }
+
+  get hasUnsavedChanges(): boolean {
+    return this.buildProfileSnapshot() !== this.initialProfileSnapshot;
+  }
+
+  get faceStatusLabel(): string {
+    if (this.faceCameraOpen) {
+      return 'Camera ouverte';
+    }
+
+    if (this.faceImageBase64) {
+      return 'Capture prete';
+    }
+
+    if (this.currentUser?.hasFaceId) {
+      return 'Configure';
+    }
+
+    return 'Non configure';
+  }
+
+  setActiveSection(section: 'profile' | 'bio' | 'faceId'): void {
+    this.activeSection = section;
+    this.message = '';
+    this.error = '';
+    this.faceMessage = '';
+    this.faceError = '';
   }
 
   async save(): Promise<void> {
@@ -65,11 +127,11 @@ export class ProfilePageComponent implements OnDestroy {
     try {
       await firstValueFrom(this.authService.updateCurrentUserProfile({
         username: this.form.controls.username.value,
-        email: this.form.controls.email.value,
         phone: this.form.controls.phone.value,
         bio: this.form.controls.bio.value
       }));
       this.message = 'Profil mis a jour avec succes.';
+      this.initialProfileSnapshot = this.buildProfileSnapshot();
     } catch (err) {
       this.error = this.extractError(err, 'Impossible de mettre a jour le profil.');
     } finally {
@@ -185,5 +247,14 @@ export class ProfilePageComponent implements OnDestroy {
     }
 
     return fallback;
+  }
+
+  private buildProfileSnapshot(): string {
+    return JSON.stringify({
+      username: this.form.controls.username.value.trim(),
+      email: this.form.controls.email.value.trim(),
+      phone: this.form.controls.phone.value.trim(),
+      bio: this.form.controls.bio.value.trim()
+    });
   }
 }

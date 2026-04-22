@@ -37,6 +37,10 @@ export class NavbarComponent {
     return bio && bio.length > 0 ? bio : 'Ajoutez une bio depuis Mon profil';
   }
 
+  get currentUserModuleLabel(): string {
+    return this.isAdminUser ? 'Tableau de bord' : 'Mon espace';
+  }
+
   openLoginDialog(): void {
     this.isLoginDialogOpen = true;
   }

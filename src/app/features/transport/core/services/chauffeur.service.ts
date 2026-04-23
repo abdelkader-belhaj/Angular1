@@ -341,11 +341,16 @@ export class ChauffeurService {
     }
 
     const normalized = path.replace(/\\/g, '/').replace(/^\/+/, '');
-    const withoutPrefix = normalized.startsWith('uploads/')
-      ? normalized.slice('uploads/'.length)
-      : normalized;
+    const lower = normalized.toLowerCase();
+    const uploadsMarker = 'uploads/';
+    const markerIndex = lower.indexOf(uploadsMarker);
+    const relativePath =
+      markerIndex >= 0
+        ? normalized.slice(markerIndex + uploadsMarker.length)
+        : normalized;
 
-    return `${this.api.getApiUrl()}/uploads/${withoutPrefix}`;
+    const origin = new URL(this.api.getApiUrl()).origin.replace(/\/+$/, '');
+    return `${origin}/uploads/${relativePath.replace(/^\/+/, '')}`;
   }
 
   affecterVehicule(

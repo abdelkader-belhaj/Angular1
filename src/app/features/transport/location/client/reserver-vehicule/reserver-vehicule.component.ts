@@ -704,12 +704,6 @@ export class ReserverVehiculeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.licenseVerification) {
-      this.error =
-        'Veuillez lancer la vérification IA du permis avant de continuer.';
-      return;
-    }
-
     if (
       licenseB64.length > ReserverVehiculeComponent.MAX_LICENSE_UPLOAD_CHARS
     ) {
@@ -922,7 +916,6 @@ export class ReserverVehiculeComponent implements OnInit, OnDestroy {
   get canSubmitReservation(): boolean {
     return (
       this.bookingForm.valid &&
-      !!this.licenseVerification &&
       !this.isVerifyingLicense &&
       !this.isCheckingPeriodAvailability &&
       !this.isSaving &&
@@ -1007,8 +1000,9 @@ export class ReserverVehiculeComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (reservation) => {
-          this.success =
-            'Réservation envoyée avec permis validé par l’IA. En attente de validation agence.';
+          this.success = this.licenseVerification?.valid
+            ? 'Réservation envoyée avec permis validé par l’IA. En attente de validation agence.'
+            : 'Réservation envoyée. La vérification du permis sera faite manuellement par l’agence.';
           this.router.navigate([
             '/transport/location/client/detail',
             reservation.idReservation,

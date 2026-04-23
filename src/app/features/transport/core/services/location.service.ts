@@ -351,11 +351,16 @@ export class LocationService {
     }
 
     const normalized = path.replace(/\\/g, '/').replace(/^\/+/, '');
-    const withoutPrefix = normalized.startsWith('uploads/')
-      ? normalized.slice('uploads/'.length)
-      : normalized;
+    const lower = normalized.toLowerCase();
+    const uploadsMarker = 'uploads/';
+    const markerIndex = lower.indexOf(uploadsMarker);
+    const relativePath =
+      markerIndex >= 0
+        ? normalized.slice(markerIndex + uploadsMarker.length)
+        : normalized;
 
-    return `${this.api.getApiUrl()}/uploads/${withoutPrefix}`;
+    const origin = new URL(this.api.getApiUrl()).origin.replace(/\/+$/, '');
+    return `${origin}/uploads/${relativePath.replace(/^\/+/, '')}`;
   }
 
   updateVehiculeAgence(
@@ -1107,13 +1112,21 @@ export class LocationService {
     }
 
     const apiUrl = this.api.getApiUrl().replace(/\/+$/, '');
+    const origin = new URL(apiUrl).origin;
+    const normalized = trimmed.replace(/\\/g, '/').replace(/^\/+/, '');
+    const normalizedLower = normalized.toLowerCase();
+    const uploadsMarker = 'uploads/';
+    const markerIndex = normalizedLower.indexOf(uploadsMarker);
+
+    if (markerIndex >= 0) {
+      const relativePath = normalized.slice(markerIndex + uploadsMarker.length);
+      return `${origin}/uploads/${relativePath.replace(/^\/+/, '')}`;
+    }
 
     if (
       trimmed.startsWith('/hypercloud/') ||
       trimmed.startsWith('hypercloud/')
     ) {
-      const normalized = trimmed.replace(/^\/+/, '');
-      const origin = new URL(apiUrl).origin;
       return `${origin}/${normalized}`;
     }
 

@@ -1,9 +1,26 @@
-import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 @Component({
   selector: 'app-login-dialog',
@@ -15,6 +32,7 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
   @Output() closed = new EventEmitter<void>();
   @ViewChild('loginVideo') loginVideoRef?: ElementRef<HTMLVideoElement>;
   @ViewChild('registerVideo') registerVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('googleButton') googleButtonRef?: ElementRef<HTMLDivElement>;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -37,6 +55,7 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
   registerCameraOpen = false;
   private loginCameraStream: MediaStream | null = null;
   private registerCameraStream: MediaStream | null = null;
+  private googleInitialized = false;
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -70,6 +89,16 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen']) {
       document.body.classList.toggle('dialog-open', this.isOpen);
+
+      if (this.isOpen) {
+        setTimeout(() => this.renderGoogleButton(), 0);
+      }
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (this.isOpen) {
+      setTimeout(() => this.renderGoogleButton(), 0);
     }
   }
 
@@ -77,6 +106,72 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
     this.stopCamera('login');
     this.stopCamera('register');
     document.body.classList.remove('dialog-open');
+  }
+
+  private initGoogleIfNeeded(): void {
+    if (this.googleInitialized) {
+      return;
+    }
+
+    const clientId = this.readGoogleClientIdFromMeta();
+    if (!clientId) {
+      this.loginError = 'Google Client ID manquant dans index.html.';
+      return;
+    }
+
+    if (!window.google?.accounts?.id) {
+      this.loginError = 'SDK Google non charge. Rechargez la page.';
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: ({ credential }) => {
+        if (!credential) {
+          this.loginError = 'Token Google manquant.';
+          return;
+        }
+
+        void this.handleGoogleCredential(credential);
+      }
+    });
+
+    this.googleInitialized = true;
+  }
+
+  private renderGoogleButton(): void {
+    const container = this.googleButtonRef?.nativeElement;
+
+    if (!container) {
+      return;
+    }
+
+    this.initGoogleIfNeeded();
+    if (!this.googleInitialized || !window.google?.accounts?.id) {
+      return;
+    }
+
+    container.innerHTML = '';
+
+    window.google.accounts.id.renderButton(container, {
+      theme: 'outline',
+      size: 'large',
+      width: 360,
+      text: 'signin_with',
+      shape: 'pill',
+      logo_alignment: 'left'
+    });
+  }
+
+  private readGoogleClientIdFromMeta(): string | null {
+    const meta = document.querySelector('meta[name="google-signin-client_id"]');
+    const clientId = meta?.getAttribute('content')?.trim();
+
+    if (!clientId || clientId.startsWith('CHANGE_ME_')) {
+      return null;
+    }
+
+    return clientId;
   }
 
   close(): void {
@@ -234,6 +329,7 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
           }
         });
       } else {
+        alert('Connexion Google reussie. Pensez a ajouter un mot de passe dans Securite pour vous connecter aussi avec email + mot de passe.');
         await this.router.navigateByUrl(targetRoute);
       }
 
@@ -249,6 +345,48 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
       }
 
       this.loginError = this.extractLoginError(error);
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private async handleGoogleCredential(idToken: string): Promise<void> {
+    this.isSubmitting = true;
+    this.loginError = '';
+
+    try {
+      const auth = await firstValueFrom(this.authService.loginWithGoogle({ idToken }));
+
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      alert('Connexion Google reussie. Pour la prochaine connexion avec email + mot de passe, veuillez ajouter votre mot de passe maintenant.');
+
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            recommendPasswordSetup: '1',
+            returnTo: targetRoute
+          }
+        });
+      } else {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendPasswordSetup: '1',
+            returnTo: targetRoute
+          }
+        });
+      }
+
+      this.close();
+    } catch (error) {
+      if (this.isPendingApprovalError(error)) {
+        this.authService.clearLocalAuth();
+        this.close();
+        await this.router.navigate(['/waiting-approval']);
+        return;
+      }
+
+      this.loginError = this.extractAuthError(error, 'Connexion Google impossible pour le moment.');
     } finally {
       this.isSubmitting = false;
     }

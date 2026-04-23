@@ -5,7 +5,7 @@ import { AuthService } from './services/auth.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
   title = 'notStandaLone01';
@@ -18,11 +18,16 @@ export class AppComponent implements OnInit {
     const currentRole = this.authService.getCurrentUser()?.role;
 
     if ((currentUrl === '/' || currentUrl === '') && currentRole) {
-      void this.router.navigateByUrl(this.authService.getRouteForRole(currentRole));
+      void this.router.navigateByUrl(
+        this.authService.getRouteForRole(currentRole)
+      );
     }
   }
 
   isAdminRoute(): boolean {
-    return this.router.url.startsWith('/dashbord') || this.router.url.startsWith('/dashboard');
+    return (
+      this.router.url.startsWith('/dashbord') ||
+      this.router.url.startsWith('/dashboard')
+    );
   }
 }

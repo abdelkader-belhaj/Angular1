@@ -9,6 +9,9 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 
 
+import { CommonModule } from '@angular/common';
+
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
@@ -37,8 +40,20 @@ import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page
 
 import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.component';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
-import { AuthInterceptor } from './services/auth.interceptor';
+
+import { VolsSectionComponent } from './homePage/vols-section.component';
+import { VolsListComponent } from './homePage/vols-list.component';
+import { MesReservationsComponent } from './homePage/mes-reservations.component';
+
+// ← NOUVEAU
+import { BilletComponent } from './billet/billet.component';
+import { NouvelleReclamationComponent } from './homePage/reclamations/nouvelle-reclamation.component';
+import { MesReclamationsComponent } from './homePage/reclamations/mes-reclamations.component';
+
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
+import { ReclamationsSocieteComponent } from './societe/reclamations/reclamations-societe.component';
+
+import { AuthInterceptor } from './services/auth.interceptor';
 
 // Forum & Community
 import { CommunityListComponent } from './homePage/community/community-list/community-list.component';
@@ -62,6 +77,7 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     EventsSectionComponent,
     MarketplaceSectionComponent,
     ChroniclesSectionComponent,
+
     DashbordPageComponent,
     SideNavComponent,
     DashHeaderComponent,
@@ -71,8 +87,10 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     InquiriesPanelComponent,
     DashFooterComponent,
     AdminUsersPageComponent,
+
     LoginDialogComponent,
     ResetPasswordComponent,
+
 
 
     // Forum & Community
@@ -84,6 +102,17 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
     ReviewSectionComponent,
     CommunityAdminComponent,
     ForumConditionsModalComponent,
+
+    VolsSectionComponent,
+    VolsListComponent,
+    MesReservationsComponent,
+
+    // ← NOUVEAU
+    BilletComponent,
+    NouvelleReclamationComponent,
+    MesReclamationsComponent,
+    ReclamationsSocieteComponent,
+
 
     WaitingResponsePageComponent
 
@@ -109,4 +138,8 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
   
 
 })
+
 export class AppModule {}
+
+
+

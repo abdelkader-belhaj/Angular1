@@ -1,0 +1,116 @@
+.reclam-page {
+  max-width: 900px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
+.context {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.ctx-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.ctx-value {
+  margin-top: 4px;
+  color: #0f172a;
+}
+
+.card {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(2, 8, 23, 0.06);
+}
+
+.label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.hint {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-primary,
+.btn-secondary {
+  border: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #0284c7;
+  color: white;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.feedback {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.feedback.success {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.feedback.erreur {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+

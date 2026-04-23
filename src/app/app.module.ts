@@ -34,7 +34,13 @@ import { VolsSectionComponent } from './homePage/vols-section.component';
 import { VolsListComponent } from './homePage/vols-list.component';
 import { MesReservationsComponent } from './homePage/mes-reservations.component';
 
+// ← NOUVEAU
+import { BilletComponent } from './billet/billet.component';
+import { NouvelleReclamationComponent } from './homePage/reclamations/nouvelle-reclamation.component';
+import { MesReclamationsComponent } from './homePage/reclamations/mes-reclamations.component';
+
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
+import { ReclamationsSocieteComponent } from './societe/reclamations/reclamations-societe.component';
 
 import { AuthInterceptor } from './services/auth.interceptor';
 
@@ -67,6 +73,12 @@ import { AuthInterceptor } from './services/auth.interceptor';
     VolsSectionComponent,
     VolsListComponent,
     MesReservationsComponent,
+
+    // ← NOUVEAU
+    BilletComponent,
+    NouvelleReclamationComponent,
+    MesReclamationsComponent,
+    ReclamationsSocieteComponent,
 
     WaitingResponsePageComponent
   ],

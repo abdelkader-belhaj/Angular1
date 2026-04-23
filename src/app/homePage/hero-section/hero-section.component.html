@@ -46,6 +46,10 @@
         🛒 Mon Panier
         <span class="pcnt" *ngIf="panierCount > 0">{{ panierCount }}</span>
       </button>
+      <button class="hbtn reclam" (click)="router.navigate(['/reclamations/mes'])">
+        📌 Mes Réclamations
+        <span class="pcnt" *ngIf="unreadReclamations > 0">{{ unreadReclamations }}</span>
+      </button>
     </div>
 
     <!-- ══ SCROLLER VOLS ══ -->
@@ -54,7 +58,15 @@
         <span class="vols-hdr-title">
           {{ vols.length }} vol(s) disponible(s)
         </span>
-        <button class="voir-tout" (click)="voirTous()">Voir tout →</button>
+        <div class="vols-hdr-actions">
+          <button class="rec-btn" (click)="getRecommendations()" *ngIf="!showRecommendations">
+            🤖 Recommandations IA
+          </button>
+          <button class="reset-btn" (click)="resetToNormal()" *ngIf="showRecommendations">
+            🔄 Afficher tout
+          </button>
+          <button class="voir-tout" (click)="voirTous()" *ngIf="!showRecommendations">Voir tout →</button>
+        </div>
       </div>
 
       <!-- Loading skeleton -->
@@ -64,6 +76,11 @@
           <div class="sk-line short"></div>
           <div class="sk-line"></div>
         </div>
+      </div>
+
+      <!-- Recommendation indicator -->
+      <div class="rec-indicator" *ngIf="showRecommendations && vols.length > 0">
+        🤖 Vols recommandés pour vous basés sur vos réservations précédentes
       </div>
 
       <!-- Aucun résultat -->
@@ -84,6 +101,10 @@
           <div class="vcard-top">
             <span class="vbadge">{{ vol.numero }}</span>
             <span class="vsociete">{{ vol.societeNom }}</span>
+            <span class="promo-badge" *ngIf="vol.offre" 
+                  style="background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; border: 1px solid #fcd34d; margin-left: auto;">
+              PROMO -{{ vol.offre!.pourcentage }}%
+            </span>
           </div>
 
           <div class="vroute">
@@ -94,11 +115,24 @@
             <div class="vmid">
               <div class="vline"></div>
               <span class="vplane">✈</span>
+              <!-- Escales Timeline -->
+              <div class="escale-timeline" *ngIf="vol.escales && vol.escales.length > 0" 
+                   style="display: flex; justify-content: space-evenly; width: 100%; position: absolute; top: 0;">
+                <div class="dot" *ngFor="let esc of vol.escales" 
+                     [title]="esc.ville + ' (' + esc.duree + ')'"
+                     style="width: 6px; height: 6px; background: #db2777; border: 1px solid white; border-radius: 50%; margin-top: -3px;"></div>
+              </div>
             </div>
             <div class="vcity">
               <span class="vcode">{{ vol.arrivee }}</span>
               <span class="vlbl">Arrivée</span>
             </div>
+          </div>
+
+          <!-- List of Escales -->
+          <div class="vescales-list" *ngIf="vol.escales && vol.escales.length > 0" 
+               style="font-size: 0.72rem; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; margin: 0 10px 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span *ngFor="let esc of vol.escales">🛑 {{ esc.ville }} ({{ esc.duree }})</span>
           </div>
 
           <div class="vinfos">
@@ -114,10 +148,22 @@
               <span class="vil">Places</span>
               <span class="viv" [class.low]="vol.places < 5">{{ vol.places }}</span>
             </div>
+            <div class="vinfo" *ngIf="vol.retard && vol.retard > 0">
+              <span class="vil" style="color: #d97706;">⚠️ Retard</span>
+              <span class="viv" style="color: #d97706; font-weight: 800;">+{{ formatRetard(vol.retard) }}</span>
+            </div>
           </div>
 
           <div class="vfooter">
-            <span class="vprix">{{ vol.prix | currency:'TND':'symbol':'1.0-0' }}</span>
+            <div class="vprice-block" style="display: flex; flex-direction: column;">
+              <span class="vprix-old" *ngIf="vol.offre" 
+                    style="font-size: 0.82rem; color: #94a3b8; text-decoration: line-through; line-height: 1;">
+                {{ vol.prix | currency:'TND':'symbol':'1.0-2' }}
+              </span>
+              <span class="vprix" [style.color]="vol.offre ? '#ef4444' : '#0ea5e9'">
+                {{ (vol.offre ? vol.prix * (1 - vol.offre!.pourcentage/100) : vol.prix) | currency:'TND':'symbol':'1.0-2' }}
+              </span>
+            </div>
             <div class="vactions">
               <button
                 class="vbtn-cart"
@@ -160,7 +206,15 @@
             <strong>{{ volAller.arrivee }}</strong>
           </div>
           <span class="mcard-num">{{ volAller.numero }} · {{ volAller.dateDepart | date:'dd/MM/yyyy' }} · {{ volAller.heureDepart }}</span>
-          <span class="mcard-prix">{{ volAller.prix | currency:'TND':'symbol':'1.0-0' }}/pers</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volAller.offre">
+              {{ volAller.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volAller.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volAller.offre ? volAller.prix * (1 - volAller.offre!.pourcentage/100) : volAller.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
         </div>
 
         <!-- Vol retour sélectionné -->
@@ -172,7 +226,15 @@
             <strong>{{ volRetour.arrivee }}</strong>
           </div>
           <span class="mcard-num">{{ volRetour.numero }} · {{ volRetour.dateDepart | date:'dd/MM/yyyy' }} · {{ volRetour.heureDepart }}</span>
-          <span class="mcard-prix">{{ volRetour.prix | currency:'TND':'symbol':'1.0-0' }}/pers</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volRetour.offre">
+              {{ volRetour.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volRetour.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volRetour.offre ? volRetour.prix * (1 - volRetour.offre!.pourcentage/100) : volRetour.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
           <button class="mcard-remove" (click)="annulerRetour()">✕ Retirer</button>
         </div>
 
@@ -220,8 +282,14 @@
           · après le {{ volAller?.dateDepart | date:'dd/MM/yyyy' }}
         </p>
 
+        <!-- Loading return flights -->
+        <div class="loading-retour" *ngIf="loading" style="text-align: center; padding: 20px; color: #0ea5e9;">
+          <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #0ea5e9; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+          Recherche des vols retour...
+        </div>
+
         <!-- Aucun vol retour dispo -->
-        <div class="no-retour" *ngIf="volsRetour.length === 0">
+        <div class="no-retour" *ngIf="!loading && volsRetour.length === 0">
           Aucun vol retour disponible pour cette destination.
           <button class="reset-link" (click)="annulerRetour()">Continuer en aller simple</button>
         </div>
@@ -238,7 +306,14 @@
               <span>{{ vr.numero }}</span>
               <span>{{ vr.dateDepart | date:'dd/MM/yyyy' }}</span>
               <span>{{ vr.heureDepart }}</span>
-              <span class="rc-prix">{{ vr.prix | currency:'TND':'symbol':'1.0-0' }}</span>
+              <span class="rc-prix">
+                <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.65rem;" *ngIf="vr.offre">
+                  {{ vr.prix | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+                <span [style.color]="vr.offre ? '#ef4444' : '#0ea5e9'">
+                  {{ (vr.offre ? vr.prix * (1 - vr.offre!.pourcentage/100) : vr.prix) | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+              </span>
             </div>
           </div>
         </div>

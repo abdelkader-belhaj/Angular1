@@ -141,6 +141,8 @@
 .hbtn.panier:hover { background: rgba(255,255,255,0.25); }
 .hbtn.reserv { background: rgba(14,165,233,0.25); color: white; border-color: rgba(14,165,233,0.4); }
 .hbtn.reserv:hover { background: rgba(14,165,233,0.4); }
+.hbtn.reclam { background: rgba(34,197,94,0.22); color: white; border-color: rgba(34,197,94,0.35); }
+.hbtn.reclam:hover { background: rgba(34,197,94,0.35); }
 
 .pcnt {
   background: #ef4444;
@@ -171,19 +173,59 @@
   align-items: center;
   margin-bottom: 16px;
 }
-.vols-hdr-title { color: rgba(255,255,255,0.9); font-weight: 700; font-size: 0.9rem; }
-.voir-tout {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.3);
+.vols-hdr-title {
   color: white;
-  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.vols-hdr-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.voir-tout, .rec-btn, .reset-btn {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 16px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.2s;
 }
-.voir-tout:hover { background: rgba(255,255,255,0.15); }
+.voir-tout:hover, .reset-btn:hover { 
+  background: rgba(255,255,255,0.25); 
+}
+.rec-btn {
+  background: linear-gradient(135deg,#8b5cf6,#7c3aed);
+  border: 1px solid #7c3aed;
+}
+.rec-btn:hover { 
+  background: linear-gradient(135deg,#7c3aed,#6d28d9);
+  transform: translateY(-1px);
+}
+.rec-indicator {
+  background: linear-gradient(135deg,#8b5cf6,#7c3aed);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .no-result {
   color: rgba(255,255,255,0.7);

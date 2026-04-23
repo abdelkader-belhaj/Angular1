@@ -4,6 +4,7 @@ import { VolService } from '../../services/vol.service';
 import { PanierService } from '../../services/panier.service';
 import { ReservationService } from '../../services/reservation.service';
 import { AuthService } from '../../services/auth.service';
+import { ReclamationService } from '../../services/reclamation.service';
 import { Vol } from '../../models/vol.model';
 
 @Component({
@@ -23,9 +24,11 @@ export class HeroSectionComponent implements OnInit {
   vols: Vol[] = [];        // vols affichés dans le scroller
   volsRetour: Vol[] = [];  // vols filtrés pour retour
   loading = true;
+  showRecommendations = false;
 
   // ── Panier ───────────────────────────────────────
   panierIds: Set<number> = new Set();
+  unreadReclamations = 0;
 
   // ── Modal réservation ────────────────────────────
   showModal = false;
@@ -44,7 +47,8 @@ export class HeroSectionComponent implements OnInit {
     public panierService: PanierService,
     private reservationService: ReservationService,
     public authService: AuthService,
-    public router: Router
+    public router: Router,
+    private readonly reclamationService: ReclamationService
   ) {}
 
   ngOnInit(): void {
@@ -62,6 +66,8 @@ export class HeroSectionComponent implements OnInit {
       },
       error: () => { this.loading = false; }
     });
+
+    this.refreshUnreadReclamations();
   }
 
   // ── FILTRES ──────────────────────────────────────
@@ -93,6 +99,40 @@ export class HeroSectionComponent implements OnInit {
     this.router.navigate(['/vols']);
   }
 
+  // ── RECOMMENDATIONS ───────────────────────────────
+  getRecommendations(): void {
+    if (!this.authService.isAuthenticated()) {
+      alert('Connectez-vous pour voir les recommandations');
+      return;
+    }
+    
+    this.loading = true;
+    this.showRecommendations = true;
+    
+    this.volService.getRecommendations().subscribe({
+      next: (recommendedVols) => {
+        if (recommendedVols.length === 0) {
+          // Si pas de recommandations, afficher tous les vols
+          this.vols = this.tous;
+          this.loading = false;
+        } else {
+          this.vols = recommendedVols;
+          this.loading = false;
+        }
+      },
+      error: () => {
+        // En cas d'erreur, afficher tous les vols
+        this.vols = this.tous;
+        this.loading = false;
+      }
+    });
+  }
+
+  resetToNormal(): void {
+    this.showRecommendations = false;
+    this.vols = this.tous;
+  }
+
   // ── PANIER toggle ─────────────────────────────────
   togglePanier(vol: Vol, event: Event): void {
     event.stopPropagation();
@@ -119,6 +159,17 @@ export class HeroSectionComponent implements OnInit {
     return this.panierService.items.length;
   }
 
+  refreshUnreadReclamations(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.unreadReclamations = 0;
+      return;
+    }
+    this.reclamationService.unreadCount().subscribe({
+      next: (res) => (this.unreadReclamations = Number(res?.unread ?? 0)),
+      error: () => (this.unreadReclamations = 0)
+    });
+  }
+
   // ── MODAL RÉSERVATION ─────────────────────────────
   ouvrirReservation(vol: Vol, event: Event): void {
     event.stopPropagation();
@@ -137,13 +188,26 @@ export class HeroSectionComponent implements OnInit {
 
   choisirAllerRetour(): void {
     this.typeBillet = 'aller_retour';
-    // Filtrer vols retour : arrivee = depart du vol aller ET date >= date aller
-    this.volsRetour = this.tous.filter(v =>
-      v.arrivee === this.volAller?.depart &&
-      v.id !== this.volAller?.id &&
-      v.dateDepart >= (this.volAller?.dateDepart ?? '')
-    );
-    this.etape = 'retour';
+    if (!this.volAller) return;
+    const aller = this.volAller;
+
+    this.volService.getAll().subscribe({
+      next: (vols) => {
+        this.tous = vols;
+        this.volsRetour = this.tous.filter(v => {
+          if (v.id === aller.id) return false;
+          const vDep = (v.depart || '').toLowerCase().trim();
+          const aArr = (aller.arrivee || '').toLowerCase().trim();
+
+          const matchLocation = vDep.includes(aArr) || aArr.includes(vDep);
+          const dateRetourValide = new Date(v.dateDepart) > new Date(aller.dateDepart);
+
+          return matchLocation && dateRetourValide;
+        });
+        this.etape = 'retour';
+      },
+      error: () => { this.etape = 'retour'; }
+    });
   }
 
   selectionnerRetour(vol: Vol): void {
@@ -188,9 +252,23 @@ export class HeroSectionComponent implements OnInit {
   }
 
   get prixTotal(): number {
-    if (!this.volAller) return 0;
-    let t = this.volAller.prix * this.nbPassagers;
-    if (this.volRetour) t += this.volRetour.prix * this.nbPassagers;
+    let t = 0;
+    if (this.volAller) {
+      const p = this.volAller.offre ? this.volAller.prix * (1 - this.volAller.offre!.pourcentage/100) : this.volAller.prix;
+      t += p * this.nbPassagers;
+    }
+    if (this.volRetour) {
+      const p = this.volRetour.offre ? this.volRetour.prix * (1 - this.volRetour.offre!.pourcentage/100) : this.volRetour.prix;
+      t += p * this.nbPassagers;
+    }
     return t;
+  }
+
+  formatRetard(minutes: number | undefined): string {
+    if (!minutes || minutes <= 0) return '';
+    if (minutes < 60) return `${minutes} min`;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 }

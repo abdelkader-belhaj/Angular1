@@ -467,3 +467,58 @@
   .gs-divider { display: none; }
   .vols-grid { padding: 20px 16px; grid-template-columns: 1fr; }
 }
+
+.escale-tag {
+  background: #fdf2f8;
+  color: #db2777;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #fbcfe8;
+  margin-top: 4px;
+}
+.escale-timeline {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  position: absolute;
+  top: 0;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #db2777;
+  border: 1px solid white;
+  border-radius: 50%;
+  margin-top: -3px;
+}
+
+.vol-escales-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+.esc-item {
+  font-size: 0.7rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.price-block {
+  display: flex;
+  flex-direction: column;
+}
+.prix-old {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  line-height: 1;
+}
+.prix.promo {
+  color: #ef4444;
+}

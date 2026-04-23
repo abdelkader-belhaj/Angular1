@@ -19,7 +19,7 @@ import {
 export class SocietePageComponent implements OnInit {
 
   // ── ONGLET ACTIF ─────────────────────────────────────────────
-  activeTab: 'vols' | 'reservations' = 'vols';
+  activeTab: 'vols' | 'reservations' | 'offres' = 'vols';
 
   // ── ALERTES ──────────────────────────────────────────────────
   successMsg = '';
@@ -44,12 +44,24 @@ export class SocietePageComponent implements OnInit {
   loadingRes = false;
   filtreStatutPaiement = '';
   filtreStatutReservation = '';
+  activeTabRes: 'all' | 'archive' = 'all';
+
+  // ── OFFRES ──────────────────────────────────────────────────
+  mesOffres: any[] = [];
+  showOffreForm = false;
+  editingOffre: any | null = null;
+  offreForm = this.emptyOffreForm();
 
   // ── MODAL CONFIRMATION ────────────────────────────────────────
   showConfirm = false;
   confirmTitle = '';
   confirmMessage = '';
   confirmAction: (() => void) | null = null;
+
+  // ── RETARD ──────────────────────────────────────────────────
+  showRetardModal = false;
+  volPourRetard: VolResponse | null = null;
+  nouveauRetard = 0;
 
   constructor(
     private service: VolReservationService,
@@ -58,6 +70,7 @@ export class SocietePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.chargerVols();
+    this.chargerOffres();
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -65,6 +78,10 @@ export class SocietePageComponent implements OnInit {
   // ══════════════════════════════════════════════════════════════
   allerStatistiques(): void {
     this.router.navigate(['/societe/statistiques']);
+  }
+
+  allerReclamations(): void {
+    this.router.navigate(['/societe/reclamations']);
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -103,7 +120,9 @@ export class SocietePageComponent implements OnInit {
       dateDepart: v.dateDepart,
       heureDepart: v.heureDepart,
       prix: v.prix,
-      places: v.places
+      places: v.places,
+      escales: v.escales ? [...v.escales] : [],
+      offreId: v.offre ? v.offre.id : null
     };
     this.formErrors = {};
     this.showVolForm = true;
@@ -129,17 +148,50 @@ export class SocietePageComponent implements OnInit {
     });
   }
 
-  confirmDeleteVol(v: VolResponse): void {
-    this.openConfirm(
-      'Supprimer ce vol ?',
-      `Supprimer le vol ${v.numero} (${v.depart} → ${v.arrivee}) ? Cette action est irréversible.`,
-      () => {
-        this.service.deleteVol(v.id).subscribe({
-          next: () => { this.showSuccess('Vol supprimé.'); this.chargerVols(); },
-          error: err => this.showError(err)
-        });
+  confirmDeleteVol(vol: VolResponse): void {
+    this.confirmTitle = 'Supprimer le vol';
+    this.confirmMessage = `Voulez-vous vraiment supprimer le vol ${vol.numero} ?`;
+    this.showConfirm = true;
+    this.confirmAction = () => {
+      this.service.deleteVol(vol.id).subscribe({
+        next: () => {
+          this.showSuccess('Vol supprimé');
+          this.chargerVols();
+          this.showConfirm = false;
+        },
+        error: err => { this.showError(err); this.showConfirm = false; }
+      });
+    };
+  }
+
+  // ── RETARD MODAL ─────────────────────────────────────────────
+  ouvrirRetardModal(vol: VolResponse): void {
+    this.volPourRetard = vol;
+    this.nouveauRetard = vol.retard || 0;
+    this.showRetardModal = true;
+  }
+
+  fermerRetardModal(): void {
+    this.showRetardModal = false;
+    this.volPourRetard = null;
+  }
+
+  validerRetard(): void {
+    if (!this.volPourRetard) return;
+    
+    this.loading = true;
+    this.service.updateRetard(this.volPourRetard.id, this.nouveauRetard).subscribe({
+      next: () => {
+        this.showSuccess('Retard mis à jour et clients notifiés par email');
+        this.chargerVols();
+        this.fermerRetardModal();
+        this.loading = false;
+      },
+      error: err => {
+        this.showError(err);
+        this.loading = false;
       }
-    );
+    });
   }
 
   cancelVolForm(): void {
@@ -152,61 +204,61 @@ export class SocietePageComponent implements OnInit {
   // ══════════════════════════════════════════════════════════════
   //  VALIDATION FORMULAIRE VOL
   // ══════════════════════════════════════════════════════════════
-  validateVolForm(): boolean {
-    this.formErrors = {};
-    const f = this.volForm;
+validateVolForm(): boolean {
+  this.formErrors = {};
+  const f = this.volForm;
 
-    // Numéro de vol
-    if (!f.numero || f.numero.trim() === '') {
-      this.formErrors['numero'] = 'Le numéro de vol est obligatoire.';
-    } else if (!/^[A-Z0-9]{2,10}$/i.test(f.numero.trim())) {
-      this.formErrors['numero'] = 'Format invalide (ex: TU123, 2-10 caractères alphanumériques).';
-    }
-
-    // Départ
-    if (!f.depart || f.depart.trim() === '') {
-      this.formErrors['depart'] = 'La ville de départ est obligatoire.';
-    } else if (!/^[A-Z]{3}$/i.test(f.depart.trim())) {
-      this.formErrors['depart'] = 'Code IATA invalide (3 lettres, ex: TUN).';
-    }
-
-    // Arrivée
-    if (!f.arrivee || f.arrivee.trim() === '') {
-      this.formErrors['arrivee'] = 'La ville d\'arrivée est obligatoire.';
-    } else if (!/^[A-Z]{3}$/i.test(f.arrivee.trim())) {
-      this.formErrors['arrivee'] = 'Code IATA invalide (3 lettres, ex: PAR).';
-    } else if (f.arrivee.trim().toUpperCase() === f.depart.trim().toUpperCase()) {
-      this.formErrors['arrivee'] = 'L\'arrivée doit être différente du départ.';
-    }
-
-    // Date départ
-    if (!f.dateDepart) {
-      this.formErrors['dateDepart'] = 'La date de départ est obligatoire.';
-    } else if (f.dateDepart < this.todayStr) {
-      this.formErrors['dateDepart'] = 'La date de départ doit être aujourd\'hui ou dans le futur.';
-    }
-
-    // Heure départ
-    if (!f.heureDepart) {
-      this.formErrors['heureDepart'] = 'L\'heure de départ est obligatoire.';
-    }
-
-    // Prix
-    if (!f.prix || f.prix <= 0) {
-      this.formErrors['prix'] = 'Le prix doit être supérieur à 0.';
-    } else if (f.prix > 99999) {
-      this.formErrors['prix'] = 'Le prix ne peut pas dépasser 99 999 TND.';
-    }
-
-    // Places
-    if (!f.places || f.places <= 0) {
-      this.formErrors['places'] = 'Le nombre de places doit être supérieur à 0.';
-    } else if (f.places > 850) {
-      this.formErrors['places'] = 'Le nombre de places ne peut pas dépasser 850.';
-    }
-
-    return Object.keys(this.formErrors).length === 0;
+  // Numéro de vol
+  if (!f.numero || f.numero.trim() === '') {
+    this.formErrors['numero'] = 'Le numéro de vol est obligatoire.';
+  } else if (!/^[A-Z0-9]{2,10}$/i.test(f.numero.trim())) {
+    this.formErrors['numero'] = 'Format invalide (ex: TU123, 2-10 caractères alphanumériques).';
   }
+
+  // Départ (MODIFIÉ ✅)
+  if (!f.depart || f.depart.trim() === '') {
+    this.formErrors['depart'] = 'La ville de départ est obligatoire.';
+  } else if (!/^[A-Za-z]{1,8}$/.test(f.depart.trim())) {
+    this.formErrors['depart'] = 'Le nom doit contenir entre 1 et 8 lettres.';
+  }
+
+  // Arrivée (MODIFIÉ ✅)
+  if (!f.arrivee || f.arrivee.trim() === '') {
+    this.formErrors['arrivee'] = 'La ville d\'arrivée est obligatoire.';
+  } else if (!/^[A-Za-z]{1,8}$/.test(f.arrivee.trim())) {
+    this.formErrors['arrivee'] = 'Le nom doit contenir entre 1 et 8 lettres.';
+  } else if (f.arrivee.trim().toLowerCase() === f.depart.trim().toLowerCase()) {
+    this.formErrors['arrivee'] = 'L\'arrivée doit être différente du départ.';
+  }
+
+  // Date départ
+  if (!f.dateDepart) {
+    this.formErrors['dateDepart'] = 'La date de départ est obligatoire.';
+  } else if (f.dateDepart < this.todayStr) {
+    this.formErrors['dateDepart'] = 'La date de départ doit être aujourd\'hui ou dans le futur.';
+  }
+
+  // Heure départ
+  if (!f.heureDepart) {
+    this.formErrors['heureDepart'] = 'L\'heure de départ est obligatoire.';
+  }
+
+  // Prix
+  if (!f.prix || f.prix <= 0) {
+    this.formErrors['prix'] = 'Le prix doit être supérieur à 0.';
+  } else if (f.prix > 99999) {
+    this.formErrors['prix'] = 'Le prix ne peut pas dépasser 99 999 TND.';
+  }
+
+  // Places
+  if (!f.places || f.places <= 0) {
+    this.formErrors['places'] = 'Le nombre de places doit être supérieur à 0.';
+  } else if (f.places > 850) {
+    this.formErrors['places'] = 'Le nombre de places ne peut pas dépasser 850.';
+  }
+
+  return Object.keys(this.formErrors).length === 0;
+}
 
   // ══════════════════════════════════════════════════════════════
   //  RÉSERVATIONS
@@ -220,17 +272,30 @@ export class SocietePageComponent implements OnInit {
 
   chargerReservations(): void {
     this.loadingRes = true;
-    this.service.getToutesReservations().subscribe({
-      next: reservations => {
-        const mesVolIds = new Set(this.mesVols.map(v => v.id));
-        this.toutesReservations = reservations.filter(r =>
-          mesVolIds.has(r.volAller.id) ||
-          (r.volRetour && mesVolIds.has(r.volRetour.id))
-        );
-        this.filtrerReservations();
-        this.loadingRes = false;
-      },
-      error: err => { this.showError(err); this.loadingRes = false; }
+    
+    // On s'assure d'abord d'avoir les vols de la société pour filtrer
+    const obsVols = this.mesVols.length > 0 
+      ? Promise.resolve(this.mesVols) 
+      : this.service.getMesVols().toPromise();
+
+    obsVols.then(vols => {
+      if (vols) this.mesVols = vols;
+      const mesVolIds = new Set(this.mesVols.map(v => v.id));
+
+      this.service.getToutesReservations().subscribe({
+        next: reservations => {
+          this.toutesReservations = reservations.filter(r =>
+            mesVolIds.has(r.volAller.id) ||
+            (r.volRetour && mesVolIds.has(r.volRetour.id))
+          );
+          this.filtrerReservations();
+          this.loadingRes = false;
+        },
+        error: err => { this.showError(err); this.loadingRes = false; }
+      });
+    }).catch(err => {
+      this.showError(err);
+      this.loadingRes = false;
     });
   }
 
@@ -238,7 +303,12 @@ export class SocietePageComponent implements OnInit {
     this.reservationsFiltrees = this.toutesReservations.filter(r => {
       const matchPaiement = !this.filtreStatutPaiement || r.statutPaiement === this.filtreStatutPaiement;
       const matchReservation = !this.filtreStatutReservation || r.statutReservation === this.filtreStatutReservation;
-      return matchPaiement && matchReservation;
+      
+      const resStatut = r.statutReservation || 'active'; // Fallback pour les anciennes lignes
+      const isArchived = resStatut === 'archivee';
+      const matchArchive = this.activeTabRes === 'archive' ? isArchived : !isArchived;
+      
+      return matchPaiement && matchReservation && matchArchive;
     });
   }
 
@@ -269,14 +339,15 @@ export class SocietePageComponent implements OnInit {
 
   confirmDeleteReservation(r: ReservationResponse): void {
     this.openConfirm(
-      'Supprimer cette réservation ?',
-      `Supprimer la réservation ${r.reference} (${r.touristeEmail}) ? Les places seront restituées si le paiement était effectué.`,
+      'Archiver cette réservation ?',
+      `Voulez-vous archiver la réservation ${r.reference} ? Elle ne sera plus visible dans la liste active mais restera consultable dans l'archive.`,
       () => {
         this.service.supprimerReservation(r.id).subscribe({
-          next: () => {
-            this.toutesReservations = this.toutesReservations.filter(x => x.id !== r.id);
+          next: (updated) => {
+            const idx = this.toutesReservations.findIndex(x => x.id === r.id);
+            if (idx !== -1) this.toutesReservations[idx] = updated;
             this.filtrerReservations();
-            this.showSuccess('Réservation supprimée.');
+            this.showSuccess('Réservation archivée.');
           },
           error: err => this.showError(err)
         });
@@ -298,6 +369,15 @@ export class SocietePageComponent implements OnInit {
     return map[statut] || statut;
   }
 
+  aOffreAppliquee(res: ReservationResponse): boolean {
+    const pInit = typeof res.prixInitial === 'number' ? res.prixInitial : parseFloat(res.prixInitial as any) || 0;
+    const pTot = typeof res.prixTotal === 'number' ? res.prixTotal : parseFloat(res.prixTotal as any) || 0;
+    const pBon = typeof res.remiseBonus === 'number' ? res.remiseBonus : parseFloat(res.remiseBonus as any) || 0;
+    
+    // Si la différence (PrixInitial - PrixTotal - Bonus) est supérieure à zéro, c'est qu'il y a eu une offre
+    return (pInit - pTot - pBon) > 0.01;
+  }
+
   openConfirm(title: string, message: string, action: () => void): void {
     this.confirmTitle = title;
     this.confirmMessage = message;
@@ -315,19 +395,90 @@ export class SocietePageComponent implements OnInit {
     this.confirmAction = null;
   }
 
+  // ══════════════════════════════════════════════════════════════
+  //  OFFRES — CRUD
+  // ══════════════════════════════════════════════════════════════
+  switchToOffres(): void {
+    this.activeTab = 'offres';
+    this.chargerOffres();
+  }
+
+  chargerOffres(): void {
+    this.service.getOffres().subscribe({
+      next: res => this.mesOffres = res,
+      error: err => this.showError(err)
+    });
+  }
+
+  openOffreForm(): void {
+    this.editingOffre = null;
+    this.offreForm = this.emptyOffreForm();
+    this.showOffreForm = true;
+  }
+
+  editOffre(o: any): void {
+    this.editingOffre = o;
+    this.offreForm = { ...o };
+    this.showOffreForm = true;
+  }
+
+  saveOffre(): void {
+    const obs = this.editingOffre
+      ? this.service.updateOffre(this.editingOffre.id, this.offreForm)
+      : this.service.createOffre(this.offreForm);
+
+    obs.subscribe({
+      next: () => {
+        this.showSuccess('Offre enregistrée !');
+        this.showOffreForm = false;
+        this.chargerOffres();
+      },
+      error: err => this.showError(err)
+    });
+  }
+
+  deleteOffre(o: any): void {
+    this.openConfirm('Supprimer cette offre ?', `Voulez-vous supprimer l'offre ${o.code} ?`, () => {
+      this.service.deleteOffre(o.id).subscribe({
+        next: () => { this.showSuccess('Offre supprimée.'); this.chargerOffres(); },
+        error: err => this.showError(err)
+      });
+    });
+  }
+
+  emptyOffreForm() {
+    return { code: '', pourcentage: 0, dateDebut: '', dateFin: '', actif: true };
+  }
+
   showSuccess(msg: string): void {
     this.successMsg = msg;
     this.errorMsg = '';
-    setTimeout(() => this.successMsg = '', 4000);
+    setTimeout(() => this.successMsg = '', 5000);
   }
 
   showError(err: any): void {
-    this.errorMsg = err?.error?.message || err?.message || 'Une erreur est survenue.';
+    this.errorMsg = err?.error?.message || 'Une erreur est survenue.';
     this.successMsg = '';
     setTimeout(() => this.errorMsg = '', 5000);
   }
 
+  formatRetard(minutes: number | undefined): string {
+    if (!minutes || minutes <= 0) return '';
+    if (minutes < 60) return `${minutes} min`;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+
   emptyVolForm(): VolRequest {
-    return { numero: '', depart: '', arrivee: '', dateDepart: '', heureDepart: '', prix: 0, places: 0 };
+    return { numero: '', depart: '', arrivee: '', dateDepart: '', heureDepart: '', prix: 0, places: 0, escales: [], offreId: null };
+  }
+
+  ajouterEscale(): void {
+    this.volForm.escales.push({ ville: '', duree: '' });
+  }
+
+  supprimerEscale(idx: number): void {
+    this.volForm.escales.splice(idx, 1);
   }
 }

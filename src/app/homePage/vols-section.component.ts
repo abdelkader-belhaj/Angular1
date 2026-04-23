@@ -14,6 +14,7 @@ export class VolsSectionComponent implements OnInit {
   depart = '';
   arrivee = '';
   date = '';
+  showRecommendations = false;
 
   constructor(
     private volService: VolService,
@@ -39,5 +40,39 @@ export class VolsSectionComponent implements OnInit {
 
   voirTous(): void {
     this.router.navigate(['/vols']);
+  }
+
+  getRecommendations(): void {
+    this.loading = true;
+    this.showRecommendations = true;
+    
+    this.volService.getRecommendations().subscribe({
+      next: (recommendedVols) => {
+        if (recommendedVols.length === 0) {
+          this.volService.getAll().subscribe({
+            next: v => { this.vols = v; this.loading = false; },
+            error: () => { this.loading = false; }
+          });
+        } else {
+          this.vols = recommendedVols;
+          this.loading = false;
+        }
+      },
+      error: () => {
+        this.volService.getAll().subscribe({
+          next: v => { this.vols = v; this.loading = false; },
+          error: () => { this.loading = false; }
+        });
+      }
+    });
+  }
+
+  resetToNormal(): void {
+    this.showRecommendations = false;
+    this.loading = true;
+    this.volService.getAll().subscribe({
+      next: v => { this.vols = v; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
   }
 }

@@ -60,8 +60,16 @@ export class PanierService {
   }
 
   private calculerPrix(volAller: Vol, nb: number, volRetour?: Vol): number {
-    let total = volAller.prix * nb;
-    if (volRetour) total += volRetour.prix * nb;
+    let total = 0;
+    
+    const p1 = volAller.offre ? volAller.prix * (1 - volAller.offre!.pourcentage/100) : volAller.prix;
+    total += p1 * nb;
+    
+    if (volRetour) {
+      const p2 = volRetour.offre ? volRetour.prix * (1 - volRetour.offre!.pourcentage/100) : volRetour.prix;
+      total += p2 * nb;
+    }
+    
     return total;
   }
 

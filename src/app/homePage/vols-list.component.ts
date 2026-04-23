@@ -130,7 +130,7 @@ export class VolsListComponent implements OnInit {
     this.volRetour = null;
     this.typeBillet = 'aller_simple';
     this.nbPassagers = 1;
-    this.etape = 'confirm';       // ← directement confirm, pas type
+    this.etape = 'confirm';
     this.reservationSuccess = '';
     this.reservationError = '';
     this.showModal = true;
@@ -139,18 +139,29 @@ export class VolsListComponent implements OnInit {
   // ── Ajouter vol retour ────────────────────────────────────
   choisirAllerRetour(): void {
     this.typeBillet = 'aller_retour';
-    // Filtrer : arrivee = depart aller ET date >= date aller ET id différent
-    this.volsRetour = this.tous.filter(v =>
-      v.arrivee === this.volAller?.depart &&
-      v.id !== this.volAller?.id &&
-      v.dateDepart >= (this.volAller?.dateDepart ?? '')
-    );
-    this.etape = 'retour';
+    if (!this.volAller) return;
+    const aller = this.volAller;
+
+    this.volService.getAll().subscribe(vols => {
+      this.tous = vols;
+      this.volsRetour = this.tous.filter(v => {
+        if (v.id === aller.id) return false;
+        
+        const d1 = (v.depart || '').toLowerCase().trim();
+        const a2 = (aller.arrivee || '').toLowerCase().trim();
+
+        const matchLocation = d1.includes(a2) || a2.includes(d1);
+        const dateRetourValide = new Date(v.dateDepart) > new Date(aller.dateDepart);
+
+        return matchLocation && dateRetourValide;
+      });
+      this.etape = 'retour';
+    });
   }
 
   selectionnerRetour(vol: Vol): void {
     this.volRetour = vol;
-    this.etape = 'confirm';  // ← retour direct vers confirm, PAS vers type
+    this.etape = 'confirm';
   }
 
   annulerRetour(): void {
@@ -190,9 +201,23 @@ export class VolsListComponent implements OnInit {
   }
 
   get prixTotal(): number {
-    if (!this.volAller) return 0;
-    let t = this.volAller.prix * this.nbPassagers;
-    if (this.volRetour) t += this.volRetour.prix * this.nbPassagers;
+    let t = 0;
+    if (this.volAller) {
+      const p = this.volAller.offre ? this.volAller.prix * (1 - this.volAller.offre!.pourcentage/100) : this.volAller.prix;
+      t += p * this.nbPassagers;
+    }
+    if (this.volRetour) {
+      const p = this.volRetour.offre ? this.volRetour.prix * (1 - this.volRetour.offre!.pourcentage/100) : this.volRetour.prix;
+      t += p * this.nbPassagers;
+    }
     return t;
+  }
+
+  formatRetard(minutes: number | undefined): string {
+    if (!minutes || minutes <= 0) return '';
+    if (minutes < 60) return `${minutes} min`;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 }

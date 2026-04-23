@@ -14,6 +14,7 @@ import { AirlinePartnerPageComponent } from './airline_partner/airline-partner-p
 import { OrganisateurPageComponent } from './organisateur/organisateur-page.component';
 import { VendeurArtPageComponent } from './vendeur_art/vendeur-art-page.component';
 import { SocietePageComponent } from './societe/societe-page.component';
+import { ReclamationsSocieteComponent } from './societe/reclamations/reclamations-societe.component';
 
 import { ProfilePageComponent } from './profile/profile-page.component';
 import { SecurityPageComponent } from './security/security-page.component';
@@ -24,6 +25,9 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
 import { VolsListComponent } from './homePage/vols-list.component';
 import { MesReservationsComponent } from './homePage/mes-reservations.component';
 import { StatistiquesPageComponent } from './statistiques/statistiques-page.component';
+import { BilletComponent } from './billet/billet.component';
+import { NouvelleReclamationComponent } from './homePage/reclamations/nouvelle-reclamation.component';
+import { MesReclamationsComponent } from './homePage/reclamations/mes-reclamations.component';
 
 
 const routes: Routes = [
@@ -41,6 +45,18 @@ const routes: Routes = [
 
   { path: 'vols', component: VolsListComponent },
   { path: 'mes-reservations', component: MesReservationsComponent },
+  {
+    path: 'reclamations/nouvelle',
+    component: NouvelleReclamationComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['CLIENT_TOURISTE'] }
+  },
+  {
+    path: 'reclamations/mes',
+    component: MesReclamationsComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['CLIENT_TOURISTE'] }
+  },
 
   { path: 'profile', component: ProfilePageComponent, canActivate: [authGuard] },
   { path: 'security', component: SecurityPageComponent, canActivate: [authGuard] },
@@ -56,9 +72,10 @@ const routes: Routes = [
   { path: 'organisateur', component: OrganisateurPageComponent, canActivate: [roleGuard], data: { roles: ['ORGANISATEUR'] } },
   { path: 'vendeur-arti', component: VendeurArtPageComponent, canActivate: [roleGuard], data: { roles: ['VENDEUR_ARTI'] } },
   { path: 'societe', component: SocietePageComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
+  { path: 'societe/reclamations', component: ReclamationsSocieteComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
   { path: 'societe/statistiques', component: StatistiquesPageComponent, canActivate: [roleGuard], data: { roles: ['SOCIETE'] } },
 
-  
+  { path: 'billet/:reference', component: BilletComponent },
 
   { path: '**', redirectTo: '' }
 ];

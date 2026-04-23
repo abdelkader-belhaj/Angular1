@@ -27,6 +27,10 @@
         <div class="user-bio-preview">
           <p>{{ currentUserBio }}</p>
         </div>
+        <button *ngIf="isClientTouriste" type="button" role="menuitem" (click)="goToMesReclamations()">
+          Mes réclamations
+          <span *ngIf="unreadReclamations > 0" class="badge">{{ unreadReclamations }}</span>
+        </button>
         <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
           Gerer mon module
         </button>

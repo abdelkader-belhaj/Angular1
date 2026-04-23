@@ -24,4 +24,28 @@ export class VolService {
       .set('date', date);
     return this.http.get<Vol[]>(`${this.base}/search`, { params });
   }
+
+  getMesVols(): Observable<Vol[]> {
+    return this.http.get<Vol[]>(`${this.base}/mes-vols`);
+  }
+
+  create(vol: any): Observable<Vol> {
+    return this.http.post<Vol>(this.base, vol);
+  }
+
+  update(id: number, vol: any): Observable<Vol> {
+    return this.http.put<Vol>(`${this.base}/${id}`, vol);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  updateRetard(id: number, minutes: number): Observable<Vol> {
+    return this.http.put<Vol>(`${this.base}/${id}/retard`, minutes);
+  }
+
+  getRecommendations(): Observable<Vol[]> {
+    return this.http.get<Vol[]>(`${this.base}/recommendations`);
+  }
 }

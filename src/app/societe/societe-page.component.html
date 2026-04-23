@@ -29,6 +29,12 @@
   <button class="tab" [class.active]="activeTab === 'reservations'" (click)="switchToReservations()">
     🎫 Réservations
   </button>
+  <button class="tab" [class.active]="activeTab === 'offres'" (click)="switchToOffres()">
+    🏷️ Offres
+  </button>
+  <button class="tab" (click)="allerReclamations()">
+    📨 Réclamations
+  </button>
   <button class="tab" (click)="allerStatistiques()">
     📊 Statistiques
   </button>
@@ -132,6 +138,40 @@
           <span class="field-hint" *ngIf="!formErrors['places']">Maximum 850 places</span>
         </div>
 
+        <div class="field">
+          <label>Offre Promotionnelle</label>
+          <select [(ngModel)]="volForm.offreId">
+            <option [ngValue]="null">Aucune offre</option>
+            <option *ngFor="let o of mesOffres" [ngValue]="o.id">
+              {{ o.code }} (-{{ o.pourcentage }}%)
+            </option>
+          </select>
+          <span class="field-hint">L'offre sera appliquée automatiquement au vol</span>
+        </div>
+
+        <div class="field full-width" style="grid-column: 1 / -1; margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="font-weight: bold; font-size: 1.1rem;">🛑 Escales</label>
+            <button type="button" (click)="ajouterEscale()" style="padding: 6px 12px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 4px; cursor: pointer;">+ Ajouter une escale</button>
+          </div>
+          
+          <div *ngIf="volForm.escales.length === 0" style="padding: 15px; border: 1px dashed #ccc; border-radius: 8px; text-align: center; color: #666;">
+            Aucune escale pour ce vol direct.
+          </div>
+
+          <div *ngFor="let esc of volForm.escales; let i = index" style="display: flex; gap: 15px; margin-bottom: 10px; align-items: flex-end; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div class="field" style="flex: 2; margin: 0;">
+              <label style="font-size: 0.8rem; color: #64748b;">Ville</label>
+              <input [(ngModel)]="esc.ville" placeholder="ex: Rome" style="width: 100%;" />
+            </div>
+            <div class="field" style="flex: 1; margin: 0;">
+              <label style="font-size: 0.8rem; color: #64748b;">Durée</label>
+              <input [(ngModel)]="esc.duree" placeholder="ex: 2h 30m" style="width: 100%;" />
+            </div>
+            <button type="button" (click)="supprimerEscale(i)" style="padding: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer;">🗑️</button>
+          </div>
+        </div>
+
       </div>
       <div class="form-actions">
         <button class="btn-primary" (click)="saveVol()" [disabled]="loading">
@@ -154,20 +194,43 @@
         <div class="vol-header">
           <span class="vol-num">{{ v.numero }}</span>
           <span class="vol-places" [class.low]="v.places < 10">{{ v.places }} places</span>
+          <span class="badge" *ngIf="v.offre" style="background: #fef9c3; color: #854d0e; border: 1px solid #fde047; margin-left: 10px;">
+            🎁 {{ v.offre.code }} (-{{ v.offre.pourcentage }}%)
+          </span>
         </div>
         <div class="vol-route">
           <span class="iata">{{ v.depart }}</span>
           <span class="arrow">→</span>
           <span class="iata">{{ v.arrivee }}</span>
         </div>
+        <!-- List of Escales -->
+        <div class="vol-escales-list" *ngIf="v.escales && v.escales.length > 0" 
+             style="font-size: 0.75rem; color: #64748b; background: #f8fafc; padding: 6px; border-radius: 6px; margin: 10px 0; border: 1px dashed #cbd5e1;">
+          <div *ngFor="let esc of v.escales" style="display: flex; justify-content: space-between;">
+            <span>🛑 {{ esc.ville }}</span>
+            <span>({{ esc.duree }})</span>
+          </div>
+        </div>
         <div class="vol-info">
           <span>📅 {{ v.dateDepart | date:'dd MMM yyyy' }}</span>
           <span>🕐 {{ v.heureDepart }}</span>
         </div>
-        <div class="vol-prix">{{ v.prix | number:'1.0-0' }} TND</div>
+        <div class="vol-prix" style="display: flex; flex-direction: column; align-items: flex-end;">
+          <span style="font-size: 0.75rem; text-decoration: line-through; color: #94a3b8;" *ngIf="v.offre">
+            {{ v.prix | number:'1.0-0' }} TND
+          </span>
+          <span [style.color]="v.offre ? '#ef4444' : '#0ea5e9'" style="font-weight: 800;">
+            {{ (v.offre ? v.prix * (1 - v.offre.pourcentage/100) : v.prix) | number:'1.0-0' }} TND
+          </span>
+        </div>
         <div class="vol-actions">
           <button class="btn-edit" (click)="editVol(v)">✏️ Modifier</button>
           <button class="btn-delete" (click)="confirmDeleteVol(v)">🗑️ Supprimer</button>
+          <button class="btn-ghost" 
+                  style="border-color: #f59e0b; color: #d97706; background: #fffbeb;"
+                  (click)="ouvrirRetardModal(v)">
+             ⚠️ Retard ({{ formatRetard(v.retard) || 'Aucun' }})
+          </button>
         </div>
       </div>
     </div>
@@ -178,9 +241,26 @@
   <!-- ══════════════════════════════════════════════════════════ -->
   <section *ngIf="activeTab === 'reservations'" class="section">
 
-    <div class="section-header">
-      <h2>Réservations de mes vols</h2>
-      <div class="filters">
+    <div class="section-header" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <h2>Réservations de mes vols</h2>
+        <div class="sub-tabs" style="display: flex; gap: 10px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
+          <button (click)="activeTabRes = 'all'; filtrerReservations()" 
+                  [style.background]="activeTabRes === 'all' ? 'white' : 'transparent'"
+                  [style.boxShadow]="activeTabRes === 'all' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
+                  style="border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #475569;">
+            📋 Actives
+          </button>
+          <button (click)="activeTabRes = 'archive'; filtrerReservations()" 
+                  [style.background]="activeTabRes === 'archive' ? 'white' : 'transparent'"
+                  [style.boxShadow]="activeTabRes === 'archive' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'"
+                  style="border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: #475569;">
+            📦 Archives
+          </button>
+        </div>
+      </div>
+
+      <div class="filters" style="width: 100%;">
         <select [(ngModel)]="filtreStatutPaiement" (change)="filtrerReservations()">
           <option value="">Tous les paiements</option>
           <option value="en_attente">En attente</option>
@@ -189,9 +269,10 @@
           <option value="rembourse">Remboursé</option>
         </select>
         <select [(ngModel)]="filtreStatutReservation" (change)="filtrerReservations()">
-          <option value="">Toutes les réservations</option>
-          <option value="active">Active</option>
-          <option value="annulee">Annulée</option>
+          <option value="">Tous les statuts</option>
+          <option value="active" *ngIf="activeTabRes === 'all'">Active</option>
+          <option value="annulee" *ngIf="activeTabRes === 'all'">Annulée</option>
+          <option value="archivee" *ngIf="activeTabRes === 'archive'">Archivée</option>
         </select>
       </div>
     </div>
@@ -226,15 +307,29 @@
               <small>{{ r.volAller.dateDepart | date:'dd/MM/yyyy' }}</small>
             </td>
             <td>{{ r.nbPassagers }}</td>
-            <td>{{ r.prixTotal | number:'1.0-2' }} TND</td>
+            <td>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span *ngIf="r.prixInitial > r.prixTotal" style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;">
+                  {{ r.prixInitial | number:'1.0-2' }} TND
+                </span>
+                <span style="font-weight: 600;">{{ r.prixTotal | number:'1.0-2' }} TND</span>
+                <span *ngIf="r.bonusApplique" style="font-size: 0.65rem; color: #16a34a; font-weight: 600; background: #dcfce7; padding: 2px 4px; border-radius: 4px; width: fit-content;">🎁 Bonus 10%</span>
+                <span *ngIf="aOffreAppliquee(r)" style="font-size: 0.65rem; color: #d97706; font-weight: 600; background: #fef3c7; padding: 2px 4px; border-radius: 4px; width: fit-content;">🏷 Offre Promo</span>
+              </div>
+            </td>
             <td>
               <span class="badge" [ngClass]="'badge-' + r.statutPaiement">
                 {{ labelPaiement(r.statutPaiement) }}
               </span>
             </td>
             <td>
-              <span class="badge" [ngClass]="r.statutReservation === 'active' ? 'badge-active' : 'badge-annulee'">
-                {{ r.statutReservation === 'active' ? 'Active' : 'Annulée' }}
+              <span class="badge" 
+                    [ngClass]="{
+                      'badge-active': r.statutReservation === 'active',
+                      'badge-annulee': r.statutReservation === 'annulee',
+                      'badge-archivee': r.statutReservation === 'archivee'
+                    }">
+                {{ r.statutReservation === 'active' ? 'Active' : (r.statutReservation === 'archivee' ? 'Archivée' : 'Annulée') }}
               </span>
             </td>
             <td>
@@ -252,12 +347,80 @@
                         (click)="confirmerRemboursement(r)">
                   💰 Rembourser
                 </button>
-                <button class="btn-delete-sm" (click)="confirmDeleteReservation(r)">🗑️</button>
+                <button class="btn-delete-sm" 
+                        *ngIf="r.statutReservation !== 'archivee'"
+                        (click)="confirmDeleteReservation(r)" 
+                        title="Archiver">🗑️</button>
+                <span *ngIf="r.statutReservation === 'archivee'" style="font-size: 1.2rem;" title="Cette réservation est dans l'archive">📦</span>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  ONGLET OFFRES                                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section *ngIf="activeTab === 'offres'" class="section">
+    <div class="section-header">
+      <h2>Gestion des Offres</h2>
+      <button class="btn-primary" (click)="openOffreForm()">+ Créer une offre</button>
+    </div>
+
+    <!-- Formulaire Offre -->
+    <div class="form-card" *ngIf="showOffreForm" style="background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+      <h3>{{ editingOffre ? 'Modifier l\'offre' : 'Nouvelle offre' }}</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>Code Promo</label>
+          <input [(ngModel)]="offreForm.code" placeholder="ex: PROMO10" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        </div>
+        <div class="field">
+          <label>Réduction (%)</label>
+          <input type="number" [(ngModel)]="offreForm.pourcentage" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        </div>
+        <div class="field">
+          <label>Date Début</label>
+          <input type="datetime-local" [(ngModel)]="offreForm.dateDebut" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        </div>
+        <div class="field">
+          <label>Date Fin</label>
+          <input type="datetime-local" [(ngModel)]="offreForm.dateFin" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+        </div>
+        <div class="field" style="display: flex; align-items: center; gap: 10px; padding-top: 25px;">
+          <input type="checkbox" [(ngModel)]="offreForm.actif" id="actif" />
+          <label for="actif" style="margin:0">Active</label>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+        <button class="btn-primary" (click)="saveOffre()">Enregistrer</button>
+        <button class="btn-ghost" (click)="showOffreForm = false">Annuler</button>
+      </div>
+    </div>
+
+    <!-- Liste Offres -->
+    <div class="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+      <div class="vol-card" *ngFor="let o of mesOffres" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+        <div class="vol-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="vol-num" style="font-weight: 800; font-size: 1.2rem; color: #0f172a;">{{ o.code }}</span>
+          <span class="badge" [style.background]="o.actif ? '#dcfce7' : '#fee2e2'" style="padding: 4px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">
+            {{ o.actif ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <div style="font-size: 2rem; font-weight: 800; color: #0ea5e9; margin: 15px 0; text-align: center;">
+          -{{ o.pourcentage }}%
+        </div>
+        <div style="font-size: 0.8rem; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 8px;">
+          📅 Du {{ o.dateDebut | date:'dd MMM yyyy HH:mm' }} <br>
+          🏁 Au {{ o.dateFin | date:'dd MMM yyyy HH:mm' }}
+        </div>
+        <div class="vol-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-edit" (click)="editOffre(o)" style="background: #f1f5f9; border: none; padding: 8px; border-radius: 6px; cursor: pointer;">✏️ Modifier</button>
+          <button class="btn-delete" (click)="deleteOffre(o)" style="background: #fee2e2; border: none; padding: 8px; border-radius: 6px; cursor: pointer; color: #dc2626;">🗑️</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -269,6 +432,48 @@
       <div class="modal-actions">
         <button class="btn-danger" (click)="executeConfirm()">Confirmer</button>
         <button class="btn-ghost" (click)="cancelConfirm()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  MODAL RETARD                                               -->
+  <!-- ============================================================ -->
+  <div class="modal-overlay" *ngIf="showRetardModal" (click)="fermerRetardModal()">
+    <div class="modal retard-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 style="color: #d97706;">⚠️ Signaler un retard</h3>
+        <button class="close-btn" (click)="fermerRetardModal()">×</button>
+      </div>
+      <div class="modal-body" *ngIf="volPourRetard">
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 20px;">
+          Indiquez le temps de retard pour le vol <strong>{{ volPourRetard.numero }}</strong>.
+          Un email sera automatiquement envoyé aux passagers.
+        </p>
+        
+        <div class="field">
+          <label>Minutes de retard</label>
+          <input type="number" [(ngModel)]="nouveauRetard" min="0" max="1440" 
+                 style="font-size: 1.5rem; text-align: center; font-weight: 800; color: #d97706; padding: 15px;" />
+          <span class="field-hint">Entrez 0 pour supprimer le retard.</span>
+        </div>
+
+        <div class="retard-preview" style="background: #fffbeb; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #fde68a;">
+           <span style="display: block; font-size: 0.75rem; color: #92400e; font-weight: 700; text-transform: uppercase;">Aperçu notification</span>
+           <p style="margin: 8px 0 0; font-size: 0.85rem; color: #475569;">
+             Le vol {{ volPourRetard.numero }} ({{ volPourRetard.depart }} → {{ volPourRetard.arrivee }}) 
+             aura un retard de <strong>{{ nouveauRetard }} minutes</strong>.
+           </p>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+        <button class="btn-ghost" (click)="fermerRetardModal()">Annuler</button>
+        <button class="btn-primary" 
+                style="background: linear-gradient(135deg, #f59e0b, #d97706);"
+                (click)="validerRetard()" 
+                [disabled]="loading">
+          {{ loading ? 'Envoi en cours...' : '⚠️ Confirmer et Envoyer' }}
+        </button>
       </div>
     </div>
   </div>

@@ -11,6 +11,9 @@ interface StatsGlobales {
   revenuTotal: number;
   totalPlaces: number;
   totalPassagers: number;
+  totalRemiseOffres: number;
+  totalRemiseBonus: number;
+  revenuNet: number;
 }
 
 interface VolDetail {
@@ -61,7 +64,10 @@ export class StatistiquesPageComponent implements OnInit {
     reservationsAnnulees: 0,
     revenuTotal: 0,
     totalPlaces: 0,
-    totalPassagers: 0
+    totalPassagers: 0,
+    totalRemiseOffres: 0,
+    totalRemiseBonus: 0,
+    revenuNet: 0
   };
 
   detailVols: VolDetail[] = [];
@@ -129,6 +135,26 @@ export class StatistiquesPageComponent implements OnInit {
     this.stats.totalPassagers = res
       .filter(r => r.statutPaiement === 'paye')
       .reduce((sum, r) => sum + r.nbPassagers, 0);
+
+    // ✅ NOUVEAU : Calcul des remises et budget net
+    const payees = res.filter(r => r.statutPaiement === 'paye');
+    
+    this.stats.totalRemiseBonus = payees.reduce((sum, r) => {
+      const b = typeof r.remiseBonus === 'number' ? r.remiseBonus : parseFloat(r.remiseBonus as any) || 0;
+      return sum + b;
+    }, 0);
+
+    this.stats.totalRemiseOffres = payees.reduce((sum, r) => {
+      if (this.aOffreAppliquee(r)) {
+        const pInit = typeof r.prixInitial === 'number' ? r.prixInitial : parseFloat(r.prixInitial as any) || 0;
+        const pTot = typeof r.prixTotal === 'number' ? r.prixTotal : parseFloat(r.prixTotal as any) || 0;
+        const pBon = typeof r.remiseBonus === 'number' ? r.remiseBonus : parseFloat(r.remiseBonus as any) || 0;
+        return sum + (pInit - pTot - pBon);
+      }
+      return sum;
+    }, 0);
+
+    this.stats.revenuNet = this.stats.revenuTotal * 0.8; // 80% Budget Net
 
     // Détail par vol
     this.detailVols = vols.map(v => {
@@ -244,5 +270,12 @@ export class StatistiquesPageComponent implements OnInit {
   revenuPct(revenu: number): number {
     const max = Math.max(...this.revenusParVol.map(v => v.revenu), 1);
     return (revenu / max) * 100;
+  }
+
+  aOffreAppliquee(res: ReservationResponse): boolean {
+    const pInit = typeof res.prixInitial === 'number' ? res.prixInitial : parseFloat(res.prixInitial as any) || 0;
+    const pTot = typeof res.prixTotal === 'number' ? res.prixTotal : parseFloat(res.prixTotal as any) || 0;
+    const pBon = typeof res.remiseBonus === 'number' ? res.remiseBonus : parseFloat(res.remiseBonus as any) || 0;
+    return (pInit - pTot - pBon) > 0.01;
   }
 }

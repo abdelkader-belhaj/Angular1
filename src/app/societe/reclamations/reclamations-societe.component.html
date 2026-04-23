@@ -1,0 +1,67 @@
+<div class="page">
+  <div class="head">
+    <div class="head-row">
+      <div>
+        <h1>📨 Réclamations clients</h1>
+        <p class="sub">Répondez aux réclamations. Le client sera notifié sur le site et par email.</p>
+      </div>
+      <button class="btn-secondary" type="button" (click)="retourDashboard()">
+        ← Retour dashboard
+      </button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">Chargement...</div>
+  <div class="error" *ngIf="!loading && error">{{ error }}</div>
+
+  <div class="empty" *ngIf="!loading && !error && reclamations.length === 0">
+    Aucune réclamation.
+  </div>
+
+  <div class="list" *ngIf="!loading && reclamations.length > 0">
+    <div class="card" *ngFor="let r of reclamations" (click)="ouvrir(r)">
+      <div class="toprow">
+        <span class="prio">{{ prioriteLabel(r.priorite) }}</span>
+        <span class="stat" [class.ok]="lc(r.statut)==='repondue'">
+          {{ lc(r.statut)==='repondue' ? 'Répondue' : 'Ouverte' }}
+        </span>
+      </div>
+      <div class="sujet">{{ r.sujet }}</div>
+      <div class="meta">
+        <span *ngIf="r.touristeEmail">👤 {{ r.touristeEmail }}</span>
+        <span *ngIf="r.reservationReference">🎫 {{ r.reservationReference }}</span>
+        <span>🕒 {{ r.dateCreation | date:'dd MMM yyyy, HH:mm' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-overlay" *ngIf="selected" (click)="fermer()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-head">
+        <div>
+          <div class="title">Réclamation</div>
+          <div class="small" *ngIf="selected?.touristeEmail">Client: <strong>{{ selected?.touristeEmail }}</strong></div>
+        </div>
+        <button class="x" type="button" (click)="fermer()">✕</button>
+      </div>
+
+      <div class="block">
+        <div class="b-title">Sujet</div>
+        <div class="b-text">{{ selected?.sujet }}</div>
+      </div>
+
+      <form class="block" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="b-title">Réponse</div>
+        <textarea class="textarea" rows="7" formControlName="reponse" placeholder="Votre réponse..."></textarea>
+        <div class="msg" *ngIf="message">{{ message }}</div>
+        <div class="actions">
+          <button class="btn-secondary" type="button" (click)="fermer()" [disabled]="saving">Fermer</button>
+          <button class="btn-primary" type="submit" [disabled]="saving">
+            {{ saving ? 'Envoi...' : 'Envoyer la réponse' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

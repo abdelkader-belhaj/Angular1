@@ -68,6 +68,10 @@
       <div class="card-top" [class.mt]="estDansPanier(vol.id)">
         <span class="badge">{{ vol.numero }}</span>
         <span class="societe">{{ vol.societeNom }}</span>
+        <span class="promo-badge" *ngIf="vol.offre" 
+              style="background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; border: 1px solid #fcd34d;">
+          PROMO -{{ vol.offre!.pourcentage }}%
+        </span>
       </div>
 
       <div class="route">
@@ -78,6 +82,13 @@
         <div class="mid">
           <div class="line"></div>
           <span class="plane">✈</span>
+          <!-- Escales Timeline -->
+          <div class="escale-timeline" *ngIf="vol.escales && vol.escales.length > 0">
+            <div class="dot" *ngFor="let esc of vol.escales" [title]="esc.ville + ' (' + esc.duree + ')'"></div>
+          </div>
+          <span class="escale-tag" *ngIf="vol.escales && vol.escales.length > 0">
+            {{ vol.escales.length }} escale{{ vol.escales.length > 1 ? 's' : '' }}
+          </span>
         </div>
         <div class="city">
           <span class="code">{{ vol.arrivee }}</span>
@@ -88,11 +99,24 @@
       <div class="infos">
         <div class="info"><span class="il">Date</span><span class="iv">{{ vol.dateDepart | date:'dd/MM/yy' }}</span></div>
         <div class="info"><span class="il">Heure</span><span class="iv">{{ vol.heureDepart }}</span></div>
-        <div class="info"><span class="il">Places</span><span class="iv" [class.low]="vol.places < 5">{{ vol.places }}</span></div>
+        <div class="info"><span class="il">Places</span><span class="iv" [class.low]="vol.places < 10">{{ vol.places }}</span></div>
+        <div class="info" *ngIf="vol.retard && vol.retard > 0">
+           <span class="il" style="color: #d97706;">⚠️ Retard</span>
+           <span class="iv" style="color: #d97706; font-weight: 800;">+{{ formatRetard(vol.retard) }}</span>
+        </div>
+      </div>
+
+      <div class="vol-escales-list" *ngIf="vol.escales && vol.escales.length > 0">
+        <span *ngFor="let esc of vol.escales" class="esc-item">📍 {{ esc.ville }} ({{ esc.duree }})</span>
       </div>
 
       <div class="card-footer">
-        <span class="prix">{{ vol.prix | currency:'TND':'symbol':'1.0-0' }}</span>
+        <div class="price-block">
+          <span class="prix-old" *ngIf="vol.offre">{{ vol.prix | currency:'TND':'symbol':'1.0-2' }}</span>
+          <span class="prix" [class.promo]="vol.offre">
+            {{ (vol.offre ? vol.prix * (1 - vol.offre!.pourcentage/100) : vol.prix) | currency:'TND':'symbol':'1.0-2' }}
+          </span>
+        </div>
         <div class="actions">
           <button class="btn-cart" [class.in-cart]="estDansPanier(vol.id)"
             (click)="togglePanier(vol)" [disabled]="vol.places === 0"
@@ -126,7 +150,15 @@
           <span class="mcard-num">
             {{ volAller.numero }} · {{ volAller.dateDepart | date:'dd/MM/yyyy' }} · {{ volAller.heureDepart }}
           </span>
-          <span class="mcard-prix">{{ volAller.prix | currency:'TND':'symbol':'1.0-0' }}/pers</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volAller.offre">
+              {{ volAller.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volAller.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volAller.offre ? volAller.prix * (1 - volAller.offre!.pourcentage/100) : volAller.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
         </div>
 
         <div class="mcard retour" *ngIf="volRetour">
@@ -139,7 +171,15 @@
           <span class="mcard-num">
             {{ volRetour.numero }} · {{ volRetour.dateDepart | date:'dd/MM/yyyy' }} · {{ volRetour.heureDepart }}
           </span>
-          <span class="mcard-prix">{{ volRetour.prix | currency:'TND':'symbol':'1.0-0' }}/pers</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volRetour.offre">
+              {{ volRetour.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volRetour.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volRetour.offre ? volRetour.prix * (1 - volRetour.offre!.pourcentage/100) : volRetour.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
           <button class="mcard-remove" (click)="annulerRetour()">✕ Retirer</button>
         </div>
 
@@ -186,7 +226,13 @@
           · après le {{ volAller?.dateDepart | date:'dd/MM/yyyy' }}
         </p>
 
-        <div class="no-retour" *ngIf="volsRetour.length === 0">
+        <!-- Loading return flights -->
+        <div class="loading-retour" *ngIf="loading" style="text-align: center; padding: 20px; color: #0ea5e9;">
+          <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #0ea5e9; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+          Recherche des vols retour...
+        </div>
+
+        <div class="no-retour" *ngIf="!loading && volsRetour.length === 0">
           Aucun vol retour disponible.
           <button class="reset-link" (click)="annulerRetour()">Continuer en aller simple</button>
         </div>
@@ -200,7 +246,14 @@
               <span>{{ vr.numero }}</span>
               <span>{{ vr.dateDepart | date:'dd/MM/yyyy' }}</span>
               <span>{{ vr.heureDepart }}</span>
-              <span class="rc-prix">{{ vr.prix | currency:'TND':'symbol':'1.0-0' }}</span>
+              <span class="rc-prix">
+                <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.65rem;" *ngIf="vr.offre">
+                  {{ vr.prix | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+                <span [style.color]="vr.offre ? '#ef4444' : '#0ea5e9'">
+                  {{ (vr.offre ? vr.prix * (1 - vr.offre!.pourcentage/100) : vr.prix) | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+              </span>
             </div>
           </div>
         </div>

@@ -68,6 +68,40 @@
         </div>
         <div class="kpi-bar" [style.width.%]="100"></div>
       </div>
+
+      <!-- ✅ NOUVEAUX KPI : OFFRES, BONUS, BUDGET NET -->
+      <div class="kpi-card" style="border-left-color: #f59e0b;">
+        <div class="kpi-icon">🏷️</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalRemiseOffres | number:'1.0-2' }} TND</span>
+          <span class="kpi-label">Remises Offres Promo</span>
+        </div>
+        <div class="kpi-bar" style="background: #f59e0b; width: 100%;"></div>
+      </div>
+      <div class="kpi-card" style="border-left-color: #10b981;">
+        <div class="kpi-icon">🎁</div>
+        <div class="kpi-content">
+          <span class="kpi-val">{{ stats.totalRemiseBonus | number:'1.0-2' }} TND</span>
+          <span class="kpi-label">Remises Bonus Fidélité</span>
+        </div>
+        <div class="kpi-bar" style="background: #10b981; width: 100%;"></div>
+      </div>
+      <div class="kpi-card" style="border-left-color: #ef4444; background: #fef2f2;">
+        <div class="kpi-icon">🏢</div>
+        <div class="kpi-content">
+          <span class="kpi-val" style="color: #dc2626;">{{ (stats.revenuTotal * 0.2) | number:'1.0-2' }} TND</span>
+          <span class="kpi-label">Commission Site (20%)</span>
+        </div>
+        <div class="kpi-bar" style="background: #ef4444; width: 100%;"></div>
+      </div>
+      <div class="kpi-card" style="border-left-color: #0e5c42; background: #f0fdf4; grid-column: span 2;">
+        <div class="kpi-icon">💎</div>
+        <div class="kpi-content">
+          <span class="kpi-val" style="color: #0e5c42; font-size: 2.2rem;">{{ stats.revenuNet | number:'1.0-2' }} TND</span>
+          <span class="kpi-label" style="font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">BUDGET NET SOCIÉTÉ (80%)</span>
+        </div>
+        <div class="kpi-bar" style="background: #0e5c42; width: 100%;"></div>
+      </div>
     </div>
 
     <!-- ══ GRAPHIQUES ROW 1 ════════════════════════════════════ -->

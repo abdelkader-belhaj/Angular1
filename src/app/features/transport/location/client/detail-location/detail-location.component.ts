@@ -203,6 +203,43 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
     return `${brand} ${model}`.trim();
   }
 
+  getRentedVehiclePhotos(): string[] {
+    const urls = this.reservation?.vehiculeAgence?.photoUrls;
+    if (!Array.isArray(urls)) {
+      return [];
+    }
+    return urls.map((u) => String(u || '').trim()).filter(Boolean);
+  }
+
+  resolveRentedVehiclePhotoUrl(path?: string | null): string {
+    const raw = String(path || '').trim();
+    if (!raw) {
+      return '';
+    }
+    if (
+      raw.startsWith('data:') ||
+      raw.startsWith('http://') ||
+      raw.startsWith('https://')
+    ) {
+      return raw;
+    }
+    return this.locationService.getPublicUploadUrl(raw);
+  }
+
+  getRentedVehiclePlate(): string {
+    return this.reservation?.vehiculeAgence?.numeroPlaque?.trim() || '—';
+  }
+
+  getRentedVehicleType(): string {
+    const t = this.reservation?.vehiculeAgence?.typeVehicule;
+    return t != null && String(t).trim() !== '' ? String(t) : '';
+  }
+
+  getRentedVehiclePassengers(): number | null {
+    const n = this.reservation?.vehiculeAgence?.capacitePassagers;
+    return n == null ? null : Number(n);
+  }
+
   getAgencyLabel(): string {
     if (this.reservation && this.reservation.agenceLocation) {
       return this.reservation.agenceLocation.nomAgence;
@@ -363,6 +400,113 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
 
   get isDepositRefunded(): boolean {
     return this.reservation?.depositStatus === DepositStatus.RELEASED;
+  }
+
+  get isDepositSettlementCompleted(): boolean {
+    if (!this.reservation) {
+      return false;
+    }
+
+    return (
+      this.reservation.statut === ReservationStatus.COMPLETED &&
+      (this.reservation.depositStatus === DepositStatus.RELEASED ||
+        this.reservation.depositStatus === DepositStatus.FORFEITED)
+    );
+  }
+
+  get hasCautionSettlementDetails(): boolean {
+    return (
+      !!this.reservation &&
+      this.showFinalInvoiceDetails &&
+      this.reservation.statut === ReservationStatus.COMPLETED
+    );
+  }
+
+  get cautionRetainedAmount(): number {
+    return this.toMoney(this.reservation?.montantCautionRetenu ?? 0);
+  }
+
+  get cautionRestitutedAmount(): number {
+    if (!this.reservation) {
+      return 0;
+    }
+
+    const explicit = Number(this.reservation.montantCautionRestitue ?? NaN);
+    if (Number.isFinite(explicit) && explicit >= 0) {
+      return this.toMoney(explicit);
+    }
+
+    return this.toMoney(
+      Math.max(0, this.depositAmount - this.cautionRetainedAmount),
+    );
+  }
+
+  get cautionDamageAmount(): number {
+    const explicit = Number(this.reservation?.montantDommages ?? NaN);
+    if (Number.isFinite(explicit) && explicit > 0) {
+      return this.toMoney(explicit);
+    }
+
+    return this.cautionRetainedAmount;
+  }
+
+  get cautionDamageReason(): string {
+    const reason = String(this.reservation?.descriptionDommages || '').trim();
+    if (reason) {
+      return reason;
+    }
+
+    if (this.hasCautionSettlementDetails && this.cautionDamageAmount > 0) {
+      return 'Dommages constatés au retour';
+    }
+
+    return 'Aucun dommage constaté';
+  }
+
+  get cautionOutcomeLabel(): string {
+    const deposit = this.depositAmount;
+    const retained = this.cautionRetainedAmount;
+    const restored = this.cautionRestitutedAmount;
+
+    if (deposit <= 0) {
+      return 'Aucune caution configurée';
+    }
+
+    if (retained <= 0 && restored >= deposit) {
+      return 'Remboursement total';
+    }
+
+    if (retained > 0 && restored > 0) {
+      return 'Remboursement partiel';
+    }
+
+    if (restored <= 0 && retained >= deposit) {
+      return 'Aucun remboursement';
+    }
+
+    return 'Ajustement caution';
+  }
+
+  get cautionRefundedDisplay(): string {
+    const outcome = this.cautionOutcomeLabel;
+    if (outcome === 'Remboursement total') {
+      return 'OUI (total)';
+    }
+    if (outcome === 'Remboursement partiel') {
+      return 'OUI (partiel)';
+    }
+    if (outcome === 'Aucun remboursement') {
+      return 'NON';
+    }
+    return '-';
+  }
+
+  get paymentCardRefundStatusLabel(): string {
+    if (!this.showFinalInvoiceDetails) {
+      return 'Remboursement non applicable';
+    }
+
+    return this.cautionRefundedDisplay;
   }
 
   get totalInvoiceAmount(): number {
@@ -619,6 +763,15 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
     }
 
     return this.getComputedReservationTotal();
+  }
+
+  private toMoney(value: unknown): number {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) {
+      return 0;
+    }
+
+    return Number(amount.toFixed(2));
   }
 
   private getDisplayedAdvanceAmount(): number {
@@ -980,10 +1133,10 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
       },
       {
         label: 'Remboursement caution',
-        done: this.reservation?.depositStatus === DepositStatus.RELEASED,
+        done: this.isDepositSettlementCompleted,
         active:
           status === ReservationStatus.COMPLETED &&
-          this.reservation?.depositStatus !== DepositStatus.RELEASED,
+          !this.isDepositSettlementCompleted,
       },
     ];
   }
@@ -1406,6 +1559,8 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
     if (!this.reservation) {
       return;
     }
+
+    this.ensureRentedVehicleLoaded();
 
     const knownAgency = this.reservation.agenceLocation;
     const rawAgenceId =
@@ -1902,6 +2057,57 @@ export class DetailLocationComponent implements OnInit, OnDestroy {
 
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  /**
+   * Complète `vehiculeAgence` si la réservation ne contient que l’identifiant véhicule.
+   */
+  private ensureRentedVehicleLoaded(): void {
+    if (!this.reservation) {
+      return;
+    }
+
+    const raw = this.reservation as ReservationLocation & Record<string, any>;
+    const reservationId = this.reservation.idReservation;
+    const v = this.reservation.vehiculeAgence;
+    const id = Number(
+      raw.vehiculeAgenceId ??
+        raw['idVehiculeAgence'] ??
+        v?.idVehiculeAgence ??
+        0,
+    );
+    if (!id) {
+      return;
+    }
+
+    const hasUsefulPayload = !!(
+      v &&
+      (String(v.marque || '').trim() ||
+        String(v.modele || '').trim() ||
+        String(v.numeroPlaque || '').trim() ||
+        (Array.isArray(v.photoUrls) && v.photoUrls.length > 0))
+    );
+    if (hasUsefulPayload) {
+      return;
+    }
+
+    this.locationService.getVehiculeAgenceById(id).subscribe({
+      next: (vehicule) => {
+        if (
+          !this.reservation ||
+          this.reservation.idReservation !== reservationId
+        ) {
+          return;
+        }
+        this.reservation = {
+          ...this.reservation,
+          vehiculeAgence: vehicule,
+        };
+      },
+      error: () => {
+        /* inchangé */
+      },
+    });
   }
 
   private getCanvasPoint(

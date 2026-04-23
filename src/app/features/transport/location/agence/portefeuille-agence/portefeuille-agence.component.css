@@ -49,6 +49,18 @@
   color: rgba(44, 60, 74, 0.7);
 }
 
+.scope-note {
+  margin: 1rem 0 0;
+  max-width: 52rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(44, 60, 74, 0.78);
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: rgba(0, 57, 116, 0.06);
+  border: 1px solid rgba(0, 57, 116, 0.08);
+}
+
 /* Stats */
 .stats-grid {
   display: grid;

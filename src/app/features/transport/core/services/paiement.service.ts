@@ -52,7 +52,7 @@ export class PaiementService {
   // → on passe par HttpClient directement
 
   private walletHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     return new HttpHeaders({
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

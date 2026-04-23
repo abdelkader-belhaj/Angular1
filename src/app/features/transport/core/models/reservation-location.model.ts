@@ -27,6 +27,10 @@ export interface ReservationLocation {
   prixTotal: number;
   advanceAmount?: number;
   depositAmount?: number;
+  montantDommages?: number;
+  descriptionDommages?: string;
+  montantCautionRetenu?: number;
+  montantCautionRestitue?: number;
   montantCommission?: number;
   depositStatus?: DepositStatus;
   statut: ReservationStatus;

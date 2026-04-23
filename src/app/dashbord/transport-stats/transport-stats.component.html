@@ -1,180 +1,592 @@
-<div class="admin-dashboard">
-  <div class="dashboard-header">
-    <div>
-      <p class="eyebrow">Transport Control</p>
-      <h1 class="title">Statistiques & Opérations</h1>
-      <p class="subtitle">Vue consolidée du module transport (Courses et Locations) connectée en temps réel au backend.</p>
-    </div>
-  </div>
+<div class="dash-layout min-h-screen bg-surface text-on-surface">
+  <app-dash-side-nav></app-dash-side-nav>
 
-  <div *ngIf="isLoading" style="padding: 3rem; text-align: center; color: #64748b;">
-    <span class="material-symbols-outlined" style="font-size: 3rem; animation: spin 1s linear infinite;">sync</span>
-    <p style="margin-top: 1rem; font-weight: 600;">Synchronisation des données...</p>
-  </div>
+  <main
+    class="dash-layout__main md:ml-64 min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8"
+  >
+    <app-dash-header [showContextBlock]="false"></app-dash-header>
 
-  <ng-container *ngIf="!isLoading">
-    <!-- Global KPIs -->
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-revenue">
-        <div class="kpi-icon">
-          <span class="material-symbols-outlined">payments</span>
-        </div>
-        <p>Chiffre d'Affaires Global</p>
-        <strong>{{ totalRevenue | currency:'TND':'symbol':'1.0-0' }}</strong>
-      </div>
-
-      <div class="kpi-card kpi-courses">
-        <div class="kpi-icon">
-          <span class="material-symbols-outlined">route</span>
-        </div>
-        <p>Total Courses Actives</p>
-        <strong>{{ totalCourses }}</strong>
-      </div>
-
-      <div class="kpi-card kpi-drivers">
-        <div class="kpi-icon">
-          <span class="material-symbols-outlined">person_play</span>
-        </div>
-        <p>Chauffeurs En Ligne</p>
-        <strong>{{ activeDrivers }}</strong>
-      </div>
-
-      <div class="kpi-card kpi-rentals">
-        <div class="kpi-icon">
-          <span class="material-symbols-outlined">car_rental</span>
-        </div>
-        <p>Véhicules Loués</p>
-        <strong>{{ totalRentedVehicles }}</strong>
-      </div>
-    </div>
-
-    <!-- Tabs Navigation -->
-    <div class="stats-tabs">
-      <button class="tab-button" [class.active]="activeTab === 'courses'" (click)="switchTab('courses')">
-        Pilotage Courses
-      </button>
-      <button class="tab-button" [class.active]="activeTab === 'location'" (click)="switchTab('location')">
-        Pilotage Location (Agences)
-      </button>
-    </div>
-
-    <!-- Content Panels -->
-    
-    <!-- PANEL: COURSES -->
-    <div class="data-panel" *ngIf="activeTab === 'courses'">
-      <div class="panel-header" style="border-bottom: none;">
-        <h2>Répartition des Courses</h2>
-        <p>Vue analytique des statuts des courses.</p>
-      </div>
-      
-      <!-- CSS CHARTS -->
-      <div class="chart-container">
-        <div class="chart-bar-wrap" *ngFor="let stat of coursesStatusChart">
-          <div class="chart-label">
-            <span>{{ stat.label }}</span>
-            <span>{{ stat.value }}</span>
+    <div class="transport-shell">
+      <header class="hero">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Transport · Hypercloud</p>
+            <h1 class="title">Pilotage transport</h1>
+            <p class="subtitle">
+              Synthèse courses VTC et locations véhicules : indicateurs,
+              graphiques et actions raccordés aux mêmes services que le module
+              transport.
+            </p>
           </div>
-          <div class="chart-track">
-            <div class="chart-fill" [class]="stat.class" [style.width.%]="stat.width"></div>
+          <div class="hero-accent" aria-hidden="true">
+            <span class="hero-glow"></span>
           </div>
         </div>
+      </header>
+
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Chargement des statistiques…</p>
       </div>
 
-      <div class="panel-header" style="border-top: 1px solid #e2e8f0;">
-        <h2>Courses en temps réel</h2>
-        <p>Surveillance et contrôle des trajets.</p>
-      </div>
+      <ng-container *ngIf="!isLoading">
+        <section class="kpi-strip" aria-label="Indicateurs clés">
+          <article class="kpi-card kpi-revenue">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >payments</span
+              >
+              <span class="kpi-tag">CA global</span>
+            </div>
+            <p class="kpi-label">Volume brut encaissé</p>
+            <p class="kpi-value">
+              {{ totalRevenue | currency: "TND" : "symbol" : "1.0-0" }}
+            </p>
+            <p class="kpi-meta">
+              Courses :
+              {{ courseRevenueTotal | currency: "TND" : "symbol" : "1.0-0" }} ·
+              Locations :
+              {{ locationRevenueTotal | currency: "TND" : "symbol" : "1.0-0" }}
+            </p>
+          </article>
 
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID Course</th>
-            <th>Chauffeur</th>
-            <th>Client</th>
-            <th>Prix</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let course of coursesList">
-            <td>#{{ course.idCourse || course.id }}</td>
-            <td><strong>{{ course.chauffeur?.nom || course.chauffeur?.prenom || 'Non assigné' }}</strong></td>
-            <td>{{ course.client?.nom || course.client?.prenom || 'Client Anonyme' }}</td>
-            <td>{{ (course.prixFinal || course.demande?.prixEstime || 0) | currency:'TND':'symbol':'1.0-0' }}</td>
-            <td>
-              <span class="badge" 
-                    [class.in-progress]="course.statut === 'IN_PROGRESS'"
-                    [class.accepted]="course.statut === 'ACCEPTED'"
-                    [class.completed]="course.statut === 'COMPLETED'">
-                {{ course.statut || 'PENDING' }}
-              </span>
-            </td>
-            <td>
-              <div class="action-group">
-                <button class="btn-action danger" *ngIf="course.statut !== 'COMPLETED' && course.statut !== 'CANCELLED'" (click)="cancelCourse(course.idCourse || course.id)">
-                  Annuler
-                </button>
-                <button class="btn-action" *ngIf="course.chauffeur?.id" (click)="suspendDriver(course.chauffeur.id)">
-                  Suspendre Chauffeur
-                </button>
+          <article class="kpi-card kpi-courses">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >route</span
+              >
+              <span class="kpi-tag">Courses</span>
+            </div>
+            <p class="kpi-label">Total enregistrées</p>
+            <p class="kpi-value">{{ totalCourses }}</p>
+            <p class="kpi-meta">
+              {{ openCoursesCount }} en cours de cycle (non closes)
+            </p>
+          </article>
+
+          <article class="kpi-card kpi-drivers">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >group</span
+              >
+              <span class="kpi-tag">Chauffeurs</span>
+            </div>
+            <p class="kpi-label">Sur courses actives</p>
+            <p class="kpi-value">{{ activeDrivers }}</p>
+            <p class="kpi-meta">
+              Assignés à une course acceptée / démarrée / en cours
+            </p>
+          </article>
+
+          <article class="kpi-card kpi-rentals">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >car_rental</span
+              >
+              <span class="kpi-tag">Locations</span>
+            </div>
+            <p class="kpi-label">Réservations actives</p>
+            <p class="kpi-value">{{ totalRentedVehicles }}</p>
+            <p class="kpi-meta">Toutes agences confondues</p>
+          </article>
+        </section>
+
+        <section class="kpi-strip" aria-label="Indicateurs commissions">
+          <article class="kpi-card kpi-revenue">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >account_balance_wallet</span
+              >
+              <span class="kpi-tag">Commission</span>
+            </div>
+            <p class="kpi-label">Commission encaissée</p>
+            <p class="kpi-value">
+              {{
+                commissionReceivedTotal | currency: "TND" : "symbol" : "1.0-0"
+              }}
+            </p>
+            <p class="kpi-meta">
+              {{ completedPayments }} paiements finalisés /
+              {{ totalPayments }} paiements chargés
+            </p>
+          </article>
+
+          <article class="kpi-card kpi-courses">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >route</span
+              >
+              <span class="kpi-tag">Courses</span>
+            </div>
+            <p class="kpi-label">Commission course</p>
+            <p class="kpi-value">
+              {{ courseCommissionTotal | currency: "TND" : "symbol" : "1.0-0" }}
+            </p>
+            <p class="kpi-meta">Paiements COURSE finalisés</p>
+          </article>
+
+          <article class="kpi-card kpi-rentals">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >car_rental</span
+              >
+              <span class="kpi-tag">Locations</span>
+            </div>
+            <p class="kpi-label">Commission location</p>
+            <p class="kpi-value">
+              {{
+                locationCommissionTotal | currency: "TND" : "symbol" : "1.0-0"
+              }}
+            </p>
+            <p class="kpi-meta">Paiements RESERVATION_LOCATION finalisés</p>
+          </article>
+
+          <article class="kpi-card kpi-drivers">
+            <div class="kpi-top">
+              <span
+                class="kpi-icon material-symbols-outlined"
+                aria-hidden="true"
+                >paid</span
+              >
+              <span class="kpi-tag">Solde</span>
+            </div>
+            <p class="kpi-label">Net versé</p>
+            <p class="kpi-value">
+              {{ netPayoutTotal | currency: "TND" : "symbol" : "1.0-0" }}
+            </p>
+            <p class="kpi-meta">Après déduction des commissions</p>
+          </article>
+        </section>
+
+        <section class="insight-grid" aria-label="Classements clés">
+          <article class="insight-card">
+            <div class="chart-card-head">
+              <h2>Zones les plus sollicitées</h2>
+              <p>
+                Localisations de départ les plus fréquentes sur les courses
+                terminées
+              </p>
+            </div>
+            <div class="chart-canvas-wrap chart-canvas--bar">
+              <canvas
+                baseChart
+                [type]="'bar'"
+                [data]="topZoneBarData"
+                [options]="topZoneBarOptions"
+              >
+              </canvas>
+            </div>
+            <div
+              class="mini-leaderboard"
+              *ngIf="topZones.length > 0; else noTopZones"
+            >
+              <article
+                class="leader-item leader-item--zone"
+                *ngFor="let item of topZones"
+              >
+                <div class="leader-item__main">
+                  <strong>{{ item.label }}</strong>
+                  <p>{{ item.count }} courses terminées</p>
+                </div>
+                <div class="leader-item__score">
+                  <span>{{ item.count }}</span>
+                  <small>courses</small>
+                </div>
+              </article>
+            </div>
+            <ng-template #noTopZones>
+              <p class="empty-inline">
+                Aucune zone n’a encore assez de volume pour être classée.
+              </p>
+            </ng-template>
+          </article>
+        </section>
+
+        <section class="charts-overview" aria-label="Graphiques de synthèse">
+          <article class="chart-card">
+            <div class="chart-card-head">
+              <h2>Répartition du chiffre d'affaires</h2>
+              <p>
+                Courses terminées vs locations (réservations comptabilisées)
+              </p>
+            </div>
+            <div class="chart-canvas-wrap chart-canvas--doughnut">
+              <canvas
+                baseChart
+                [type]="'doughnut'"
+                [data]="revenueSplitData"
+                [options]="revenueSplitOptions"
+              >
+              </canvas>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <div class="chart-card-head">
+              <h2>Statuts des courses</h2>
+              <p>Répartition sur l’ensemble des courses chargées</p>
+            </div>
+            <div class="chart-canvas-wrap chart-canvas--doughnut">
+              <canvas
+                baseChart
+                [type]="'doughnut'"
+                [data]="courseDoughnutData"
+                [options]="courseDoughnutOptions"
+              >
+              </canvas>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <div class="chart-card-head">
+              <h2>Répartition des commissions</h2>
+              <p>Commission Tunisiatour par activité encaissée</p>
+            </div>
+            <div class="chart-canvas-wrap chart-canvas--doughnut">
+              <canvas
+                baseChart
+                [type]="'doughnut'"
+                [data]="commissionSplitData"
+                [options]="commissionSplitOptions"
+              >
+              </canvas>
+            </div>
+          </article>
+
+          <article class="chart-card chart-card--wide">
+            <div class="chart-card-head">
+              <h2>Création de courses (7 jours)</h2>
+              <p>
+                Nombre de courses dont la date de création tombe sur chaque jour
+              </p>
+            </div>
+            <div class="chart-canvas-wrap chart-canvas--line">
+              <canvas
+                baseChart
+                [type]="'line'"
+                [data]="courseTrendData"
+                [options]="courseTrendOptions"
+              >
+              </canvas>
+            </div>
+          </article>
+        </section>
+
+        <div class="data-panel">
+          <div class="panel-toolbar">
+            <div>
+              <h2 class="panel-title">Paiements et commissions</h2>
+              <p class="panel-desc">
+                Détails des lignes paiementtransport les plus récentes, avec
+                phase et source
+              </p>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Référence</th>
+                  <th>Total</th>
+                  <th>Commission</th>
+                  <th>Net</th>
+                  <th>Méthode</th>
+                  <th>Phase</th>
+                  <th>Statut</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let payment of recentPayments">
+                  <td>
+                    <span class="cell-id">#{{ payment.idPaiement }}</span>
+                  </td>
+                  <td>{{ getPaymentTypeLabel(payment.typePaiement) }}</td>
+                  <td>
+                    <strong>{{ getPaymentReference(payment) }}</strong>
+                  </td>
+                  <td class="cell-num">
+                    {{
+                      payment.montantTotal
+                        | currency: "TND" : "symbol" : "1.0-0"
+                    }}
+                  </td>
+                  <td class="cell-num">
+                    {{
+                      payment.montantCommission
+                        | currency: "TND" : "symbol" : "1.0-0"
+                    }}
+                  </td>
+                  <td class="cell-num">
+                    {{
+                      payment.montantNet | currency: "TND" : "symbol" : "1.0-0"
+                    }}
+                  </td>
+                  <td>{{ getPaymentMethodLabel(payment.methode) }}</td>
+                  <td>{{ payment.phasePaiement || "—" }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [ngClass]="getPaymentStatusClass(payment.statut)"
+                    >
+                      {{ getPaymentStatusLabel(payment.statut) }}
+                    </span>
+                  </td>
+                  <td>{{ getPaymentDate(payment) }}</td>
+                </tr>
+                <tr *ngIf="recentPayments.length === 0">
+                  <td colspan="10" class="table-empty">
+                    Aucun paiement trouvé.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <nav class="stats-tabs" role="tablist" aria-label="Sections détail">
+          <button
+            type="button"
+            role="tab"
+            class="tab-button"
+            [class.active]="activeTab === 'courses'"
+            [attr.aria-selected]="activeTab === 'courses'"
+            (click)="switchTab('courses')"
+          >
+            <span class="material-symbols-outlined tab-ic" aria-hidden="true"
+              >map</span
+            >
+            Courses
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="tab-button"
+            [class.active]="activeTab === 'location'"
+            [attr.aria-selected]="activeTab === 'location'"
+            (click)="switchTab('location')"
+          >
+            <span class="material-symbols-outlined tab-ic" aria-hidden="true"
+              >storefront</span
+            >
+            Agences location
+          </button>
+        </nav>
+
+        <div class="data-panel" *ngIf="activeTab === 'courses'" role="tabpanel">
+          <div class="panel-toolbar">
+            <div>
+              <h2 class="panel-title">Courses en temps réel</h2>
+              <p class="panel-desc">Surveillance et actions sur les trajets</p>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Chauffeur</th>
+                  <th>Client</th>
+                  <th>Prix</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let course of coursesList">
+                  <td>
+                    <span class="cell-id">#{{ course.idCourse }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ getChauffeurLabel(course) }}</strong>
+                  </td>
+                  <td>{{ getClientLabel(course) }}</td>
+                  <td class="cell-num">
+                    {{
+                      course.prixFinal ?? course.demande.prixEstime ?? 0
+                        | currency: "TND" : "symbol" : "1.0-0"
+                    }}
+                  </td>
+                  <td>
+                    <span
+                      class="badge"
+                      [ngClass]="getCourseStatusClass(course.statut)"
+                    >
+                      {{ getCourseStatusLabel(course.statut) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-group">
+                      <button
+                        type="button"
+                        class="btn-action danger"
+                        *ngIf="
+                          course.statut !== CourseStatus.COMPLETED &&
+                          course.statut !== CourseStatus.CANCELLED
+                        "
+                        (click)="cancelCourse(course.idCourse)"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action"
+                        *ngIf="getChauffeurId(course) as chauffeurId"
+                        (click)="suspendDriver(chauffeurId)"
+                      >
+                        Suspendre chauffeur
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="coursesList.length === 0">
+                  <td colspan="6" class="table-empty">
+                    Aucune course trouvée.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          class="data-panel"
+          *ngIf="activeTab === 'location'"
+          role="tabpanel"
+        >
+          <div class="panel-toolbar">
+            <div>
+              <h2 class="panel-title">Agences de location</h2>
+              <p class="panel-desc">
+                Revenus et réservations actives par partenaire
+              </p>
+            </div>
+          </div>
+
+          <div class="location-charts" *ngIf="agencesList.length > 0">
+            <article class="chart-card chart-card--nested">
+              <div class="chart-card-head">
+                <h3>Revenu par agence</h3>
+                <p>Montants TND (périmètre aligné tableau agence)</p>
               </div>
-            </td>
-          </tr>
-          <tr *ngIf="coursesList.length === 0">
-            <td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">Aucune course trouvée.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- PANEL: LOCATION -->
-    <div class="data-panel" *ngIf="activeTab === 'location'">
-      <div class="panel-header">
-        <h2>Agences de Location de Voitures</h2>
-        <p>Gestion des partenaires et surveillance des véhicules.</p>
-      </div>
-      
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID Agence</th>
-            <th>Nom de l'Agence</th>
-            <th>Locations Actives</th>
-            <th>Revenu de l'Agence</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let agency of agencesList">
-            <td>#{{ agency.idAgence || agency.id }}</td>
-            <td><strong>{{ agency.nomAgence || 'Agence' }}</strong></td>
-            <td>{{ agency.activeRentals || 0 }} véhicules</td>
-            <td>{{ (agency.revenue || 0) | currency:'TND':'symbol':'1.0-0' }}</td>
-            <td>
-              <span class="badge" 
-                    [class.active]="agency.status === 'ACTIVE'"
-                    [class.suspended]="agency.status === 'SUSPENDED'">
-                {{ agency.status || 'ACTIVE' }}
-              </span>
-            </td>
-            <td>
-              <div class="action-group">
-                <button class="btn-action danger" *ngIf="agency.status === 'ACTIVE'" (click)="suspendAgency(agency.idAgence || agency.id)">
-                  Suspendre
-                </button>
-                <button class="btn-action success" *ngIf="agency.status === 'SUSPENDED'" (click)="approveAgency(agency.idAgence || agency.id)">
-                  Approuver
-                </button>
-                <button class="btn-action text-only">
-                  Voir Flotte
-                </button>
+              <div class="chart-canvas-wrap chart-canvas--bar">
+                <canvas
+                  baseChart
+                  [type]="'bar'"
+                  [data]="agencyRevenueBarData"
+                  [options]="agencyRevenueBarOptions"
+                >
+                </canvas>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </article>
+            <article class="chart-card chart-card--nested">
+              <div class="chart-card-head">
+                <h3>Locations actives par agence</h3>
+                <p>Nombre de réservations engagées</p>
+              </div>
+              <div class="chart-canvas-wrap chart-canvas--bar">
+                <canvas
+                  baseChart
+                  [type]="'bar'"
+                  [data]="agencyRentalsBarData"
+                  [options]="agencyRentalsBarOptions"
+                >
+                </canvas>
+              </div>
+            </article>
+          </div>
+
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Agence</th>
+                  <th>Locations actives</th>
+                  <th>Revenu</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let agency of agencesList">
+                  <td>
+                    <span class="cell-id">#{{ getAgenceId(agency) }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ agency.nomAgence || "Agence" }}</strong>
+                  </td>
+                  <td>{{ agency.activeRentals || 0 }}</td>
+                  <td class="cell-num">
+                    {{
+                      agency.revenue || 0 | currency: "TND" : "symbol" : "1.0-0"
+                    }}
+                  </td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.active]="agency.status === 'ACTIVE'"
+                      [class.suspended]="agency.status === 'SUSPENDED'"
+                    >
+                      {{ agency.status === "ACTIVE" ? "Active" : "Suspendue" }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-group">
+                      <button
+                        type="button"
+                        class="btn-action danger"
+                        *ngIf="agency.status === 'ACTIVE'"
+                        (click)="suspendAgency(getAgenceId(agency))"
+                      >
+                        Suspendre
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action success"
+                        *ngIf="agency.status === 'SUSPENDED'"
+                        (click)="approveAgency(getAgenceId(agency))"
+                      >
+                        Approuver
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action text-only"
+                        disabled
+                        title="À relier au détail flotte"
+                      >
+                        Flotte
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="agencesList.length === 0">
+                  <td colspan="6" class="table-empty">
+                    Aucune agence trouvée.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </ng-container>
     </div>
-  </ng-container>
+  </main>
 </div>

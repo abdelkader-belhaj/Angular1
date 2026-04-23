@@ -8,7 +8,10 @@ import {
   ReservationLocation,
   ReservationStatus,
 } from '../../../core/models';
-import { LocationService } from '../../../core/services/location.service';
+import {
+  CheckoutCautionPayload,
+  LocationService,
+} from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-etat-lieux',
@@ -41,6 +44,10 @@ export class EtatLieuxComponent implements OnInit {
   checkOutPhotos: string[] = [];
   checkInFileNames: string[] = [];
   checkOutFileNames: string[] = [];
+  checkoutHasDamages = false;
+  checkoutDamageDescription = '';
+  checkoutDamageAmount: number | null = null;
+  checkoutRetainedAmount: number | null = 0;
   uploadedCheckInPhotos: Array<{ url: string; label: string }> = [];
   uploadedCheckOutPhotos: Array<{ url: string; label: string }> = [];
   enlargedPhoto: { url: string; label: string } | null = null;
@@ -136,6 +143,35 @@ export class EtatLieuxComponent implements OnInit {
 
   get expectedReturnDateLabel(): string {
     return this.reservation?.dateFin || '';
+  }
+
+  get depositAmountValue(): number {
+    return Number(this.reservation?.depositAmount || 0);
+  }
+
+  get checkoutRetainedMax(): number {
+    return this.depositAmountValue;
+  }
+
+  get checkoutRetainedNormalized(): number {
+    return this.clampMoney(
+      this.checkoutRetainedAmount,
+      0,
+      this.checkoutRetainedMax,
+    );
+  }
+
+  get checkoutDamageAmountNormalized(): number {
+    return Math.max(0, this.roundMoney(Number(this.checkoutDamageAmount || 0)));
+  }
+
+  get checkoutRestitutedAmount(): number {
+    return Math.max(
+      0,
+      this.roundMoney(
+        this.depositAmountValue - this.checkoutRetainedNormalized,
+      ),
+    );
   }
 
   get checkInGallery(): Array<{ url: string; label: string }> {
@@ -382,15 +418,21 @@ export class EtatLieuxComponent implements OnInit {
       return;
     }
 
+    const checkoutPayload = this.prepareCheckoutCautionPayload();
+    if (!checkoutPayload) {
+      return;
+    }
+
     this.isSubmitting = true;
     this.error = '';
     this.success = '';
     this.locationService
-      .checkOut(reservationId, this.checkOutPhotos)
+      .checkOut(reservationId, this.checkOutPhotos, checkoutPayload)
       .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
         next: (message) => {
-          this.success = message || 'Check-out validé. Location clôturée.';
+          this.success =
+            message || 'Check-out validé. Caution traitée selon les dommages.';
           this.uploadedCheckOutPhotos = this.buildLocalPhotoGallery(
             this.checkOutPhotos,
             this.checkOutFileNames,
@@ -402,12 +444,93 @@ export class EtatLieuxComponent implements OnInit {
           );
           this.checkOutPhotos = [];
           this.checkOutFileNames = [];
+          this.resetCheckoutDamageForm();
           this.refreshReservationState();
         },
         error: (error) => {
           this.error = error?.message || 'Impossible de lancer le check-out.';
         },
       });
+  }
+
+  onCheckoutDamageToggle(): void {
+    if (!this.checkoutHasDamages) {
+      this.checkoutDamageDescription = '';
+      this.checkoutDamageAmount = 0;
+      this.checkoutRetainedAmount = 0;
+      return;
+    }
+
+    if (!this.checkoutRetainedAmount || this.checkoutRetainedAmount < 0) {
+      this.checkoutRetainedAmount = 0;
+    }
+  }
+
+  onCheckoutRetainedAmountChange(): void {
+    this.checkoutRetainedAmount = this.checkoutRetainedNormalized;
+  }
+
+  private prepareCheckoutCautionPayload(): CheckoutCautionPayload | null {
+    const deposit = this.depositAmountValue;
+    const retained = this.checkoutHasDamages
+      ? this.checkoutRetainedNormalized
+      : 0;
+    const damages = this.checkoutHasDamages
+      ? this.checkoutDamageAmountNormalized
+      : 0;
+    const description = String(this.checkoutDamageDescription || '').trim();
+
+    if (this.checkoutHasDamages) {
+      if (!description) {
+        this.error =
+          'Décrivez les dommages constatés avant de valider le check-out.';
+        return null;
+      }
+
+      if (damages <= 0) {
+        this.error =
+          'Le montant estimé des réparations doit être supérieur à 0 en cas de dommages.';
+        return null;
+      }
+    }
+
+    if (retained < 0 || retained > deposit) {
+      this.error =
+        'Le montant retenu sur la caution doit être compris entre 0 et la caution totale.';
+      return null;
+    }
+
+    return {
+      constatDommages: this.checkoutHasDamages,
+      descriptionDommages: description,
+      montantDommages: damages,
+      montantCautionRetenu: retained,
+      montantCautionRestitue: Math.max(0, this.roundMoney(deposit - retained)),
+    };
+  }
+
+  private resetCheckoutDamageForm(): void {
+    this.checkoutHasDamages = false;
+    this.checkoutDamageDescription = '';
+    this.checkoutDamageAmount = 0;
+    this.checkoutRetainedAmount = 0;
+  }
+
+  private clampMoney(
+    value: number | null | undefined,
+    min: number,
+    max: number,
+  ): number {
+    const numeric = Number(value ?? 0);
+    if (!Number.isFinite(numeric)) {
+      return min;
+    }
+
+    return Math.max(min, Math.min(max, this.roundMoney(numeric)));
+  }
+
+  private roundMoney(value: number): number {
+    return Number(Number(value || 0).toFixed(2));
   }
 
   onCheckInFilesSelected(event: Event): void {

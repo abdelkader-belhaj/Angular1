@@ -61,7 +61,7 @@
             <p
               class="text-lg font-headline font-bold text-primary leading-none"
             >
-              {{ departureCountdown || '-' }}
+              {{ departureCountdown || "-" }}
             </p>
           </div>
         </div>
@@ -78,12 +78,82 @@
               Retour prévu
             </p>
             <p class="text-lg font-headline font-bold text-dark leading-none">
-              {{ returnCountdown || '-' }}
+              {{ returnCountdown || "-" }}
             </p>
           </div>
         </div>
       </div>
     </header>
+
+    <!-- Véhicule loué -->
+    <section
+      class="card bg-lowest p-6 rounded-lg shadow-premium border border-light-subtle rented-vehicle w-full"
+    >
+      <div class="rented-vehicle__layout">
+        <div class="rented-vehicle__media">
+          <div
+            class="rented-vehicle__hero-img"
+            *ngIf="
+              getRentedVehiclePhotos().length > 0;
+              else clientNoVehiclePhoto
+            "
+          >
+            <img
+              [src]="resolveRentedVehiclePhotoUrl(getRentedVehiclePhotos()[0])"
+              [alt]="getVehicleLabel() || 'Véhicule'"
+            />
+          </div>
+          <ng-template #clientNoVehiclePhoto>
+            <div class="rented-vehicle__placeholder">
+              <span class="material-symbols-outlined">directions_car</span>
+            </div>
+          </ng-template>
+          <div
+            class="rented-vehicle__thumbs"
+            *ngIf="getRentedVehiclePhotos().length > 1"
+          >
+            <img
+              *ngFor="let p of getRentedVehiclePhotos().slice(1, 5)"
+              [src]="resolveRentedVehiclePhotoUrl(p)"
+              alt=""
+              class="rented-vehicle__thumb"
+            />
+          </div>
+        </div>
+        <div class="rented-vehicle__body flex-col gap-2 flex-1">
+          <p
+            class="text-[10px] font-black text-muted uppercase tracking-widest"
+          >
+            Votre véhicule
+          </p>
+          <h2
+            class="text-2xl font-headline font-black text-primary tracking-tight"
+          >
+            {{ getVehicleLabel() || "Véhicule de location" }}
+          </h2>
+          <div class="flex flex-wrap gap-4 text-sm text-dark">
+            <span
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Immat.</span
+              >
+              {{ getRentedVehiclePlate() }}</span
+            >
+            <span *ngIf="getRentedVehicleType()"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Type</span
+              >
+              {{ getRentedVehicleType() }}</span
+            >
+            <span *ngIf="getRentedVehiclePassengers() != null"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Places</span
+              >
+              {{ getRentedVehiclePassengers() }}</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Actions Rapides -->
     <div
@@ -122,6 +192,82 @@
         {{ cancelActionLabel }}
       </button>
     </div>
+
+    <section
+      class="card premium-shadow bg-surface-low rounded-lg p-6 border border-light mb-6"
+      *ngIf="reservation && showFinalInvoiceDetails"
+    >
+      <div class="flex items-center gap-2 mb-4 text-primary">
+        <span class="material-symbols-outlined">receipt</span>
+        <h3 class="font-headline font-bold text-lg">
+          Résumé Financier Clôture
+        </h3>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex-between">
+          <span>Prix Total Location:</span>
+          <strong>{{
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Avance Payée:</span>
+          <strong>{{
+            advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Paiement Final Reçu:</span>
+          <strong>{{
+            remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Caution Configurée:</span>
+          <strong>{{
+            depositAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Motif dégâts:</span>
+          <strong>{{ cautionDamageReason }}</strong>
+        </div>
+        <ng-container *ngIf="hasCautionSettlementDetails">
+          <div class="flex-between">
+            <span>Montant dommages:</span>
+            <strong>{{
+              cautionDamageAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution retenue:</span>
+            <strong class="text-warning">{{
+              cautionRetainedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution restituée:</span>
+            <strong class="text-success">{{
+              cautionRestitutedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Issue caution:</span>
+            <strong>{{ cautionOutcomeLabel }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution remboursée:</span>
+            <strong>{{ cautionRefundedDisplay }}</strong>
+          </div>
+        </ng-container>
+        <div class="flex-between text-base pt-1 border-t border-light mt-2">
+          <span class="text-primary font-bold">Total Facture:</span>
+          <strong class="text-primary font-black">{{
+            totalInvoiceAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+      </div>
+    </section>
 
     <!-- Horizontal Workflow Progression -->
     <div
@@ -232,8 +378,8 @@
                 >Période</span
               >
               <p class="font-bold text-dark text-base">
-                {{ reservation.dateDebut | date: 'mediumDate' }} —
-                {{ reservation.dateFin | date: 'mediumDate' }}
+                {{ reservation.dateDebut | date: "mediumDate" }} —
+                {{ reservation.dateFin | date: "mediumDate" }}
               </p>
             </div>
           </div>
@@ -247,7 +393,7 @@
                 ></span
               >
               <span class="font-bold text-dark text-base">{{
-                displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
               }}</span>
             </div>
             <div class="flex-between text-sm items-center">
@@ -260,11 +406,11 @@
                       ? 'badge-success'
                       : 'badge-surface'
                   "
-                  >{{ reservation.advanceStatus || '-' }}</span
+                  >{{ reservation.advanceStatus || "-" }}</span
                 ></span
               >
               <span class="font-bold text-dark">{{
-                advanceAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                advanceAmount | currency: "TND" : "symbol" : "1.0-0"
               }}</span>
             </div>
             <div
@@ -272,7 +418,7 @@
             >
               <span class="font-bold text-dark">Solde Frais Location</span>
               <span class="font-black text-primary text-xl">{{
-                remainingAmountToPay | currency: 'TND' : 'symbol' : '1.0-0'
+                remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
               }}</span>
             </div>
             <div
@@ -288,7 +434,7 @@
                 }}</span></span
               >
               <span class="font-bold text-secondary text-lg">{{
-                depositAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                depositAmount | currency: "TND" : "symbol" : "1.0-0"
               }}</span>
             </div>
             <p class="text-xs text-muted italic mt-2 opacity-70">
@@ -325,7 +471,7 @@
                     ? 'badge-error'
                     : 'badge-surface'
               "
-              >Statut: {{ reservation.licenseStatus || 'En attente' }}</span
+              >Statut: {{ reservation.licenseStatus || "En attente" }}</span
             >
           </div>
 
@@ -374,18 +520,18 @@
             <div class="flex-1 w-full space-y-4">
               <div>
                 <p class="text-2xl font-headline font-bold text-dark">
-                  {{ reservation.prenom || '-' }} {{ reservation.nom || '-' }}
+                  {{ reservation.prenom || "-" }} {{ reservation.nom || "-" }}
                 </p>
                 <p class="text-muted text-sm mt-1">
                   Numéro permis:
-                  <strong>{{ reservation.numeroPermis || '-' }}</strong>
+                  <strong>{{ reservation.numeroPermis || "-" }}</strong>
                 </p>
                 <p class="text-muted text-sm">
                   Date de naissance:
                   <strong>{{
                     reservation.dateNaiss
-                      ? (reservation.dateNaiss | date: 'mediumDate')
-                      : '-'
+                      ? (reservation.dateNaiss | date: "mediumDate")
+                      : "-"
                   }}</strong>
                 </p>
               </div>
@@ -468,7 +614,7 @@
                   class="text-xs text-muted font-medium truncate group-hover:text-primary transition"
                   >{{
                     selectedResubmissionFileName ||
-                      'Sélectionner nouvelle photo du permis...'
+                      "Sélectionner nouvelle photo du permis..."
                   }}</span
                 >
                 <span class="material-symbols-outlined text-primary text-sm"
@@ -486,7 +632,7 @@
                 (click)="submitLicenseResubmission()"
                 [disabled]="isResubmitting"
               >
-                {{ isResubmitting ? 'Traitement...' : 'SOUMETTRE LE DOCUMENT' }}
+                {{ isResubmitting ? "Traitement..." : "SOUMETTRE LE DOCUMENT" }}
               </button>
             </div>
           </div>
@@ -523,7 +669,7 @@
               <div
                 class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate"
               >
-                {{ photo.label || 'Photo' }}
+                {{ photo.label || "Photo" }}
               </div>
             </figure>
           </div>
@@ -570,13 +716,13 @@
                 <div class="flex-between text-sm opacity-90">
                   <span>Total Séjour Estimé</span
                   ><span>{{
-                    displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                    displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
                 </div>
                 <div class="flex-between text-sm opacity-90">
                   <span class="font-medium">Avance (30%)</span
                   ><span>{{
-                    advanceAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                    advanceAmount | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
                 </div>
                 <div
@@ -584,13 +730,13 @@
                 >
                   <span class="font-medium">Dépôt (Caution)</span
                   ><span>{{
-                    depositAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                    depositAmount | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
                 </div>
                 <div class="flex-between text-lg font-black pt-2">
                   <span>A Prélever</span
                   ><span class="text-secondary-fixed">{{
-                    upfrontPaymentAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                    upfrontPaymentAmount | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
                 </div>
               </div>
@@ -616,8 +762,8 @@
                 >
                 {{
                   isSubmittingInitialPayment
-                    ? 'Ouverture module...'
-                    : 'Payer Avance + Bloquer Caution'
+                    ? "Ouverture module..."
+                    : "Payer Avance + Bloquer Caution"
                 }}
               </button>
             </div>
@@ -646,7 +792,7 @@
                 <div class="flex-between text-sm opacity-90">
                   <span>Total Location</span
                   ><span>{{
-                    displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                    displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
                 </div>
                 <div
@@ -656,15 +802,36 @@
                   ><span
                     >-
                     {{
-                      advanceAmount | currency: 'TND' : 'symbol' : '1.0-0'
+                      advanceAmount | currency: "TND" : "symbol" : "1.0-0"
                     }}</span
                   >
                 </div>
                 <div class="flex-between text-xl font-black pt-2">
                   <span class="text-white">Reste à payer</span
                   ><span class="text-secondary-fixed">{{
-                    remainingAmountToPay | currency: 'TND' : 'symbol' : '1.0-0'
+                    remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
                   }}</span>
+                </div>
+
+                <div
+                  class="mt-3 pt-3 border-t border-white/20 space-y-2 text-xs"
+                  *ngIf="showFinalInvoiceDetails"
+                >
+                  <div class="flex-between text-white/90">
+                    <span>Statut remboursement caution</span>
+                    <strong class="text-white">{{
+                      paymentCardRefundStatusLabel
+                    }}</strong>
+                  </div>
+                  <div class="flex-between text-white/90">
+                    <span>Issue caution</span>
+                    <strong class="text-white">{{
+                      cautionOutcomeLabel
+                    }}</strong>
+                  </div>
+                  <div class="text-white/80">
+                    Motif dégâts: {{ cautionDamageReason }}
+                  </div>
                 </div>
               </div>
 
@@ -687,8 +854,8 @@
                 <span class="material-symbols-outlined text-xl">payments</span>
                 {{
                   isPreparingFinalPayment
-                    ? 'Chargement Stripe...'
-                    : 'Scanner carte pour le solde'
+                    ? "Chargement Stripe..."
+                    : "Scanner carte pour le solde"
                 }}
               </button>
             </div>
@@ -768,7 +935,7 @@
                 (click)="submitSignature()"
                 [disabled]="isSigning"
               >
-                {{ isSigning ? 'Encodage...' : 'JE SIGNE LE CONTRAT' }}
+                {{ isSigning ? "Encodage..." : "JE SIGNE LE CONTRAT" }}
               </button>
             </div>
           </div>
@@ -804,7 +971,7 @@
             <div class="flex-between">
               <span>Nouvelle date de livraison:</span>
               <strong>{{
-                extensionRequest.proposedEndDate | date: 'mediumDate'
+                extensionRequest.proposedEndDate | date: "mediumDate"
               }}</strong>
             </div>
             <div
@@ -813,7 +980,7 @@
               <span>Total mis à jour:</span>
               <span>{{
                 extensionRequest.proposedTotalPrice
-                  | currency: 'TND' : 'symbol' : '1.0-0'
+                  | currency: "TND" : "symbol" : "1.0-0"
               }}</span>
             </div>
           </div>
@@ -856,11 +1023,11 @@
               : 'invoice-badge-warning'
           "
         >
-          {{ isFinalPaymentCompleted ? 'Acquittée' : 'En attente de solde' }}
+          {{ isFinalPaymentCompleted ? "Acquittée" : "En attente de solde" }}
         </div>
         <div class="pdf-ref">Facture #{{ reservation.idReservation }}</div>
         <div class="pdf-date">
-          Émise le {{ reservation.dateDebut | date: 'dd MMM yyyy' }}
+          Émise le {{ reservation.dateDebut | date: "dd MMM yyyy" }}
         </div>
       </div>
     </header>
@@ -870,7 +1037,7 @@
         <p class="invoice-hero-label">Client</p>
         <h2>{{ getClientLabel() }}</h2>
         <p>
-          {{ reservation.prenom || '-' }} {{ reservation.nom || '-' }} ·
+          {{ reservation.prenom || "-" }} {{ reservation.nom || "-" }} ·
           {{ getClientUsername() }}
         </p>
       </div>
@@ -878,13 +1045,13 @@
       <div class="invoice-hero-summary">
         <div class="invoice-hero-item">
           <span>Véhicule</span>
-          <strong>{{ getVehicleLabel() || 'Véhicule de location' }}</strong>
+          <strong>{{ getVehicleLabel() || "Véhicule de location" }}</strong>
         </div>
         <div class="invoice-hero-item">
           <span>Période</span>
           <strong
-            >{{ reservation.dateDebut | date: 'mediumDate' }} -
-            {{ reservation.dateFin | date: 'mediumDate' }}</strong
+            >{{ reservation.dateDebut | date: "mediumDate" }} -
+            {{ reservation.dateFin | date: "mediumDate" }}</strong
           >
         </div>
         <div class="invoice-hero-item">
@@ -927,25 +1094,25 @@
           <div>
             <span>Location</span>
             <strong>{{
-              displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+              displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
           <div>
             <span>Avance</span>
             <strong>{{
-              advanceAmount | currency: 'TND' : 'symbol' : '1.0-0'
+              advanceAmount | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
           <div>
             <span>Solde</span>
             <strong>{{
-              remainingAmountToPay | currency: 'TND' : 'symbol' : '1.0-0'
+              remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
           <div>
             <span>Caution</span>
             <strong>{{
-              depositAmount | currency: 'TND' : 'symbol' : '1.0-0'
+              depositAmount | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
         </div>
@@ -960,40 +1127,68 @@
         <div class="pdf-fin-row">
           <span>Prix total location</span>
           <strong>{{
-            displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
           }}</strong>
         </div>
         <div class="pdf-fin-row">
           <span>Avance payée</span>
           <strong
             >-
-            {{ advanceAmount | currency: 'TND' : 'symbol' : '1.0-0' }}</strong
+            {{ advanceAmount | currency: "TND" : "symbol" : "1.0-0" }}</strong
           >
         </div>
         <div class="pdf-fin-row">
           <span>Paiement final reçu</span>
           <strong>{{
-            remainingAmountToPay | currency: 'TND' : 'symbol' : '1.0-0'
+            remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
           }}</strong>
         </div>
         <div class="pdf-fin-row">
           <span>Dépôt de garantie</span>
           <strong>{{
-            depositAmount | currency: 'TND' : 'symbol' : '1.0-0'
+            depositAmount | currency: "TND" : "symbol" : "1.0-0"
           }}</strong>
         </div>
         <div class="pdf-fin-row">
           <span>Etat de la caution</span>
           <strong>{{
-            isDepositRefunded
-              ? 'Remboursée'
+            hasCautionSettlementDetails
+              ? cautionOutcomeLabel
               : getDepositStatusLabel(reservation.depositStatus)
           }}</strong>
         </div>
+        <div class="pdf-fin-row">
+          <span>Motif dégâts</span>
+          <strong>{{ cautionDamageReason }}</strong>
+        </div>
+        <ng-container *ngIf="hasCautionSettlementDetails">
+          <div class="pdf-fin-row">
+            <span>Montant dommages</span>
+            <strong>{{
+              cautionDamageAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution retenue</span>
+            <strong>{{
+              cautionRetainedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution restituée</span>
+            <strong>{{
+              cautionRestitutedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution remboursée</span>
+            <strong>{{ cautionRefundedDisplay }}</strong>
+          </div>
+        </ng-container>
         <div class="pdf-fin-row pdf-fin-total">
           <span>Total facture</span>
           <strong>{{
-            totalInvoiceAmount | currency: 'TND' : 'symbol' : '1.0-0'
+            totalInvoiceAmount | currency: "TND" : "symbol" : "1.0-0"
           }}</strong>
         </div>
       </div>
@@ -1034,7 +1229,7 @@
         <div class="pdf-sig-body">
           <div class="pdf-stamp pdf-stamp-success">SIGNÉ</div>
           <p>{{ getClientLabel() }}</p>
-          <p>{{ reservation.prenom || '-' }} {{ reservation.nom || '-' }}</p>
+          <p>{{ reservation.prenom || "-" }} {{ reservation.nom || "-" }}</p>
         </div>
       </div>
     </section>
@@ -1046,8 +1241,8 @@
       </p>
       <p>
         Réservation {{ reservation.idReservation }} ·
-        {{ reservation.dateDebut | date: 'dd/MM/yyyy' }} -
-        {{ reservation.dateFin | date: 'dd/MM/yyyy' }}
+        {{ reservation.dateDebut | date: "dd/MM/yyyy" }} -
+        {{ reservation.dateFin | date: "dd/MM/yyyy" }}
       </p>
     </footer>
   </section>
@@ -1088,7 +1283,7 @@
       <p
         class="text-center text-white mt-4 font-bold tracking-widest uppercase text-xs"
       >
-        {{ enlargedPhoto.label || 'Document Vérifié' }}
+        {{ enlargedPhoto.label || "Document Vérifié" }}
       </p>
     </div>
   </div>
@@ -1117,14 +1312,14 @@
         <div class="flex-between text-sm text-muted mb-2">
           <span>Sous-total Location</span>
           <strong class="text-dark">{{
-            displayTotalAmount | currency: 'TND' : 'symbol' : '1.0-0'
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
           }}</strong>
         </div>
         <div class="flex-between text-sm text-muted mb-3">
           <span>Avance Initiale Payée</span>
           <strong class="text-dark"
             >-
-            {{ advanceAmount | currency: 'TND' : 'symbol' : '1.0-0' }}</strong
+            {{ advanceAmount | currency: "TND" : "symbol" : "1.0-0" }}</strong
           >
         </div>
         <div
@@ -1133,7 +1328,7 @@
           <span>Total À Payer</span>
           <span class="text-2xl">{{
             finalPaymentDetails?.montant ?? remainingAmountToPay
-              | currency: 'TND' : 'symbol' : '1.0-0'
+              | currency: "TND" : "symbol" : "1.0-0"
           }}</span>
         </div>
         <p class="text-[10px] mt-3 uppercase font-bold text-warning">
@@ -1179,8 +1374,8 @@
         >
           {{
             isSubmittingFinalPayment
-              ? 'Autorisation en cours...'
-              : 'CONFIRMER ET PAYER'
+              ? "Autorisation en cours..."
+              : "CONFIRMER ET PAYER"
           }}
         </button>
       </div>

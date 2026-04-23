@@ -62,6 +62,11 @@ const routes: Routes = [
     canActivate: [adminGuard],
   },
   {
+    path: 'dashboard/transport-stats',
+    component: TransportStatsComponent,
+    canActivate: [adminGuard],
+  },
+  {
     path: 'hebergeur',
     component: HebergeurPageComponent,
     canActivate: [roleGuard],

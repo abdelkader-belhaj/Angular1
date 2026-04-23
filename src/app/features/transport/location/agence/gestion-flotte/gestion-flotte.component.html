@@ -119,8 +119,18 @@
               <span
                 class="vehicle-status"
                 [class.active]="isVehicleActive(vehicle)"
+                [class.maintenance]="isEnMaintenance(vehicle)"
               >
-                {{ isVehicleActive(vehicle) ? 'Actif' : 'Inactif' }}
+                {{ statutLabel(vehicle.statut) }}
+              </span>
+              <span
+                class="type-pill pill-warn"
+                *ngIf="isVehiculeActuellementLoue(vehicle.idVehiculeAgence)"
+              >
+                Location en cours
+              </span>
+              <span class="type-pill pill-muted" *ngIf="!isVehicleReservable(vehicle)">
+                Non réservable
               </span>
             </div>
           </div>
@@ -183,6 +193,12 @@
               type="button"
               class="mini-button"
               *ngIf="!isVehicleActive(vehicle)"
+              [disabled]="isVehiculeActuellementLoue(vehicle.idVehiculeAgence)"
+              [title]="
+                isVehiculeActuellementLoue(vehicle.idVehiculeAgence)
+                  ? 'Réservation en cours : impossible d’activer tant que la location n’est pas terminée.'
+                  : ''
+              "
               (click)="activateVehicle(vehicle)"
             >
               Activer
@@ -226,58 +242,85 @@
         </button>
       </header>
 
-      <div class="form-grid">
+      <p class="form-banner" *ngIf="editingVehicleId && isVehiculeActuellementLoue(editingVehicleId)">
+        <strong>Location en cours :</strong> vous ne pouvez pas enregistrer le statut « Actif » tant qu’une réservation
+        utilise encore ce véhicule.
+      </p>
+
+      <form
+        [formGroup]="fleetForm"
+        (ngSubmit)="saveVehicle()"
+        novalidate
+        class="fleet-form-block"
+      >
+        <div class="form-grid">
         <label>
-          Marque
-          <input [(ngModel)]="form.marque" name="marque" type="text" />
+          Marque <span class="req">*</span>
+          <input type="text" formControlName="marque" maxlength="32" autocomplete="off" />
+          <span class="field-error" *ngIf="erreurChamp('marque')">{{ erreurChamp('marque') }}</span>
+          <span class="field-hint">2 à 30 caractères (espaces en trop ignorés en enregistrement).</span>
         </label>
         <label>
-          Modèle
-          <input [(ngModel)]="form.modele" name="modele" type="text" />
+          Modèle <span class="req">*</span>
+          <input type="text" formControlName="modele" maxlength="32" autocomplete="off" />
+          <span class="field-error" *ngIf="erreurChamp('modele')">{{ erreurChamp('modele') }}</span>
+          <span class="field-hint">2 à 30 caractères.</span>
         </label>
         <label>
-          Plaque
+          Plaque <span class="req">*</span>
           <input
-            [(ngModel)]="form.numeroPlaque"
-            name="numeroPlaque"
             type="text"
+            formControlName="numeroPlaque"
+            placeholder="ex. 123 TU 4567"
+            autocomplete="off"
           />
+          <span class="field-error" *ngIf="erreurChamp('numeroPlaque')">{{ erreurChamp('numeroPlaque') }}</span>
+          <span class="field-hint">Format tunisien : 2–4 chiffres, code wilaya (lettres), 2–5 chiffres (espaces optionnels).</span>
         </label>
         <label>
-          Type
-          <select [(ngModel)]="form.typeVehicule" name="typeVehicule">
+          Type <span class="req">*</span>
+          <select formControlName="typeVehicule">
             <option *ngFor="let option of typeOptions" [value]="option">
               {{ option }}
             </option>
           </select>
+          <span class="field-hint">Le prix / jour doit rester cohérent : Économique = bas, Premium = élevé, Van = milieu.</span>
         </label>
         <label>
-          Places
-          <input
-            [(ngModel)]="form.capacitePassagers"
-            name="capacitePassagers"
-            type="number"
-          />
+          Places <span class="req">*</span>
+          <input type="number" formControlName="capacitePassagers" min="1" max="9" step="1" />
+          <span class="field-error" *ngIf="erreurChamp('capacitePassagers')">{{ erreurChamp('capacitePassagers') }}</span>
+          <span class="field-hint">Entier entre 1 et 9.</span>
         </label>
         <label>
-          Statut
-          <select [(ngModel)]="form.statut" name="statut">
+          Statut <span class="req">*</span>
+          <select formControlName="statut">
             <option *ngFor="let option of statusOptions" [value]="option">
-              {{ option }}
+              {{
+                option === 'ACTIVE'
+                  ? 'Actif (réservable si pas de location en cours)'
+                  : option === 'INACTIVE'
+                    ? 'Inactif (non réservable)'
+                    : 'En maintenance (non réservable)'
+              }}
             </option>
           </select>
+          <span class="field-hint" *ngIf="fleetForm.get('statut')?.value === 'INACTIVE' || fleetForm.get('statut')?.value === 'EN_MAINTENANCE'">
+            Inactif ou maintenance : le véhicule ne sera pas proposé à la réservation.
+          </span>
         </label>
         <label>
-          Prix / jour
-          <input [(ngModel)]="form.prixJour" name="prixJour" type="number" />
+          Prix / jour (TND) <span class="req">*</span>
+          <input type="number" formControlName="prixJour" min="0" max="5000" step="1" />
+          <span class="field-error" *ngIf="erreurChamp('prixJour')">{{ erreurChamp('prixJour') }}</span>
+          <span class="field-error" *ngIf="erreurGroupePrix()">{{ erreurGroupePrix() }}</span>
+          <span class="field-hint">0 = brouillon. Sinon plage réaliste 80 – 1000 TND selon le type.</span>
         </label>
         <label>
           Prix du véhicule (base caution)
-          <input
-            [(ngModel)]="form.prixVehicule"
-            name="prixVehicule"
-            type="number"
-          />
+          <input type="number" formControlName="prixVehicule" min="0" step="1" />
+          <span class="field-error" *ngIf="erreurChamp('prixVehicule')">{{ erreurChamp('prixVehicule') }}</span>
+          <span class="field-hint">≥ 0 TND.</span>
         </label>
         <label class="full-width">
           Photos du véhicule
@@ -289,7 +332,7 @@
             (change)="onPhotosSelected($event)"
           />
         </label>
-      </div>
+        </div>
 
       <div class="photos-preview" *ngIf="photoPreviews.length > 0">
         <div
@@ -309,11 +352,11 @@
 
       <div
         class="photos-existing"
-        *ngIf="editingVehicleId && getEditingPhotos().length > 0"
+        *ngIf="editingVehicleId && editingExistingPhotos.length > 0"
       >
         <p>Photos actuelles</p>
         <div class="existing-grid">
-          <div class="existing-item" *ngFor="let photo of getEditingPhotos()">
+          <div class="existing-item" *ngFor="let photo of editingExistingPhotos">
             <img [src]="resolvePhotoUrl(photo)" alt="Photo actuelle véhicule" />
             <button
               type="button"
@@ -327,12 +370,7 @@
       </div>
 
       <footer class="actions modal-actions">
-        <button
-          type="button"
-          class="button button-primary"
-          (click)="saveVehicle()"
-          [disabled]="isSaving"
-        >
+        <button type="submit" class="button button-primary" [disabled]="isSaving">
           {{
             isSaving
               ? 'Enregistrement...'
@@ -356,6 +394,7 @@
           Annuler
         </button>
       </footer>
+      </form>
     </article>
   </div>
 

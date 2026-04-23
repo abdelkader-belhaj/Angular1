@@ -556,6 +556,59 @@
   margin-top: 18px;
 }
 
+.fleet-form-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.form-banner {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.req {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.vehicle-status.maintenance {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.type-pill.pill-warn {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.type-pill.pill-muted {
+  background: #f1f5f9;
+  color: #475569;
+}
+
 .gallery-modal {
   width: min(960px, 100%);
   max-height: 92vh;

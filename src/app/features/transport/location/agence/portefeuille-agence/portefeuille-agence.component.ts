@@ -54,7 +54,12 @@ export class PortefeuilleAgenceComponent implements OnInit {
             .getAgenceTransactions(this.agency.idAgence)
             .subscribe({
               next: (transactions) => {
-                this.transactions = transactions ?? [];
+                const list = transactions ?? [];
+                this.transactions = [...list].sort((a, b) => {
+                  const ta = new Date(a.dateTransaction ?? 0).getTime();
+                  const tb = new Date(b.dateTransaction ?? 0).getTime();
+                  return tb - ta;
+                });
               },
               error: (error) => {
                 this.error =
@@ -73,13 +78,13 @@ export class PortefeuilleAgenceComponent implements OnInit {
   get confirmedRevenue(): number {
     return this.transactions
       .filter((tx) => this.isCreditType(tx.type))
-      .reduce((total, tx) => total + Number(tx.montant ?? 0), 0);
+      .reduce((total, tx) => total + this.parseMontant(tx.montant), 0);
   }
 
   get pendingRevenue(): number {
     return this.transactions
       .filter((tx) => this.isDebitType(tx.type))
-      .reduce((total, tx) => total + Number(tx.montant ?? 0), 0);
+      .reduce((total, tx) => total + this.parseMontant(tx.montant), 0);
   }
 
   get completedCount(): number {
@@ -116,5 +121,11 @@ export class PortefeuilleAgenceComponent implements OnInit {
     return String(type || '')
       .toUpperCase()
       .startsWith('DEBIT');
+  }
+
+  /** Montants API parfois en chaîne ; aligné sur `montant_net` côté wallet. */
+  parseMontant(value: unknown): number {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
   }
 }

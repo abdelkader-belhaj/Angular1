@@ -41,6 +41,14 @@ export interface EtatDesLieuxPhotoDto {
   createdAt: string;
 }
 
+export interface CheckoutCautionPayload {
+  constatDommages: boolean;
+  descriptionDommages?: string;
+  montantDommages: number;
+  montantCautionRetenu: number;
+  montantCautionRestitue: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LocationService {
   private readonly etatDesLieuxPhotosCachePrefix =
@@ -616,11 +624,25 @@ export class LocationService {
     );
   }
 
-  checkOut(id: number, photoUrls: string[]): Observable<string> {
-    return this.api.postText(
-      `/reservations-location/${id}/check-out`,
-      photoUrls,
-    );
+  checkOut(
+    id: number,
+    photoUrls: string[],
+    checkoutData?: CheckoutCautionPayload,
+  ): Observable<string> {
+    const normalizedPhotos = (photoUrls || [])
+      .map((photo) => String(photo || '').trim())
+      .filter(Boolean);
+
+    const payload = {
+      photoUrls: normalizedPhotos,
+      constatDommages: checkoutData?.constatDommages ?? false,
+      descriptionDommages: checkoutData?.descriptionDommages || '',
+      montantDommages: Number(checkoutData?.montantDommages || 0),
+      montantCautionRetenu: Number(checkoutData?.montantCautionRetenu || 0),
+      montantCautionRestitue: Number(checkoutData?.montantCautionRestitue || 0),
+    };
+
+    return this.api.postText(`/reservations-location/${id}/check-out`, payload);
   }
 
   getEtatDesLieuxPhotosByReservation(

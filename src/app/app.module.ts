@@ -28,6 +28,8 @@ import { ResetPasswordComponent } from './homePage/reset-password/reset-password
 import { AuthInterceptor } from './services/auth.interceptor';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
 import { TransportStatsComponent } from './dashbord/transport-stats/transport-stats.component';
+import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -59,8 +61,10 @@ import { TransportStatsComponent } from './dashbord/transport-stats/transport-st
     ReactiveFormsModule,
     FormsModule,
     HttpClientModule,
+    BaseChartDirective,
   ],
   providers: [
+    provideCharts(withDefaultRegisterables()),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

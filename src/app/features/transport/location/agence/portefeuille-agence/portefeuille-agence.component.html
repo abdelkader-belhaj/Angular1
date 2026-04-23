@@ -9,6 +9,11 @@
       <p>
         Visualisez le solde, les revenus confirmés et les montants en attente.
       </p>
+      <p class="scope-note">
+        Seules les lignes <strong>wallet_transactions</strong> liées à votre agence
+        (ex. crédits réservation) apparaissent ici. Les paiements de courses VTC sont
+        crédités sur le portefeuille chauffeur, pas sur celui de l'agence.
+      </p>
     </div>
   </header>
 
@@ -26,15 +31,15 @@
   <section class="stats-grid" *ngIf="agency">
     <article class="stat-card">
       <span>Solde agence</span>
-      <strong>{{ agency.solde | currency: "TND" : "symbol" : "1.0-0" }}</strong>
+      <strong>{{ agency.solde | currency: "TND" : "symbol" : "1.2-2" }}</strong>
     </article>
     <article class="stat-card">
       <span>Revenus confirmés</span>
-      <strong>{{ confirmedRevenue | currency: "TND" : "symbol" : "1.0-0" }}</strong>
+      <strong>{{ confirmedRevenue | currency: "TND" : "symbol" : "1.2-2" }}</strong>
     </article>
     <article class="stat-card">
       <span>Montants en attente</span>
-      <strong>{{ pendingRevenue | currency: "TND" : "symbol" : "1.0-0" }}</strong>
+      <strong>{{ pendingRevenue | currency: "TND" : "symbol" : "1.2-2" }}</strong>
     </article>
     <article class="stat-card">
       <span>Transactions</span>
@@ -59,7 +64,7 @@
           [class.credit]="isCredit(tx.type)"
           [class.debit]="!isCredit(tx.type)"
         >
-          {{ isCredit(tx.type) ? '+' : '-' }}{{ tx.montant | currency: "TND" : "symbol" : "1.0-0" }}
+          {{ isCredit(tx.type) ? '+' : '-' }}{{ parseMontant(tx.montant) | currency: "TND" : "symbol" : "1.2-2" }}
         </span>
       </div>
     </div>

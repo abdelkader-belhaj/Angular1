@@ -10,8 +10,8 @@
     </div>
     <strong
       >{{
-        vehicle.prixKm || 0 | currency: 'TND' : 'symbol' : '1.0-0'
-      }}/km</strong
+        vehicle.prixJour ?? 0 | currency: "TND" : "symbol" : "1.0-0"
+      }}/jour</strong
     >
   </header>
 
@@ -57,19 +57,19 @@
           </div>
           <div>
             <span>Capacité</span>
-            <strong>{{ vehicle.capacitePassagers || '-' }} passagers</strong>
+            <strong>{{ vehicle.capacitePassagers || "-" }} passagers</strong>
           </div>
           <div>
-            <span>Tarif minute</span>
+            <span>Tarif journalier</span>
             <strong>{{
-              vehicle.prixMinute || 0 | currency: 'TND' : 'symbol' : '1.0-0'
+              vehicle.prixJour ?? 0 | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
           <div>
             <span>Caution (20%)</span>
             <strong>{{
               (vehicle.prixVehicule || 0) * 0.2
-                | currency: 'TND' : 'symbol' : '1.0-0'
+                | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
           <div>
@@ -89,7 +89,7 @@
         <ul>
           <li>Plaque: {{ vehicle.numeroPlaque }}</li>
           <li>Catégorie: {{ vehicle.typeVehicule }}</li>
-          <li>Capacité: {{ vehicle.capacitePassagers || '-' }} places</li>
+          <li>Capacité: {{ vehicle.capacitePassagers || "-" }} places</li>
         </ul>
       </article>
     </section>
@@ -98,12 +98,9 @@
       <article class="panel booking-panel">
         <p class="eyebrow">Tarification</p>
         <h3>
-          {{ vehicle.prixKm || 0 | currency: 'TND' : 'symbol' : '1.0-0' }} / km
+          {{ vehicle.prixJour ?? 0 | currency: "TND" : "symbol" : "1.0-0" }} /
+          jour
         </h3>
-        <p class="muted">
-          {{ vehicle.prixMinute || 0 | currency: 'TND' : 'symbol' : '1.0-0' }}
-          par minute
-        </p>
 
         <div class="booking-summary">
           <div>
@@ -114,14 +111,14 @@
             <span>Agence</span>
             <strong>{{
               (vehicle.agence && vehicle.agence.nomAgence) ||
-                'Agence de location'
+                "Agence de location"
             }}</strong>
           </div>
           <div>
             <span>Caution</span>
             <strong>{{
               (vehicle.prixVehicule || 0) * 0.2
-                | currency: 'TND' : 'symbol' : '1.0-0'
+                | currency: "TND" : "symbol" : "1.0-0"
             }}</strong>
           </div>
         </div>

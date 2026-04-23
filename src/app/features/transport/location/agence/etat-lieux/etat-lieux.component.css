@@ -162,6 +162,67 @@ input[type="file"] {
   line-height: 1.35;
 }
 
+.damage-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #d5dde7;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.damage-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #183153;
+}
+
+.damage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.damage-grid label,
+.damage-description {
+  display: grid;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #334155;
+  font-weight: 700;
+}
+
+.damage-grid input,
+.damage-description textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d5dde7;
+  border-radius: 10px;
+  font: inherit;
+  background: #ffffff;
+}
+
+.damage-summary {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #d5dde7;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.damage-summary p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #334155;
+  font-size: 0.82rem;
+}
+
 .success-banner,
 .error-banner {
   padding: 14px 16px;
@@ -233,5 +294,9 @@ input[type="file"] {
   .state-hero {
     grid-template-columns: 1fr;
     flex-direction: column;
+  }
+
+  .damage-grid {
+    grid-template-columns: 1fr;
   }
 }

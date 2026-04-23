@@ -20,55 +20,42 @@
       </div>
       <div class="recap-row total-row">
         <span>Total</span>
-        <b class="total-amt">{{ reservation.totalPrice | number:'1.0-0' }} TND</b>
+        <b class="total-amt">{{ payableAmount | number:'1.0-0' }} TND</b>
+      </div>
+      <div class="recap-row" *ngIf="promoApplied">
+        <span>Promo appliquée</span>
+        <b>-{{ promoPercent }}%</b>
       </div>
       <p class="secure-badge">🔒 Paiement sécurisé</p>
     </aside>
 
     <section class="pay-form">
-      <h2>Finaliser le paiement</h2>
+      <h2>Payer avec Stripe</h2>
 
       <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
 
+      <div class="promo-pay-box">
+        <label>Code promo</label>
+        <div class="promo-pay-row">
+          <input type="text" [(ngModel)]="promoCodeInput" placeholder="Ex: FARAH10" />
+          <button type="button" class="meth-btn" (click)="applyPromoCode()">Appliquer</button>
+        </div>
+        <small class="promo-ok" *ngIf="promoApplied">Code validé: réduction appliquée.</small>
+        <small class="promo-err" *ngIf="promoError">{{ promoError }}</small>
+      </div>
+
       <div class="method-tabs">
-        <button class="meth-btn" [class.active]="selectedMethod === 'CARTE'" (click)="selectedMethod='CARTE'">Carte</button>
-        <button class="meth-btn" [class.active]="selectedMethod === 'PAYPAL'" (click)="selectedMethod='PAYPAL'">PayPal</button>
-        <button class="meth-btn" [class.active]="selectedMethod === 'VIREMENT'" (click)="selectedMethod='VIREMENT'">Virement</button>
+        <button class="meth-btn active" type="button">Stripe</button>
       </div>
 
-      <div *ngIf="selectedMethod === 'CARTE'">
-        <div class="card-preview">
-          <div class="card-chip">◉ ◉</div>
-          <div class="card-num">•••• •••• •••• 4821</div>
-          <div class="card-row">
-            <span>Client</span>
-            <span>12/28</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Numéro de carte</label>
-          <input type="text" placeholder="1234 5678 9012 3456" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Expiration</label>
-            <input type="text" placeholder="MM/AA" />
-          </div>
-          <div class="form-group">
-            <label>CVV</label>
-            <input type="password" placeholder="***" />
-          </div>
-        </div>
-      </div>
-
-      <div class="alt-pay" *ngIf="selectedMethod !== 'CARTE'">
-        <div class="alt-ico">💳</div>
-        <p>Vous avez choisi <b>{{ selectedMethod }}</b>. Cliquez sur confirmer pour valider.</p>
+      <div *ngIf="selectedMethod === 'STRIPE'" class="alt-pay stripe-pay-block">
+        <div class="alt-ico">🔒</div>
+        <p>Paiement sécurisé via Stripe. Vous serez redirigé vers la page officielle de paiement.</p>
+        <p class="stripe-note">Les codes promo valides sont appliqués avant la redirection.</p>
       </div>
 
       <button class="btn-pay-main" (click)="confirmPayment()" [disabled]="processing">
-        {{ processing ? 'Traitement en cours...' : 'Confirmer le paiement' }}
+        {{ processing ? 'Redirection Stripe...' : 'Payer avec Stripe' }}
       </button>
     </section>
   </div>

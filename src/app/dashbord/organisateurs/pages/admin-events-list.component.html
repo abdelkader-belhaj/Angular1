@@ -1,6 +1,23 @@
 <!-- admin-events-list.component.html -->
 <div class="events-container">
 
+  <div *ngIf="newEventPopupTarget" class="event-modal-backdrop" (click)="closeNewEventPopup()">
+    <div class="event-modal" (click)="$event.stopPropagation()">
+      <div class="event-modal-header">
+        <h3>Nouvel événement créé</h3>
+        <button type="button" class="event-modal-close" (click)="closeNewEventPopup()">✕</button>
+      </div>
+      <div class="event-modal-content">
+        <p><strong>{{ newEventPopupTarget.organizerName }}</strong> a créé l'événement:</p>
+        <p><strong>{{ newEventPopupTarget.title }}</strong> - {{ newEventPopupTarget.city }} - {{ formatDate(newEventPopupTarget.startDate) }}</p>
+        <div class="reject-actions">
+          <button class="page-btn" (click)="closeNewEventPopup()">Fermer</button>
+          <button class="page-btn danger" (click)="openNewEventDetails()">Voir les détails</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div *ngIf="toastMessage" [class]="'toast toast-' + toastType">
     {{ toastMessage }}
@@ -249,6 +266,32 @@
         <div class="reject-actions">
           <button class="page-btn" (click)="closeRejectModal()">Annuler</button>
           <button class="page-btn danger" (click)="submitReject()">Confirmer le rejet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCancelModal" class="event-modal-backdrop" (click)="closeCancelModal()">
+    <div class="event-modal reject-modal" (click)="$event.stopPropagation()">
+      <div class="event-modal-header">
+        <h3>Annuler l'événement</h3>
+        <button type="button" class="event-modal-close" (click)="closeCancelModal()">✕</button>
+      </div>
+
+      <div class="event-modal-content">
+        <p class="reject-target" *ngIf="cancelTargetEvent">Event: <strong>{{ cancelTargetEvent.title }}</strong></p>
+        <label class="label" for="cancelReason">Motif (obligatoire)</label>
+        <textarea
+          id="cancelReason"
+          class="reject-textarea"
+          [(ngModel)]="cancelReason"
+          rows="5"
+          placeholder="Ex: problème logistique, indisponibilité lieu, sécurité..."
+        ></textarea>
+
+        <div class="reject-actions">
+          <button class="page-btn" (click)="closeCancelModal()">Retour</button>
+          <button class="page-btn danger" (click)="submitCancel()">Confirmer l'annulation</button>
         </div>
       </div>
     </div>

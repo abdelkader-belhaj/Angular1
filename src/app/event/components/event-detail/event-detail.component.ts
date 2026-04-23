@@ -1,19 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EventActivity, WeatherData, DiscountInfo } from '../../models/event.model';
+import { DiscountInfo, EventActivity, EventReview, EventReviewRequest, WeatherData } from '../../models/event.model';
 import { EventService } from '../../../services/events/event.service';
 import { ReservationService } from '../../../services/events/reservation.service';
 import { calculateDiscount, defaultEventImage } from '../../utils/discount.util';
 import { AuthService } from '../../../services/auth.service';
-
-type EventReview = {
-  eventId: number;
-  userId: number | null;
-  userName: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-};
 
 @Component({
   selector: 'app-event-detail',
@@ -43,8 +34,7 @@ export class EventDetailComponent implements OnInit {
   reviewComment = '';
   reviewError = '';
   reviewSuccess = '';
-
-  private readonly reviewsStorageKey = 'tunisiatour.eventReviews.v1';
+  hasConfirmedReservationForEvent = false;
 
   get isLoggedIn(): boolean { return !!this.auth.getToken(); }
   get isClient(): boolean { return this.auth.getCurrentUser()?.role === 'CLIENT_TOURISTE'; }
@@ -64,6 +54,28 @@ export class EventDetailComponent implements OnInit {
     return Math.round(this.averageRating);
   }
 
+  get isEventFinished(): boolean {
+    if (!this.event?.endDate) return false;
+    return new Date(this.event.endDate).getTime() <= Date.now();
+  }
+
+  get canReview(): boolean {
+    return this.isLoggedIn && this.isClient && this.isEventFinished && this.hasConfirmedReservationForEvent;
+  }
+
+  get reviewEligibilityMessage(): string {
+    if (!this.isLoggedIn || !this.isClient) {
+      return 'Connectez-vous en tant que client pour laisser un avis.';
+    }
+    if (!this.hasConfirmedReservationForEvent) {
+      return 'Vous pouvez laisser un avis uniquement après une réservation confirmée (paiement validé).';
+    }
+    if (!this.isEventFinished) {
+      return 'Vous pourrez laisser un avis dès la fin de cet événement.';
+    }
+    return '';
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -77,7 +89,13 @@ export class EventDetailComponent implements OnInit {
     this.eventService.getPublishedById(id).subscribe({
       next: ev => {
         this.event = ev;
-        this.discount = calculateDiscount(ev.price, ev.startDate, ev.categoryName);
+        this.discount = calculateDiscount(ev.price, ev.startDate, ev.categoryName, {
+          promoType: ev.promoType,
+          promoPercent: ev.promoPercent,
+          promoCode: ev.promoCode,
+          promoStartDate: ev.promoStartDate,
+          promoEndDate: ev.promoEndDate,
+        });
         this.loadReviews(ev.id);
         this.loading = false;
         this.eventService.getEventWeather(id).subscribe({ next: w => this.weather = w, error: () => {} });
@@ -89,7 +107,12 @@ export class EventDetailComponent implements OnInit {
 
   checkReservation(): void {
     this.resService.getMesReservations().subscribe({
-      next: rs => { this.isReserved = rs.some(r => r.eventId === this.event?.id && r.status !== 'CANCELLED'); },
+      next: rs => {
+        this.isReserved = rs.some(r => r.eventId === this.event?.id && r.status !== 'CANCELLED');
+        this.hasConfirmedReservationForEvent = rs.some(
+          r => r.eventId === this.event?.id && r.status === 'CONFIRMED'
+        );
+      },
       error: () => {}
     });
   }
@@ -142,68 +165,48 @@ export class EventDetailComponent implements OnInit {
       return;
     }
 
+    if (!this.hasConfirmedReservationForEvent) {
+      this.reviewError = 'Avis autorisé uniquement après paiement confirmé pour cet événement.';
+      return;
+    }
+
+    if (!this.isEventFinished) {
+      this.reviewError = 'Vous pourrez publier votre avis après la fin de l\'événement.';
+      return;
+    }
+
     const message = this.reviewComment.trim();
     if (message.length < 10) {
       this.reviewError = 'Votre avis doit contenir au moins 10 caractères.';
       return;
     }
 
-    const user = this.auth.getCurrentUser();
-    const review: EventReview = {
-      eventId: this.event.id,
-      userId: user?.id ?? null,
-      userName: user?.username ?? 'Client',
+    const payload: EventReviewRequest = {
       rating: this.reviewRating,
       comment: message,
-      createdAt: new Date().toISOString(),
     };
 
-    const store = this.readReviewsStore();
-    const key = String(this.event.id);
-    const list = Array.isArray(store[key]) ? store[key] : [];
-
-    const existingIndex = list.findIndex((r: EventReview) => {
-      if (user?.id != null && r.userId != null) return r.userId === user.id;
-      return r.userName === review.userName;
+    this.eventService.submitReview(this.event.id, payload).subscribe({
+      next: () => {
+        this.reviewSuccess = 'Merci, votre avis a été publié.';
+        this.reviewComment = '';
+        this.reviewRating = 5;
+        this.loadReviews(this.event!.id);
+      },
+      error: err => {
+        this.reviewError = err?.error?.message || 'Impossible de publier votre avis pour le moment.';
+      }
     });
-
-    if (existingIndex >= 0) {
-      list[existingIndex] = review;
-      this.reviewSuccess = 'Votre avis a été mis à jour.';
-    } else {
-      list.unshift(review);
-      this.reviewSuccess = 'Merci, votre avis a été publié.';
-    }
-
-    store[key] = list;
-    this.writeReviewsStore(store);
-    this.loadReviews(this.event.id);
-    this.reviewComment = '';
-    this.reviewRating = 5;
   }
 
   private loadReviews(eventId: number): void {
-    const store = this.readReviewsStore();
-    const list = Array.isArray(store[String(eventId)]) ? store[String(eventId)] : [];
-    this.reviews = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }
-
-  private readReviewsStore(): Record<string, EventReview[]> {
-    try {
-      const raw = localStorage.getItem(this.reviewsStorageKey);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }
-
-  private writeReviewsStore(store: Record<string, EventReview[]>): void {
-    try {
-      localStorage.setItem(this.reviewsStorageKey, JSON.stringify(store));
-    } catch {
-      // Ignore storage failures.
-    }
+    this.eventService.getReviews(eventId).subscribe({
+      next: reviews => {
+        this.reviews = Array.isArray(reviews) ? reviews : [];
+      },
+      error: () => {
+        this.reviews = [];
+      }
+    });
   }
 }

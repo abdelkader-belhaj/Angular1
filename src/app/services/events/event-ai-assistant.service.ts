@@ -13,6 +13,7 @@ interface PriceSuggestionRequest {
   type: string;
   categoryName?: string;
   city?: string;
+  address?: string;
   capacity?: number;
   startDate?: string;
   endDate?: string;
@@ -24,7 +25,7 @@ export interface AssistantResponse {
 }
 
 export interface PriceSuggestionResponse {
-  price: number;
+  price: number | null;
   label: string;
   rationale: string;
   aiUsed: boolean;

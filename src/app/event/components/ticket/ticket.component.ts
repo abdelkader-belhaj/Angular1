@@ -1,7 +1,7 @@
 // src/app/event/components/ticket/ticket.component.ts
 
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import html2canvas from 'html2canvas';
@@ -49,17 +49,56 @@ export class TicketComponent implements OnInit {
     private readonly route:      ActivatedRoute,
     private readonly resService: ReservationService,
     private readonly auth:       AuthService,
+    private readonly router:     Router,
     public  readonly location:   Location,
   ) {}
 
   ngOnInit(): void {
     const id = +this.route.snapshot.paramMap.get('reservationId')!;
     this.reservationId = id;
+    this.autoValidateFromQrLink();
 
     this.loadReservation(id, true);
     this.refreshTimer = setInterval(() => this.loadReservation(this.reservationId, false), this.refreshIntervalMs);
     window.addEventListener('focus', this.refreshOnFocus);
     document.addEventListener('visibilitychange', this.refreshOnVisibility);
+  }
+
+  private autoValidateFromQrLink(): void {
+    if (!this.canScan) return;
+
+    const query = this.route.snapshot.queryParamMap;
+    const rawCode = query.get('code');
+    const scanFlag = query.get('scan');
+
+    if (rawCode && rawCode.trim().length > 0) {
+      this.scanTicket(decodeURIComponent(rawCode.trim()));
+      return;
+    }
+
+    // Fallback: old QR links may only contain ?scan=1
+    if (scanFlag === '1' && this.reservationId > 0 && !this.isAnalyzing) {
+      this.isAnalyzing = true;
+      this.resService.scanQr(this.reservationId).subscribe({
+        next: (result) => {
+          this.visionResult = {
+            success: result.valid,
+            title: result.valid ? 'Ticket validé' : 'Ticket invalide',
+            message: result.message,
+          };
+          this.loadReservation(this.reservationId, false);
+          this.isAnalyzing = false;
+        },
+        error: () => {
+          this.visionResult = {
+            success: false,
+            title: 'Erreur scan',
+            message: 'Impossible de valider ce ticket pour le moment.',
+          };
+          this.isAnalyzing = false;
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -80,6 +119,11 @@ export class TicketComponent implements OnInit {
 
   get canPrint(): boolean {
     return !this.isAdmin && !this.isOrganisateur;
+  }
+
+  get showPendingPaymentWarning(): boolean {
+    if (!this.reservation) return false;
+    return this.reservation.status === 'PENDING' && this.canPrint;
   }
 
   private loadReservation(id: number, firstLoad: boolean): void {
@@ -180,6 +224,11 @@ export class TicketComponent implements OnInit {
   }
 
   goBack(): void { this.location.back(); }
+
+  goToPayment(): void {
+    if (!this.reservation) return;
+    void this.router.navigate(['/payment', this.reservation.id]);
+  }
 
   async analyzeTicketWithVisionAI(): Promise<void> {
     if (!this.reservation || this.isAlreadyUsed || this.isAnalyzing) return;

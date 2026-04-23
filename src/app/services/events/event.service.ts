@@ -9,6 +9,8 @@ import {
   EventActivity,
   EventActivityRequest,
   EventCategory,
+  EventReview,
+  EventReviewRequest,
 } from '../../event/models/event.model';
 
 @Injectable({ providedIn: 'root' })
@@ -59,6 +61,31 @@ export class EventService {
   // GET /api/events/category/{categoryId}
   getByCategoryId(categoryId: number): Observable<EventActivity[]> {
     return this.http.get<EventActivity[]>(`${this.base}/category/${categoryId}`);
+  }
+
+  checkDateAvailability(date: string): Observable<{
+    date: string;
+    eventsCount: number;
+    status: 'AVAILABLE' | 'BUSY' | 'SATURATED' | string;
+    message: string;
+    suggestions: string[];
+  }> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<{
+      date: string;
+      eventsCount: number;
+      status: 'AVAILABLE' | 'BUSY' | 'SATURATED' | string;
+      message: string;
+      suggestions: string[];
+    }>(`${this.base}/check-date`, { params });
+  }
+
+  getReviews(eventId: number): Observable<EventReview[]> {
+    return this.http.get<EventReview[]>(`${this.base}/${eventId}/reviews`);
+  }
+
+  submitReview(eventId: number, payload: EventReviewRequest): Observable<EventReview> {
+    return this.http.post<EventReview>(`${this.base}/${eventId}/reviews`, payload);
   }
 
   // GET /api/events/{id}/weather

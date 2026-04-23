@@ -3,7 +3,14 @@ import { DiscountInfo } from '../models/event.model';
 export function calculateDiscount(
   price: number,
   startDate: string,
-  categoryName?: string | null
+  categoryName?: string | null,
+  promo?: {
+    promoType?: 'NONE' | 'WEEKEND' | 'HOLIDAY' | 'CUSTOM' | string;
+    promoPercent?: number | null;
+    promoCode?: string | null;
+    promoStartDate?: string | null;
+    promoEndDate?: string | null;
+  }
 ): DiscountInfo {
   const d     = new Date(startDate);
   const month = d.getMonth() + 1;
@@ -13,14 +20,34 @@ export function calculateDiscount(
   let percent = 0;
   let label   = '';
 
+  const promoType = (promo?.promoType ?? 'NONE').toUpperCase();
+  const promoPercent = typeof promo?.promoPercent === 'number' ? Math.max(0, Math.min(80, promo.promoPercent)) : 0;
+  const now = new Date();
+  const promoStart = promo?.promoStartDate ? new Date(promo.promoStartDate) : null;
+  const promoEnd = promo?.promoEndDate ? new Date(promo.promoEndDate) : null;
+  const promoInWindow = (!promoStart || promoStart <= now) && (!promoEnd || promoEnd >= now);
+  const isWeekend = dow === 5 || dow === 6 || dow === 0;
+
+  if (promoType !== 'NONE' && promoPercent > 0) {
+    if (promoType === 'WEEKEND' && isWeekend) {
+      percent = promoPercent;
+      label = `🎉 Promo Weekend −${promoPercent}%`;
+    } else if ((promoType === 'HOLIDAY' || promoType === 'CUSTOM') && promoInWindow) {
+      percent = promoPercent;
+      label = promoType === 'CUSTOM' && promo?.promoCode
+        ? `🎟️ Code ${promo.promoCode} −${promoPercent}%`
+        : `🎉 Promo −${promoPercent}%`;
+    }
+  }
+
   // ── Jours fériés ─────────────────────────────────────────────
-  if      (month === 2  && day >= 12 && day <= 16) { percent = 20; label = '💝 Saint-Valentin −20%'; }
-  else if (month === 12 && day >= 24)               { percent = 15; label = '🎄 Fêtes de fin d\'année −15%'; }
-  else if (month === 1  && day === 1)               { percent = 15; label = '🎆 Nouvel An −15%'; }
-  else if (month === 7  && day === 25)              { percent = 10; label = '🇹🇳 Fête Nationale −10%'; }
-  else if (month === 5  && day === 1)               { percent = 10; label = '🛠️ Fête du Travail −10%'; }
-  else if (month === 3  && day === 20)              { percent = 15; label = '🇹🇳 Fête Indépendance −15%'; }
-  else if (month === 8  && day === 13)              { percent = 10; label = '🌸 Fête de la Femme −10%'; }
+  if (percent === 0 && month === 2  && day >= 12 && day <= 16) { percent = 20; label = '💝 Saint-Valentin −20%'; }
+  else if (percent === 0 && month === 12 && day >= 24)               { percent = 15; label = '🎄 Fêtes de fin d\'année −15%'; }
+  else if (percent === 0 && month === 1  && day === 1)               { percent = 15; label = '🎆 Nouvel An −15%'; }
+  else if (percent === 0 && month === 7  && day === 25)              { percent = 10; label = '🇹🇳 Fête Nationale −10%'; }
+  else if (percent === 0 && month === 5  && day === 1)               { percent = 10; label = '🛠️ Fête du Travail −10%'; }
+  else if (percent === 0 && month === 3  && day === 20)              { percent = 15; label = '🇹🇳 Fête Indépendance −15%'; }
+  else if (percent === 0 && month === 8  && day === 13)              { percent = 10; label = '🌸 Fête de la Femme −10%'; }
   else {
     // ── Weekend ──────────────────────────────────────────────
     if (dow === 5 || dow === 6 || dow === 0) {
@@ -37,7 +64,6 @@ export function calculateDiscount(
     }
 
     // ── Dernière minute (< 48h) ───────────────────────────────
-    const now     = new Date();
     const diffH   = (d.getTime() - now.getTime()) / 3600000;
     if (diffH > 0 && diffH < 48) {
       percent = 30;
@@ -52,7 +78,7 @@ export function calculateDiscount(
     { y: 2026, m: 3,  d: 20 },
     { y: 2027, m: 3,  d: 10 },
   ];
-  if (aids.some(a =>
+  if (percent === 0 && aids.some(a =>
     d.getFullYear() === a.y &&
     month === a.m &&
     Math.abs(day - a.d) <= 3
@@ -68,7 +94,7 @@ export function calculateDiscount(
     { y: 2026, m: 5,  d: 27 },
     { y: 2027, m: 5,  d: 17 },
   ];
-  if (adhas.some(a =>
+  if (percent === 0 && adhas.some(a =>
     d.getFullYear() === a.y &&
     month === a.m &&
     Math.abs(day - a.d) <= 3

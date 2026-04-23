@@ -2,7 +2,8 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   EventReservation,
   EventQrScanResult,
@@ -71,11 +72,15 @@ export class ReservationService {
 
     return this.http.post<unknown>(eventsEndpoint, {}).pipe(
       map((response) => this.normalizeScanResponse(response)),
-      catchError(() =>
-        this.http.put<unknown>(legacyEndpoint, {}).pipe(
-          map((response) => this.normalizeScanResponse(response))
-        )
-      )
+      catchError((err: HttpErrorResponse) => {
+        // Keep legacy fallback only for endpoint-not-found to preserve old environments.
+        if (err?.status === 404) {
+          return this.http.put<unknown>(legacyEndpoint, {}).pipe(
+            map((response) => this.normalizeScanResponse(response))
+          );
+        }
+        return throwError(() => err);
+      })
     );
   }
 

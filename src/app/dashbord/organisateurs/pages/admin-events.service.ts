@@ -34,6 +34,10 @@ export interface EventRejectRequest {
   reason?: string;
 }
 
+export interface EventCancelRequest {
+  reason?: string;
+}
+
 export interface AdminEventStats {
   totalEvents: number;
   draftCount: number;
@@ -71,8 +75,8 @@ export class AdminEventsService {
   }
 
   // Annuler un événement (ADMIN/ORGANISATEUR)
-  cancelEvent(id: number): Observable<EventActivityResponse> {
-    return this.http.post<EventActivityResponse>(`${this.apiUrl}/${id}/cancel`, null);
+  cancelEvent(id: number, payload?: EventCancelRequest): Observable<EventActivityResponse> {
+    return this.http.post<EventActivityResponse>(`${this.apiUrl}/${id}/cancel`, payload ?? null);
   }
 
   // Obtenir les statistiques d'événements

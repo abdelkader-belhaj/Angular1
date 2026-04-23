@@ -64,8 +64,25 @@
       <div class="loading" *ngIf="loading">Chargement des donnees...</div>
       <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <div class="event-list" *ngIf="!loading && !errorMsg && events.length > 0">
-        <article class="event-item" *ngFor="let ev of events">
+      <div class="filters" *ngIf="!loading && !errorMsg && events.length > 0">
+        <input
+          class="form-input"
+          [(ngModel)]="eventQuickSearch"
+          placeholder="Recherche rapide (titre, ville, catégorie)"
+        />
+        <select [(ngModel)]="eventQuickStatus">
+          <option value="ALL">Tous les statuts</option>
+          <option value="PUBLISHED">Publiés</option>
+          <option value="DRAFT">Brouillons</option>
+          <option value="REJECTED">Rejetés</option>
+          <option value="CANCELLED">Annulés</option>
+        </select>
+        <input type="date" [(ngModel)]="eventQuickDate" />
+        <button class="btn-ghost" (click)="clearEventQuickFilters()">Reset filtres</button>
+      </div>
+
+      <div class="event-list" *ngIf="!loading && !errorMsg && filteredOrganizerEvents.length > 0">
+        <article class="event-item" *ngFor="let ev of filteredOrganizerEvents">
           <div>
             <h3>
               {{ ev.title }}
@@ -81,18 +98,19 @@
             </small>
           </div>
           <div class="event-actions">
+            <button class="btn-ghost" (click)="goToEvent(ev.id)">Voir</button>
             <button class="btn-primary" *ngIf="canEditEvent(ev)" (click)="startEdit(ev)">Modifier</button>
-            <span class="edit-lock" *ngIf="!canEditEvent(ev)">Modification: brouillon uniquement</span>
+            <span class="edit-lock" *ngIf="!canEditEvent(ev)">Modification: brouillon/rejeté uniquement</span>
             <button class="btn-danger" *ngIf="canCancelEvent(ev)" (click)="cancelEvent(ev)">Annuler</button>
             <span class="edit-lock" *ngIf="ev.status === 'PUBLISHED' && !canCancelEvent(ev)">Annulation verrouillée dans les 24h</span>
           </div>
         </article>
       </div>
 
-      <div class="empty" *ngIf="!loading && !errorMsg && events.length === 0">
+      <div class="empty" *ngIf="!loading && !errorMsg && filteredOrganizerEvents.length === 0">
         <p>Aucun evenement lie a ce compte organisateur.</p>
         <small>Connecte avec: {{ organizerEmail }}</small>
-        <small>Si tes events sont crees par un autre organisateur en base, ils ne s'affichent pas ici.</small>
+        <small>Si des filtres sont actifs, reinitialisez-les pour revoir toute la liste.</small>
       </div>
     </article>
   </section>
@@ -143,7 +161,7 @@
           <div class="form-group full">
             <label class="form-label required">Titre</label>
             <input class="form-input" [(ngModel)]="form.title" name="title" maxlength="80" placeholder="Ex : Festival Jazz de Tunis 2025" (ngModelChange)="onFormTextChange()" />
-            <span class="form-hint">{{ form.title.length }}/80 caractères</span>
+            <span class="form-hint">{{ form.title.length }}/80 caractères · réels: {{ titleRealLength }}/15 min</span>
           </div>
           <div class="form-group">
             <label class="form-label required">Catégorie</label>
@@ -156,21 +174,6 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label required">Prix</label>
-            <div class="input-addon-wrapper">
-              <input class="form-input has-addon" [(ngModel)]="form.price" name="price" type="number" min="0" placeholder="0" (ngModelChange)="onManualPriceChange()" />
-              <span class="input-addon">TND</span>
-            </div>
-            <span class="form-hint">Le prix se remplit automatiquement quand titre, type, catégorie et description sont renseignés.</span>
-            <div class="ai-hint" *ngIf="priceAiLoading">Suggestion IA en cours...</div>
-            <div class="ai-hint" *ngIf="!priceAiLoading && suggestedPriceInfo as suggestion">
-              Prix estimé par IA: <strong>{{ suggestion.price | number:'1.0-0' }} TND</strong>
-              <span>({{ suggestion.label }})</span>
-              <small>· {{ suggestion.rationale }}</small>
-            </div>
-            <div class="ai-hint" *ngIf="!priceAiLoading && priceAiError">{{ priceAiError }}</div>
-          </div>
-          <div class="form-group">
             <label class="form-label required">Capacité</label>
             <div class="input-addon-wrapper">
               <input class="form-input has-addon" [(ngModel)]="form.capacity" name="capacity" type="number" min="1" placeholder="100" />
@@ -180,6 +183,37 @@
           <div class="form-group full">
             <label class="form-label required">Description</label>
             <textarea class="form-textarea" [(ngModel)]="form.description" name="description" rows="4" (ngModelChange)="onFormTextChange()"></textarea>
+            <span class="form-hint">Caractères réels: {{ descriptionRealLength }}/20 min</span>
+            <span class="form-hint" *ngIf="hasFakeContent">⚠️ Contenu factice détecté</span>
+          </div>
+
+          <div class="form-group full promo-block">
+            <label class="form-label">Promotion</label>
+            <div class="promo-type-row">
+              <label><input type="radio" name="promoType" [value]="'NONE'" [(ngModel)]="form.promoType" (ngModelChange)="onPromoTypeChange()" /> Aucune</label>
+              <label><input type="radio" name="promoType" [value]="'WEEKEND'" [(ngModel)]="form.promoType" (ngModelChange)="onPromoTypeChange()" /> Weekend</label>
+              <label><input type="radio" name="promoType" [value]="'HOLIDAY'" [(ngModel)]="form.promoType" (ngModelChange)="onPromoTypeChange()" /> Fête/Aïd</label>
+              <label><input type="radio" name="promoType" [value]="'CUSTOM'" [(ngModel)]="form.promoType" (ngModelChange)="onPromoTypeChange()" /> Personnalisée</label>
+            </div>
+
+            <div class="promo-grid" *ngIf="form.promoType && form.promoType !== 'NONE'">
+              <div class="form-group">
+                <label class="form-label">Remise (%)</label>
+                <input class="form-input" type="number" min="1" max="80" [(ngModel)]="form.promoPercent" name="promoPercent" />
+              </div>
+              <div class="form-group" *ngIf="form.promoType === 'CUSTOM'">
+                <label class="form-label">Code promo</label>
+                <input class="form-input" [(ngModel)]="form.promoCode" name="promoCode" placeholder="EX: WEEKEND10" />
+              </div>
+              <div class="form-group" *ngIf="form.promoType === 'CUSTOM' || form.promoType === 'HOLIDAY'">
+                <label class="form-label">Début promo</label>
+                <input class="form-input" type="datetime-local" [(ngModel)]="form.promoStartDate" name="promoStartDate" />
+              </div>
+              <div class="form-group" *ngIf="form.promoType === 'CUSTOM' || form.promoType === 'HOLIDAY'">
+                <label class="form-label">Fin promo</label>
+                <input class="form-input" type="datetime-local" [(ngModel)]="form.promoEndDate" name="promoEndDate" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -191,10 +225,32 @@
 
       <div class="form-step-content" *ngIf="formStep === 2">
         <div class="form-grid">
-          <div class="form-group"><label class="form-label required">Ville</label><input class="form-input" [(ngModel)]="form.city" name="city" (blur)="geocodeAddress()" /></div>
-          <div class="form-group"><label class="form-label required">Adresse</label><input class="form-input" [(ngModel)]="form.address" name="address" (blur)="geocodeAddress()" /></div>
-          <div class="form-group"><label class="form-label required">Date de début</label><input class="form-input" [(ngModel)]="form.startDate" name="startDate" type="datetime-local" /></div>
+          <div class="form-group"><label class="form-label required">Ville</label><input class="form-input" [(ngModel)]="form.city" name="city" (ngModelChange)="onLocationInputChange()" (blur)="geocodeAddress()" /></div>
+          <div class="form-group"><label class="form-label required">Adresse</label><input class="form-input" [(ngModel)]="form.address" name="address" (ngModelChange)="onLocationInputChange()" (blur)="geocodeAddress()" /></div>
+          <div class="form-group">
+            <label class="form-label required">Prix</label>
+            <div class="input-addon-wrapper">
+              <input class="form-input has-addon" [(ngModel)]="form.price" name="price" type="number" min="0" placeholder="0" (ngModelChange)="onManualPriceChange()" />
+              <span class="input-addon">TND</span>
+            </div>
+            <div class="ai-hint" *ngIf="priceAiLoading">Suggestion IA en cours...</div>
+          </div>
+          <div class="form-group"><label class="form-label required">Date de début</label><input class="form-input" [(ngModel)]="form.startDate" name="startDate" type="datetime-local" (ngModelChange)="onStartDateChange()" /></div>
           <div class="form-group"><label class="form-label required">Date de fin</label><input class="form-input" [(ngModel)]="form.endDate" name="endDate" type="datetime-local" /></div>
+        </div>
+
+        <div class="date-availability" *ngIf="dateAvailability as availability" [class.ok]="availability.status === 'AVAILABLE'" [class.busy]="availability.status === 'BUSY'" [class.saturated]="availability.status === 'SATURATED'">
+          <strong *ngIf="availability.status === 'AVAILABLE'">✅ Date disponible !</strong>
+          <strong *ngIf="availability.status === 'BUSY'">⚠️ {{ availability.eventsCount }} événements ce jour</strong>
+          <strong *ngIf="availability.status === 'SATURATED'">❌ Date saturée</strong>
+          <p>{{ availability.message }}</p>
+          <p class="form-hint" *ngIf="dateAvailabilityNotice">💡 {{ dateAvailabilityNotice }}</p>
+          <div class="date-suggestions" *ngIf="availability.suggestions?.length">
+            <span>Dates libres proches :</span>
+            <div class="date-suggestion-list">
+              <span class="date-suggestion-chip" *ngFor="let d of availability.suggestions">{{ d | date:'dd MMM y' }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="location-block">
@@ -628,11 +684,11 @@
   <section class="org-content single" *ngIf="activeTab === 'qr'">
     <article class="panel panel-scan full">
       <h2>Validation QR</h2>
-      <p>Scannez le QR avec la caméra. La validation IA Groq se lance automatiquement.</p>
+      <p>Scannez le QR avec la caméra. La validation se fait instantanément en base de données.</p>
 
       <div class="ai-qr-tools">
         <button class="btn-ghost" *ngIf="!cameraScanning" [disabled]="!cameraSupported" (click)="startAiQrCamera()">
-          📷 Lancer scan caméra
+          📷 Scanner
         </button>
         <button class="btn-danger" *ngIf="cameraScanning" (click)="stopAiQrCamera()">❌ Arrêter caméra</button>
       </div>
@@ -645,8 +701,15 @@
 
       <small class="ai-hint" *ngIf="!cameraSupported">⚠️ Caméra non supportée sur cet appareil.</small>
 
-      <div *ngIf="scanResult" class="scan-result" [class.ok]="scanResult.valid" [class.ko]="!scanResult.valid">
-        {{ scanResult.message }}
+      <div
+        *ngIf="scanResult"
+        class="scan-result"
+        [class.ok]="scanResult.valid"
+        [class.used]="qrResultUsed"
+        [class.pending]="qrResultPending"
+        [class.ko]="!scanResult.valid && !qrResultUsed && !qrResultPending">
+        <div class="scan-result-icon">{{ qrResultIcon }}</div>
+        <p class="scan-result-message">{{ scanResult.message }}</p>
       </div>
       <div class="info" *ngIf="aiQrHint">{{ aiQrHint }}</div>
     </article>

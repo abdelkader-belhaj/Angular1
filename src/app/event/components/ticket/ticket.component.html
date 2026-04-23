@@ -28,10 +28,15 @@
 
           <!-- STATUT -->
           <div class="status-block" [class.confirmed]="reservation.status==='CONFIRMED'" [class.pending]="reservation.status==='PENDING'" [class.cancelled]="reservation.status==='CANCELLED'">
-            <span *ngIf="reservation.status==='CONFIRMED' && !isEntryValidated">Paiement confirmé</span>
+
             <span *ngIf="reservation.status==='CONFIRMED' && isEntryValidated">Billet confirmé — Entrée validée par l'organisateur</span>
             <span *ngIf="reservation.status==='PENDING'">⏳ En attente de paiement</span>
             <span *ngIf="reservation.status==='CANCELLED'">❌ Billet Annulé</span>
+          </div>
+
+          <div class="pending-warning" *ngIf="showPendingPaymentWarning">
+            <p>⚠️ Complétez votre paiement pour accéder à votre billet</p>
+            <button class="btn-pay-now" type="button" (click)="goToPayment()">Payer maintenant</button>
           </div>
         </div>
 
@@ -63,7 +68,7 @@
     </div>
 
     <!-- ACTIONS -->
-    <div class="ticket-actions no-print" *ngIf="canPrint">
+    <div class="ticket-actions no-print" *ngIf="canPrint && !showPendingPaymentWarning">
       <button class="btn-print" (click)="print()">🖨️ Imprimer / Télécharger</button>
     </div>
 

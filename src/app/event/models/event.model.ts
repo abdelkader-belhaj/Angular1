@@ -2,6 +2,7 @@
 
 export type EventType         = 'EVENT' | 'ACTIVITY';
 export type EventStatus       = 'DRAFT' | 'PUBLISHED' | 'REJECTED' | 'CANCELLED';
+export type PromoType         = 'NONE' | 'WEEKEND' | 'HOLIDAY' | 'CUSTOM';
 export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 export type PaymentStatus     = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
 
@@ -22,8 +23,17 @@ export interface EventActivity {
   imageUrl:       string | null;
   type:           EventType;
   status:         EventStatus;
+  promoType?:     PromoType;
+  promoPercent?:  number | null;
+  promoCode?:     string | null;
+  promoStartDate?: string | null;
+  promoEndDate?:   string | null;
   createdAt:      string;
   updatedAt:      string;
+  moderatedAt?:   string | null;
+  moderatedByEmail?: string | null;
+  moderationReason?: string | null;
+  cancellationReason?: string | null;
   categoryId:     number;
   categoryName:   string | null;
   organizerId:    number;
@@ -52,6 +62,11 @@ export interface EventActivityRequest {
   imageUrl: string | null;
   type: EventType;
   categoryId: number;
+  promoType?: PromoType;
+  promoPercent?: number | null;
+  promoCode?: string | null;
+  promoStartDate?: string | null;
+  promoEndDate?: string | null;
 }
 
 // ── EventReservationRequest ──────────────────────────────────
@@ -84,6 +99,7 @@ export interface EventPaymentRequest {
   currency:       string;
   transactionId?: string;
   reservationId:  number;
+  promoCode?:     string | null;
 }
 
 // ── EventPaymentResponse ─────────────────────────────────────
@@ -112,6 +128,22 @@ export interface EventVisionAnalysisResult {
   extractedData?: string | null;
   reservationId?: number;
   alreadyUsed?: boolean;
+}
+
+export interface EventReview {
+  id: number;
+  eventId: number;
+  userId: number | null;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventReviewRequest {
+  rating: number;
+  comment: string;
 }
 
 export interface EventTicket {

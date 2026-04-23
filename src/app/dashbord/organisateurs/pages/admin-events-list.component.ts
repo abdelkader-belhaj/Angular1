@@ -10,9 +10,13 @@ export class AdminEventsListComponent implements OnInit {
   events: EventActivityResponse[] = [];
   filteredEvents: EventActivityResponse[] = [];
   selectedEvent: EventActivityResponse | null = null;
+  newEventPopupTarget: EventActivityResponse | null = null;
   rejectTargetEvent: EventActivityResponse | null = null;
   rejectReason = '';
   showRejectModal = false;
+  cancelTargetEvent: EventActivityResponse | null = null;
+  cancelReason = '';
+  showCancelModal = false;
   loading = false;
   error = '';
   toastMessage = '';
@@ -47,6 +51,7 @@ export class AdminEventsListComponent implements OnInit {
       next: (data) => {
         this.events = data;
         this.filterEvents();
+        this.showNewEventPopupIfNeeded();
         this.showToast('Liste des evenements chargee', 'success');
         this.loading = false;
       },
@@ -163,6 +168,16 @@ export class AdminEventsListComponent implements OnInit {
     this.showActionMenu = null;
   }
 
+  closeNewEventPopup(): void {
+    this.newEventPopupTarget = null;
+  }
+
+  openNewEventDetails(): void {
+    if (!this.newEventPopupTarget) return;
+    this.selectedEvent = this.newEventPopupTarget;
+    this.newEventPopupTarget = null;
+  }
+
   closeEventDetails(): void {
     this.selectedEvent = null;
   }
@@ -255,22 +270,39 @@ export class AdminEventsListComponent implements OnInit {
       return;
     }
 
-    if (!confirm(`Êtes-vous sûr de vouloir annuler l'événement "${event.title}" ? Les clients recevront un email et SMS.`)) {
+    this.cancelTargetEvent = event;
+    this.cancelReason = '';
+    this.showCancelModal = true;
+    this.showActionMenu = null;
+  }
+
+  closeCancelModal(): void {
+    this.showCancelModal = false;
+    this.cancelTargetEvent = null;
+    this.cancelReason = '';
+  }
+
+  submitCancel(): void {
+    if (!this.cancelTargetEvent) return;
+    const event = this.cancelTargetEvent;
+    const reason = this.cancelReason.trim();
+
+    if (reason.length < 10) {
+      this.showToast('Motif obligatoire (minimum 10 caractères).', 'error');
       return;
     }
 
     this.actionInProgress[event.id] = 'cancelling';
-
-    this.adminEventsService.cancelEvent(event.id).subscribe({
+    this.adminEventsService.cancelEvent(event.id, { reason }).subscribe({
       next: (updated) => {
         const index = this.events.findIndex(e => e.id === event.id);
         if (index !== -1) {
           this.events[index] = updated;
         }
         this.filterEvents();
-        this.showToast('Evenement annule avec succes', 'success');
+        this.showToast('Evenement annule avec motif', 'success');
         delete this.actionInProgress[event.id];
-        this.showActionMenu = null;
+        this.closeCancelModal();
       },
       error: (err) => {
         this.error = 'Erreur lors de l\'annulation';
@@ -316,6 +348,19 @@ export class AdminEventsListComponent implements OnInit {
     this.toastTimer = setTimeout(() => {
       this.toastMessage = '';
     }, 2800);
+  }
+
+  private showNewEventPopupIfNeeded(): void {
+    const latest = [...this.events]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    if (!latest) return;
+
+    const storageKey = 'admin.events.lastSeenCreatedAt';
+    const lastSeen = localStorage.getItem(storageKey);
+    if (!lastSeen || new Date(latest.createdAt).getTime() > new Date(lastSeen).getTime()) {
+      this.newEventPopupTarget = latest;
+      localStorage.setItem(storageKey, latest.createdAt);
+    }
   }
 
   formatDate(date: string): string {

@@ -1182,13 +1182,45 @@ textarea {
 .scan-result {
 	margin-top: 12px;
 	border-radius: 12px;
-	padding: 12px;
+	padding: 16px;
 	font-weight: 700;
+	display: grid;
+	gap: 6px;
+	text-align: center;
+}
+
+.scan-result h3 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+
+.scan-result p {
+	margin: 0;
+	font-weight: 600;
+}
+
+.scan-result-message {
+	white-space: pre-line;
+}
+
+.scan-result-icon {
+	font-size: 1.9rem;
+	line-height: 1;
 }
 
 .scan-result.ok {
 	background: #ddf8ea;
 	color: #0b6a45;
+}
+
+.scan-result.used {
+	background: #fee6e6;
+	color: #a22323;
+}
+
+.scan-result.pending {
+	background: #fff2df;
+	color: #8a5600;
 }
 
 .scan-result.ko {
@@ -1684,6 +1716,89 @@ textarea {
 .form-hint {
 	font-size: 0.76rem;
 	color: #64809b;
+}
+
+.date-availability {
+	margin: 12px 0 4px;
+	padding: 12px;
+	border-radius: 12px;
+	border: 1px solid #d8e5f2;
+	background: #f8fbff;
+	display: grid;
+	gap: 6px;
+}
+
+.date-availability p {
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.date-availability.ok {
+	background: #e9f9ef;
+	border-color: #b9e6c8;
+	color: #0b6b47;
+}
+
+.date-availability.busy {
+	background: #fff6e8;
+	border-color: #f7d7a6;
+	color: #8a5600;
+}
+
+.date-availability.saturated {
+	background: #ffecec;
+	border-color: #f5b9b9;
+	color: #a22323;
+}
+
+.date-suggestions {
+	display: grid;
+	gap: 6px;
+	font-size: 0.82rem;
+}
+
+.date-suggestion-list {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.date-suggestion-chip {
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.7);
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	font-weight: 700;
+}
+
+.promo-block {
+	border: 1px dashed #cddff1;
+	border-radius: 12px;
+	padding: 10px;
+	background: #fafdff;
+}
+
+.promo-type-row {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	font-size: 0.9rem;
+	margin-top: 4px;
+}
+
+.promo-type-row label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+	color: #19456e;
+}
+
+.promo-grid {
+	margin-top: 10px;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
 }
 
 .select-wrapper,

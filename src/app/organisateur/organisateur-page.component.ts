@@ -34,6 +34,9 @@ import { ForecastWeatherInfo, WeatherService } from '../services/events/Weather.
   imports: [CommonModule, FormsModule, RouterLink],
 })
 export class OrganisateurPageComponent implements OnInit, OnDestroy {
+  private static readonly MIN_TITLE_REAL_LENGTH = 15;
+  private static readonly MIN_DESCRIPTION_REAL_LENGTH = 20;
+
   activeTab: 'events' | 'create' | 'carte' | 'calendar' | 'reservations' | 'qr' | 'stats' = 'events';
   formStep: 1 | 2 | 3 | 4 = 1;
   private readonly resolvedCoords = new Map<number, { lat: number; lng: number }>();
@@ -65,6 +68,9 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
 
   events: EventActivity[] = [];
   categories: EventCategory[] = [];
+  eventQuickSearch = '';
+  eventQuickStatus: 'ALL' | 'PUBLISHED' | 'DRAFT' | 'REJECTED' | 'CANCELLED' = 'ALL';
+  eventQuickDate = '';
   reservationsByEvent: Record<number, EventReservation[]> = {};
   allReservations: EventReservation[] = [];
   reservationsFiltrees: EventReservation[] = [];
@@ -88,10 +94,18 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
   aiPriceSuggestion: PriceSuggestionResponse | null = null;
   private priceSuggestionTimer: ReturnType<typeof setTimeout> | null = null;
   private priceSuggestionRequestKey = '';
+  dateAvailabilityNotice = '';
 
   formWeather: WeatherInfo | null = null;
   weatherForecastTime: string | null = null;
   weatherSource: 'forecast' | 'current' | null = null;
+  dateAvailability: {
+    date: string;
+    eventsCount: number;
+    status: 'AVAILABLE' | 'BUSY' | 'SATURATED' | string;
+    message: string;
+    suggestions: string[];
+  } | null = null;
   weatherLoading = false;
   geoLoading = false;
   localImagePreview = '';
@@ -132,6 +146,32 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     return this.authService.getCurrentUser()?.email ?? 'inconnu';
   }
 
+  get qrResultUsed(): boolean {
+    if (!this.scanResult || this.scanResult.valid) return false;
+    return /deja|déjà|utilis/i.test(this.scanResult.message);
+  }
+
+  get qrResultPending(): boolean {
+    if (!this.scanResult || this.scanResult.valid) return false;
+    return /non confirm|paiement/i.test(this.scanResult.message);
+  }
+
+  get qrResultTitle(): string {
+    if (!this.scanResult) return '';
+    if (this.scanResult.valid) return 'Ticket Valide !';
+    if (this.qrResultUsed) return 'Déjà Utilisé !';
+    if (this.qrResultPending) return 'Paiement non confirmé !';
+    return 'Ticket invalide';
+  }
+
+  get qrResultIcon(): string {
+    if (!this.scanResult) return '';
+    if (this.scanResult.valid) return '✅';
+    if (this.qrResultUsed) return '❌';
+    if (this.qrResultPending) return '⚠️';
+    return '❌';
+  }
+
   ngOnInit(): void {
     this.loadCategories();
     this.loadOrganizerData();
@@ -159,8 +199,30 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     return !!(
       this.form.title.trim() &&
       this.form.description.trim() &&
+      !this.hasFakeContent &&
       this.form.categoryId
     );
+  }
+
+  get titleRealLength(): number {
+    return this.realTextLength(this.form.title);
+  }
+
+  get descriptionRealLength(): number {
+    return this.realTextLength(this.form.description);
+  }
+
+  get hasFakeContent(): boolean {
+    const text = `${this.form.title} ${this.form.description} ${this.form.city}`.toLowerCase();
+    return [
+      /\btest\b/,
+      /\baaa+\b/,
+      /\bxxx+\b/,
+      /\basdf\b/,
+      /\bqwerty\b/,
+      /\blorem\b/,
+      /\bdemo\b/
+    ].some((pattern) => pattern.test(text));
   }
 
   get canGoStep3(): boolean {
@@ -200,6 +262,20 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
 
   get confirmEstimatedRefund(): number {
     return this.confirmEventId ? this.getEventRevenue(this.confirmEventId) : 0;
+  }
+
+  get filteredOrganizerEvents(): EventActivity[] {
+    const query = this.eventQuickSearch.trim().toLowerCase();
+    return this.events.filter((ev) => {
+      const matchStatus = this.eventQuickStatus === 'ALL' || ev.status === this.eventQuickStatus;
+      const matchQuery = !query
+        || ev.title.toLowerCase().includes(query)
+        || ev.city.toLowerCase().includes(query)
+        || (ev.categoryName ?? '').toLowerCase().includes(query);
+      const eventDateKey = this.toDateKey(new Date(ev.startDate));
+      const matchDate = !this.eventQuickDate || eventDateKey === this.eventQuickDate;
+      return matchStatus && matchQuery && matchDate;
+    });
   }
 
   get successPrediction(): {
@@ -318,6 +394,29 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       cityComment = 'Ville touristique - bon potentiel.';
     }
     factors.push({ label: 'Ville', score: cityScore, max: 10, comment: cityComment });
+
+    // Facteur 6 - Disponibilite de la date (10)
+    let dateLoadScore = 8;
+    let dateLoadComment = 'Date libre ou peu chargee.';
+    const selectedDate = this.form.startDate ? this.form.startDate.slice(0, 10) : '';
+    const availability = this.dateAvailability;
+    if (selectedDate && availability && availability.date === selectedDate) {
+      const count = availability.eventsCount ?? 0;
+      if (count === 0) {
+        dateLoadScore = 10;
+        dateLoadComment = 'Aucun autre evenement ce jour.';
+      } else if (count <= 2) {
+        dateLoadScore = 7;
+        dateLoadComment = 'Concurrence moderee ce jour.';
+      } else if (count <= 5) {
+        dateLoadScore = 4;
+        dateLoadComment = 'Date chargee, impact possible sur la demande.';
+      } else {
+        dateLoadScore = 2;
+        dateLoadComment = 'Date saturee, risque de baisse des reservations.';
+      }
+    }
+    factors.push({ label: 'Disponibilite date', score: dateLoadScore, max: 10, comment: dateLoadComment });
 
     const totalScore = Math.min(100, Math.round(factors.reduce((sum, f) => sum + f.score, 0)));
     const label = totalScore >= 75 ? 'Forte' : totalScore >= 55 ? 'Bonne' : totalScore >= 35 ? 'Moyenne' : 'Faible';
@@ -515,6 +614,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
         this.events = [...events].sort(
           (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
         );
+        this.notifyLatestCancellationReason();
         void this.resolveMissingCoordinates();
         this.loadReservationsPerEvent();
       },
@@ -620,7 +720,9 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
   goFormStep(step: 1 | 2 | 3 | 4): void {
     if (step > this.formStep) {
       if (step >= 2 && !this.canGoStep2) {
-        this.actionMsg = 'Complétez le titre, la description et la catégorie avant de continuer.';
+        this.actionMsg = this.hasFakeContent
+          ? '⚠️ Contenu factice détecté'
+          : 'Complétez le titre, la description et la catégorie avant de continuer.';
         return;
       }
       if (step >= 3 && !this.canGoStep3) {
@@ -815,6 +917,12 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     this.filtrerReservations();
   }
 
+  clearEventQuickFilters(): void {
+    this.eventQuickSearch = '';
+    this.eventQuickStatus = 'ALL';
+    this.eventQuickDate = '';
+  }
+
   goToEvent(id: number): void {
     void this.router.navigate(['/events', id], { queryParams: { source: 'organisateur' } });
   }
@@ -841,6 +949,9 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     return !!(
       this.form.title.trim() &&
       this.form.description.trim() &&
+      this.titleRealLength >= OrganisateurPageComponent.MIN_TITLE_REAL_LENGTH &&
+      this.descriptionRealLength >= OrganisateurPageComponent.MIN_DESCRIPTION_REAL_LENGTH &&
+      !this.hasFakeContent &&
       this.form.city.trim() &&
       this.form.address.trim() &&
       this.form.startDate &&
@@ -864,10 +975,99 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     this.scheduleAiPriceSuggestion();
   }
 
+  onStartDateChange(): void {
+    this.scheduleAiPriceSuggestion();
+    this.checkDateAvailability();
+  }
+
+  onLocationInputChange(): void {
+    this.scheduleAiPriceSuggestion();
+  }
+
+  private checkDateAvailability(): void {
+    if (!this.form.startDate) {
+      this.dateAvailability = null;
+      return;
+    }
+
+    const isoDate = this.form.startDate.slice(0, 10);
+    if (!isoDate || isoDate.length !== 10) {
+      this.dateAvailability = null;
+      return;
+    }
+
+    this.eventService.checkDateAvailability(isoDate).subscribe({
+      next: (result) => {
+        this.dateAvailability = result;
+        if ((result?.eventsCount ?? 0) > 0) {
+          const suggestedDateTime = this.buildSuggestedDateTime(result.suggestions ?? []);
+          const recommendation = suggestedDateTime
+            ? `Nous recommandons de faire l'événement par exemple le ${suggestedDateTime} (date encore vide).`
+            : 'Nous recommandons de choisir une autre date ou un autre horaire pour éviter la concurrence.';
+          this.dateAvailabilityNotice = `${result.eventsCount} événement(s) déjà prévu(s) ce jour. ${recommendation}`;
+        } else {
+          this.dateAvailabilityNotice = '';
+        }
+      },
+      error: () => {
+        this.dateAvailability = null;
+        this.dateAvailabilityNotice = '';
+      }
+    });
+  }
+
+  private buildSuggestedDateTime(suggestions: string[]): string {
+    if (!suggestions || suggestions.length === 0) return '';
+    const firstDate = suggestions[0];
+    const source = this.form.startDate ? new Date(this.form.startDate) : new Date();
+    const hh = String(source.getHours()).padStart(2, '0');
+    const mm = String(source.getMinutes()).padStart(2, '0');
+    const displayDate = new Date(`${firstDate}T00:00:00`).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    return `${displayDate} à ${hh}:${mm}`;
+  }
+
+  private notifyLatestCancellationReason(): void {
+    const latestCancelled = [...this.events]
+      .filter(ev => ev.status === 'CANCELLED' && !!ev.cancellationReason)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
+    if (!latestCancelled) return;
+
+    const storageKey = `organizer.cancel.reason.seen.${this.organizerEmail}`;
+    const seenValue = localStorage.getItem(storageKey);
+    const marker = `${latestCancelled.id}-${latestCancelled.updatedAt}`;
+    if (seenValue === marker) return;
+
+    this.actionMsg = `ℹ️ L'admin a annulé "${latestCancelled.title}". Motif: ${latestCancelled.cancellationReason}`;
+    localStorage.setItem(storageKey, marker);
+  }
+
   onManualPriceChange(): void {
     this.priceAutoManaged = false;
     this.aiPriceSuggestion = null;
     this.priceAiError = '';
+  }
+
+  onPromoTypeChange(): void {
+    if (this.form.promoType === 'NONE') {
+      this.form.promoPercent = null;
+      this.form.promoCode = null;
+      this.form.promoStartDate = null;
+      this.form.promoEndDate = null;
+      return;
+    }
+
+    if (this.form.promoType === 'WEEKEND' && (!this.form.promoPercent || this.form.promoPercent <= 0)) {
+      this.form.promoPercent = 5;
+    }
+  }
+
+  private realTextLength(value: string): number {
+    return value.replace(/\s+/g, ' ').trim().replace(/[^\p{L}\p{N}]/gu, '').length;
   }
 
   get suggestedPriceInfo(): PriceSuggestionResponse | null {
@@ -892,15 +1092,17 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
 
   private isPriceAutoFillable(): boolean {
     return !!(
-      this.form.title.trim() &&
-      this.form.description.trim() &&
-      this.form.categoryId &&
-      this.form.type
+      this.titleRealLength >= OrganisateurPageComponent.MIN_TITLE_REAL_LENGTH &&
+      this.descriptionRealLength >= OrganisateurPageComponent.MIN_DESCRIPTION_REAL_LENGTH &&
+      this.form.city.trim() &&
+      this.form.address.trim()
     );
   }
 
   private async requestAiPriceSuggestion(): Promise<void> {
     if (!this.isPriceAutoFillable() || !this.priceAutoManaged) {
+      this.priceAiError = '';
+      this.aiPriceSuggestion = null;
       return;
     }
 
@@ -910,6 +1112,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       type: this.form.type,
       categoryName: this.selectedCategoryName(),
       city: this.form.city.trim(),
+      address: this.form.address.trim(),
       capacity: this.form.capacity,
       startDate: this.form.startDate || undefined,
       endDate: this.form.endDate || undefined,
@@ -927,13 +1130,21 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     try {
       const suggestion = await firstValueFrom(this.eventAiAssistantService.suggestPrice(payload));
       this.aiPriceSuggestion = suggestion;
+      if (suggestion.price == null) {
+        const fallback = this.buildLocalPriceSuggestion();
+        this.form.price = fallback.price ?? 0;
+        this.aiPriceSuggestion = fallback;
+        this.priceAiError = '';
+        return;
+      }
       this.form.price = suggestion.price;
+      this.priceAiError = '';
       this.priceAutoManaged = true;
     } catch {
       const fallback = this.buildLocalPriceSuggestion();
       this.aiPriceSuggestion = fallback;
-      this.form.price = fallback.price;
-      this.priceAiError = 'IA indisponible, estimation locale appliquée.';
+      this.form.price = fallback.price ?? 0;
+      this.priceAiError = '';
     } finally {
       this.priceAiLoading = false;
       this.cdr.detectChanges();
@@ -941,7 +1152,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
   }
 
   private buildLocalPriceSuggestion(): PriceSuggestionResponse {
-    const text = `${this.form.title} ${this.form.description} ${this.selectedCategoryName()} ${this.form.city}`.toLowerCase();
+    const text = `${this.form.title} ${this.form.description} ${this.selectedCategoryName()} ${this.form.city} ${this.form.address}`.toLowerCase();
     let price = this.form.type === 'ACTIVITY' ? 35 : 55;
 
     const keywords: Array<[RegExp, number]> = [
@@ -981,6 +1192,15 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       price += 8;
     }
 
+    // Variation deterministe par event (evite des prix repetitifs comme 50 pour tous)
+    const signature = `${this.form.title}|${this.form.city}|${this.form.address}|${this.form.startDate}|${this.form.capacity}`;
+    let hash = 0;
+    for (let i = 0; i < signature.length; i++) {
+      hash = ((hash << 5) - hash) + signature.charCodeAt(i);
+      hash |= 0;
+    }
+    price += Math.abs(hash % 11) - 5;
+
     const start = this.form.startDate ? new Date(this.form.startDate) : null;
     if (start) {
       const day = start.getDay();
@@ -1012,6 +1232,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     this.aiPriceSuggestion = null;
     this.priceAiError = '';
     this.priceSuggestionRequestKey = '';
+    this.dateAvailability = null;
     if (this.categoriesForType.length > 0) {
       this.form.categoryId = this.categoriesForType[0].id;
     }
@@ -1048,23 +1269,37 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       imageUrl: ev.imageUrl,
       type: ev.type,
       categoryId: ev.categoryId,
+      promoType: ev.promoType ?? 'NONE',
+      promoPercent: ev.promoPercent ?? null,
+      promoCode: ev.promoCode ?? null,
+      promoStartDate: ev.promoStartDate ? this.toDateTimeLocal(ev.promoStartDate) : null,
+      promoEndDate: ev.promoEndDate ? this.toDateTimeLocal(ev.promoEndDate) : null,
     };
     this.priceAutoManaged = false;
     this.aiPriceSuggestion = null;
     this.priceAiError = '';
     this.localImagePreview = ev.imageUrl ?? '';
+    this.checkDateAvailability();
     this.refreshWeatherAndInsights();
   }
 
   canEditEvent(ev: EventActivity): boolean {
-    return ev.status === 'DRAFT';
+    return ev.status === 'DRAFT' || ev.status === 'REJECTED';
   }
 
   async saveEvent(): Promise<void> {
     if (!this.canSubmit) {
-      this.actionMsg = this.form.price <= 0
-        ? 'Le prix doit être supérieur à 0 TND.'
-        : 'Completez tous les champs requis.';
+      if (this.titleRealLength < OrganisateurPageComponent.MIN_TITLE_REAL_LENGTH) {
+        this.actionMsg = 'Le titre doit contenir au moins 15 caractères réels.';
+      } else if (this.descriptionRealLength < OrganisateurPageComponent.MIN_DESCRIPTION_REAL_LENGTH) {
+        this.actionMsg = 'La description doit contenir au moins 20 caractères réels.';
+      } else if (this.hasFakeContent) {
+        this.actionMsg = '⚠️ Contenu factice détecté';
+      } else if (this.form.price <= 0) {
+        this.actionMsg = 'Le prix doit être supérieur à 0 TND.';
+      } else {
+        this.actionMsg = 'Complétez tous les champs requis.';
+      }
       return;
     }
 
@@ -1092,6 +1327,11 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       imageUrl: this.form.imageUrl?.trim() || null,
       startDate: this.normalizeDate(this.form.startDate),
       endDate: this.normalizeDate(this.form.endDate),
+      promoType: this.form.promoType ?? 'NONE',
+      promoPercent: (this.form.promoPercent ?? 0) > 0 ? this.form.promoPercent ?? null : null,
+      promoCode: this.form.promoCode?.trim() || null,
+      promoStartDate: this.form.promoStartDate ? this.normalizeDate(this.form.promoStartDate) : null,
+      promoEndDate: this.form.promoEndDate ? this.normalizeDate(this.form.promoEndDate) : null,
     };
 
     const req = this.formMode === 'create'
@@ -1099,15 +1339,22 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       : this.eventService.update(this.editingId as number, payload);
 
     req.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving = false;
+        const moderation = saved?.status === 'PUBLISHED'
+          ? '✅ Événement publié avec succès.'
+          : saved?.status === 'REJECTED'
+            ? `❌ Événement rejeté automatiquement: ${saved?.moderationReason ?? 'raison indisponible'}`
+            : 'Événement enregistré.';
+
         this.actionMsg = this.formMode === 'create'
           ? (geocodeMissing
-              ? 'Evenement cree (DRAFT), mais localisation introuvable. Verifiez adresse/ville avant publication.'
-              : 'Evenement cree avec succes (statut DRAFT).')
+              ? `${moderation} Localisation introuvable: vérifiez adresse/ville.`
+              : moderation)
           : (geocodeMissing
-              ? 'Evenement modifie, mais localisation introuvable. Verifiez adresse/ville avant publication.'
-              : 'Evenement modifie avec succes.');
+              ? `Mise à jour enregistrée. ${moderation} Localisation introuvable: vérifiez adresse/ville.`
+              : `Mise à jour enregistrée. ${moderation}`);
+
         this.startCreate();
         this.activeTab = 'events';
         this.loadOrganizerData();
@@ -1343,6 +1590,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       this.placeFormPickerMarker(this.form.latitude, this.form.longitude, true);
     }
     this.refreshWeatherAndInsights();
+    this.scheduleAiPriceSuggestion();
   }
 
   openFormMapPicker(): void {
@@ -1464,58 +1712,35 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
  async validateFromPayload(): Promise<void> {
     const payload = this.qrPayload.trim();
     if (!payload) {
-        this.scanResult = { valid: false, message: 'Collez le lien du QR scanné.' };
-        return;
-    }
-
-    const id = this.extractReservationId(payload);
-    if (!id) {
-    this.scanResult = { valid: false, message: 'Lien QR invalide. Format attendu: /ticket/{id} avec option code=EVT-...' };
+        this.scanResult = { valid: false, message: 'QR non détecté. Relancez le scan caméra.' };
         return;
     }
 
     this.validating = true;
     this.scanResult = null;
-    this.aiQrHint = '🤖 IA Vision Groq analyse le QR en cours...';
+    this.aiQrHint = 'Validation en cours...';
 
     try {
-        // Capturer depuis le canvas jsQR qui a déjà l'image du QR
-        const canvas = this.qrCanvas?.nativeElement;
-        let base64Image = '';
+        const ticketCode = this.extractTicketCode(payload);
 
-        if (canvas && canvas.width > 0 && canvas.height > 0) {
-            // Le canvas jsQR contient déjà la dernière frame avec le QR !
-            base64Image = canvas.toDataURL('image/jpeg', 0.88);
+        if (ticketCode) {
+          this.scanResult = await firstValueFrom(this.reservationService.scanTicketByCode(ticketCode));
+        } else {
+          const id = this.extractReservationId(payload);
+          if (!id) {
+            this.scanResult = {
+              valid: false,
+              message: 'QR invalide. Format attendu: /ticket/{id}?code=EVT-...'
+            };
+            this.aiQrHint = 'QR non reconnu.';
+            return;
+          }
+          this.scanResult = await firstValueFrom(this.reservationService.scanQr(id));
         }
 
-        if (!base64Image) {
-          this.scanResult = {
-            valid: false,
-            message: 'Aucune image QR exploitable. Relancez le scan caméra.',
-          };
-          this.aiQrHint = 'Positionnez le QR dans le cadre puis réessayez.';
-          return;
-        }
+        this.aiQrHint = '';
 
-        // IA Vision Groq prioritaire, fallback backend si nécessaire
-        const response = await firstValueFrom(
-          this.reservationService.analyzeTicketWithAI(base64Image, id)
-        );
-        this.scanResult = {
-          valid: response.valid,
-          message: response.valid
-            ? '✅ Billet validé avec succès par IA Groq !'
-            : `❌ ${response.message}`
-        };
-        this.aiQrHint = response.extractedData
-          ? `📋 Données extraites : ${response.extractedData}`
-          : response.valid
-            ? '🤖 IA Groq : ticket authentique validé.'
-            : '🤖 IA Groq : ticket rejeté.';
-
-        if (this.scanResult?.valid) {
-            this.loadOrganizerData();
-        }
+        if (this.scanResult.valid) this.loadOrganizerData();
 
     } catch (err: unknown) {
         const error = err as { error?: { message?: string } };
@@ -1523,7 +1748,7 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
             valid: false,
             message: error?.error?.message ?? 'Erreur lors de la validation du QR.',
         };
-        this.aiQrHint = '❌ Erreur IA, vérifiez le contenu QR.';
+        this.aiQrHint = 'Erreur de validation côté serveur.';
     } finally {
         this.validating = false;
     }
@@ -1593,21 +1818,21 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
             } else {
                 raw = this.detectQrWithJsQr(video) ?? '';
                 if (!raw) {
-                this.aiQrHint = 'Analyse en cours... rapprochez le QR et améliorez la luminosité.';
+                this.aiQrHint = 'Scan en cours... rapprochez le QR et améliorez la luminosité.';
                 }
             }
 
             // ← LE IF MANQUAIT ICI !
             if (raw && raw.length > 3) {
                 this.qrPayload = raw;
-                this.aiQrHint = '✅ QR détecté ! Validation IA Groq automatique...';
+                this.aiQrHint = '✅ QR détecté, validation en cours...';
                 this.stopAiQrCamera();
                 await this.validateFromPayload();
                 return;
             }
 
         } catch {
-          this.aiQrHint = 'Analyse en cours... ajustez la luminosité et gardez le QR stable.';
+          this.aiQrHint = 'Scan en cours... ajustez la luminosité et gardez le QR stable.';
         }
         this.qrScanLoopHandle = requestAnimationFrame(() => { void tick(); });
     };
@@ -1631,6 +1856,38 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
     const frame = ctx.getImageData(0, 0, width, height);
     const code = jsQR(frame.data, width, height, { inversionAttempts: 'dontInvert' });
     return code?.data?.trim() || null;
+  }
+
+  private extractTicketCode(payload: string): string | null {
+    try {
+      const parsedUrl = new URL(payload);
+      const candidateFromQuery =
+        parsedUrl.searchParams.get('code')
+        ?? parsedUrl.searchParams.get('ticketCode')
+        ?? parsedUrl.searchParams.get('ticket')
+        ?? parsedUrl.searchParams.get('qr');
+      if (candidateFromQuery && candidateFromQuery.trim().length > 0) {
+        return decodeURIComponent(candidateFromQuery.trim());
+      }
+
+      const pathCodeMatch = parsedUrl.pathname.match(/\/scan\/([^/?#]+)/i);
+      if (pathCodeMatch?.[1]) {
+        return decodeURIComponent(pathCodeMatch[1]).trim();
+      }
+    } catch {
+      // payload might be a partial URL or raw code
+    }
+
+    const queryMatch = payload.match(/[?&](code|ticketCode|ticket|qr)=([^&]+)/i);
+    if (queryMatch?.[2]) {
+      return decodeURIComponent(queryMatch[2]).trim();
+    }
+
+    if (/^EVT[-_A-Za-z0-9]+$/i.test(payload.trim())) {
+      return payload.trim();
+    }
+
+    return null;
   }
 
   private extractReservationId(payload: string): number | null {
@@ -1666,6 +1923,11 @@ export class OrganisateurPageComponent implements OnInit, OnDestroy {
       imageUrl: '',
       type: 'EVENT',
       categoryId: 0,
+      promoType: 'NONE',
+      promoPercent: null,
+      promoCode: null,
+      promoStartDate: null,
+      promoEndDate: null,
     };
   }
 

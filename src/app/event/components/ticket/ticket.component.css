@@ -38,6 +38,33 @@
 .status-block.pending { background: #fef3c7; color: #92400e; }
 .status-block.cancelled { background: #fee2e2; color: #dc2626; }
 
+.pending-warning {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff3cd;
+  border: 1px solid #f5d88f;
+  display: grid;
+  gap: 10px;
+}
+
+.pending-warning p {
+  margin: 0;
+  color: #92400e;
+  font-weight: 700;
+}
+
+.btn-pay-now {
+  width: fit-content;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .qr-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .qr-img { width: 180px; height: 180px; border: 3px solid #003974; border-radius: 12px; padding: 4px; }
 .qr-hint { font-size: .8rem; color: #6b7480; text-align: center; margin: 0; }

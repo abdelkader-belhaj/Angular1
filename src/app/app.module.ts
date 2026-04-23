@@ -1,8 +1,16 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+
+
+
+
+
+
+import { CommonModule } from '@angular/common';
+
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -25,6 +33,9 @@ import { BookingsTableComponent } from './dashbord/bookings-table/bookings-table
 import { InventoryCardsComponent } from './dashbord/inventory-cards/inventory-cards.component';
 import { InquiriesPanelComponent } from './dashbord/inquiries-panel/inquiries-panel.component';
 import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.component';
+
+
+
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
 
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
@@ -48,6 +59,16 @@ import {
   withDefaultRegisterables,
 } from 'ng2-charts';
 import { AuthInterceptor } from './services/auth.interceptor';
+
+// Forum & Community
+import { CommunityListComponent } from './homePage/community/community-list/community-list.component';
+import { CommunityDetailComponent } from './homePage/community/community-detail/community-detail.component';
+import { ForumDetailComponent } from './homePage/forum/forum-detail/forum-detail.component';
+import { ForumCardComponent } from './homePage/forum/forum-card/forum-card.component';
+import { CommentSectionComponent } from './homePage/forum/comment-section/comment-section.component';
+import { ReviewSectionComponent } from './homePage/forum/review-section/review-section.component';
+import { CommunityAdminComponent } from './dashbord/community-admin/community-admin.component';
+import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions-modal/forum-conditions-modal.component';
 
 @NgModule({
   declarations: [
@@ -73,6 +94,18 @@ import { AuthInterceptor } from './services/auth.interceptor';
 
     ResetPasswordComponent,
 
+
+
+    // Forum & Community
+    CommunityListComponent,
+    CommunityDetailComponent,
+    ForumDetailComponent,
+    ForumCardComponent,
+    CommentSectionComponent,
+    ReviewSectionComponent,
+    CommunityAdminComponent,
+    ForumConditionsModalComponent,
+
     VolsSectionComponent,
     VolsListComponent,
     MesReservationsComponent,
@@ -82,8 +115,10 @@ import { AuthInterceptor } from './services/auth.interceptor';
     NouvelleReclamationComponent,
     MesReclamationsComponent,
     ReclamationsSocieteComponent,
+
     WaitingResponsePageComponent,
     TransportStatsComponent,
+
   ],
   imports: [
     BrowserModule,
@@ -103,6 +138,11 @@ import { AuthInterceptor } from './services/auth.interceptor';
       multi: true,
     },
   ],
+
   bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+
+
+,
 })
-export class AppModule {}
+export class AppModule { }

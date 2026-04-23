@@ -78,3 +78,4 @@ export class ResetPasswordComponent {
     return 'Impossible de reinitialiser le mot de passe pour le moment.';
   }
 }
+

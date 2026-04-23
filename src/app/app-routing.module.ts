@@ -22,6 +22,11 @@ import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
 import { TransportStatsComponent } from './dashbord/transport-stats/transport-stats.component';
 
+
+import { CommunityAdminComponent } from './dashbord/community-admin/community-admin.component';
+import { CommunityDetailComponent } from './homePage/community/community-detail/community-detail.component';
+import { ForumDetailComponent } from './homePage/forum/forum-detail/forum-detail.component';
+
 import { VolsListComponent } from './homePage/vols-list.component';
 import { MesReservationsComponent } from './homePage/mes-reservations.component';
 import { StatistiquesPageComponent } from './statistiques/statistiques-page.component';
@@ -29,6 +34,7 @@ import { BilletComponent } from './billet/billet.component';
 import { NouvelleReclamationComponent } from './homePage/reclamations/nouvelle-reclamation.component';
 import { MesReclamationsComponent } from './homePage/reclamations/mes-reclamations.component';
 import { TransporteurPageComponent } from './transporteur/transporteur-page.component';
+
 
 const routes: Routes = [
   { path: '', component: HomePageComponent },
@@ -79,6 +85,12 @@ const routes: Routes = [
     component: DashbordPageComponent,
     canActivate: [adminGuard],
   },
+
+  { path: 'community-admin', component: CommunityAdminComponent },
+
+  { path: 'communities/:id', component: CommunityDetailComponent },
+  { path: 'communities/:id/forum', component: ForumDetailComponent },
+
   {
     path: 'dashbord/users',
     component: AdminUsersPageComponent,
@@ -136,6 +148,8 @@ const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['SOCIETE'] },
   },
+
+
   {
     path: 'societe/reclamations',
     component: ReclamationsSocieteComponent,
@@ -158,6 +172,8 @@ const routes: Routes = [
   },
 
   { path: 'billet/:reference', component: BilletComponent },
+
+
 
   { path: '**', redirectTo: '' },
 ];

@@ -47,6 +47,29 @@ export class LogementDetailsComponent implements OnInit, AfterViewChecked {
   readonly fixedOfferStep = 10;
   private shouldScrollChat = false;
 
+  // AI Negotiation Visuals/Logic
+  negotiationInputError = '';
+  quickSuggestions: { label: string; value: number; icon: string }[] = [];
+
+  get heatLabel() {
+    const original = this.getOriginalTotalPrice();
+    if (!original) return { text: '...', color: '#94a3b8', bar: 20 };
+    
+    // Default or Idle if no offer yet
+    if (this.negotiationStatus === 'IDLE' && !this.userOfferAmount) {
+      return { text: 'En attente', color: '#6366f1', bar: 30 };
+    }
+
+    const offer = this.userOfferAmount || 0;
+    const ratio = offer / original;
+
+    if (ratio < 0.6) return { text: 'Glacial 🧊', color: '#3b82f6', bar: 20 };
+    if (ratio < 0.75) return { text: 'Froid ❄️', color: '#60a5fa', bar: 40 };
+    if (ratio < 0.85) return { text: 'Tiède 🌤️', color: '#10b981', bar: 60 };
+    if (ratio < 0.95) return { text: 'Chaud 🔥', color: '#f59e0b', bar: 80 };
+    return { text: 'Bouillant 🌋', color: '#ef4444', bar: 100 };
+  }
+
   // Geo-Secured Access
   isVerifyingLocation = false;
   geoAccessStatus: 'idle' | 'success' | 'error' = 'idle';
@@ -535,7 +558,39 @@ export class LogementDetailsComponent implements OnInit, AfterViewChecked {
       role: 'bot',
       text: `👋 Bonjour ! Je suis l'Agent Négociateur du propriétaire. Le tarif officiel pour ${nbJours} nuit(s) est ${this.formatPrice(originalTotalPrice)}.${equipementsText} 💬 On commence à partir de ${this.formatPrice(this.minNegotiationPrice)} (minimum négociable). Ensuite, chaque nouvelle proposition augmente de ${this.fixedOfferStep} DT jusqu'à accord.`
     }];
+    this.updateQuickSuggestions();
     this.shouldScrollChat = true;
+  }
+
+  private updateQuickSuggestions(): void {
+    const original = this.getOriginalTotalPrice();
+    this.quickSuggestions = [
+      { label: 'Offre Audacieuse', value: Math.round(original * 0.7 / 5) * 5, icon: '🚀' },
+      { label: 'Offre Équilibrée', value: Math.round(original * 0.8 / 5) * 5, icon: '⚖️' },
+      { label: 'Offre Directe', value: Math.round(original * 0.9 / 5) * 5, icon: '⚡' }
+    ];
+  }
+
+  applyQuickSuggestion(value: number): void {
+    if (this.isNegotiating) return;
+    this.userOfferAmount = value;
+    this.validateAndSendOffer();
+  }
+
+  validateAndSendOffer(): void {
+    this.negotiationInputError = '';
+    
+    if (!this.userOfferAmount || this.userOfferAmount <= 0) {
+      this.negotiationInputError = 'Veuillez saisir un montant valide.';
+      return;
+    }
+
+    if (this.userOfferAmount < this.minNegotiationPrice) {
+      this.negotiationInputError = `L'offre minimum est de ${this.minNegotiationPrice} DT.`;
+      return;
+    }
+
+    this.sendOffer();
   }
 
   sendOffer(): void {

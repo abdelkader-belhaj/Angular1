@@ -140,6 +140,43 @@ app.post('/api/payments/create-payment-intent', async (req, res) => {
   }
 });
 
+// ── REFUND ENDPOINT ─────────────────────────────────────────────────────────
+// Politique de remboursement :
+//   > 5 jours avant check-in : 100%
+//   2–5 jours                 : 50%
+//   < 48h                     : 0%  (refusé côté Angular avant d'arriver ici)
+app.post('/api/payments/refund', async (req, res) => {
+  try {
+    const { paymentIntentId, amountInCents, reservationId } = req.body || {};
+
+    if (!paymentIntentId || typeof paymentIntentId !== 'string') {
+      return res.status(400).json({ message: 'paymentIntentId manquant ou invalide.' });
+    }
+    if (!amountInCents || Number(amountInCents) <= 0) {
+      return res.status(400).json({ message: 'Montant de remboursement invalide.' });
+    }
+
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      amount: Number(amountInCents),
+      reason: 'requested_by_customer',
+      metadata: {
+        reservationId: reservationId ? String(reservationId) : 'unknown'
+      }
+    });
+
+    return res.json({
+      refundId: refund.id,
+      status: refund.status,
+      amountRefunded: refund.amount,
+      currency: refund.currency
+    });
+  } catch (error) {
+    const message = error && error.message ? error.message : 'Stripe refund failed.';
+    return res.status(500).json({ message });
+  }
+});
+
 app.use((error, _req, res, next) => {
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
     return res.status(400).json({ message: 'Invalid JSON payload.' });

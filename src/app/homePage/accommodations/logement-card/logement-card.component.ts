@@ -103,6 +103,12 @@ export class LogementCardComponent implements OnInit, OnDestroy {
     return !!this.logement?.saturated || this.getAvailablePlaces() <= 0;
   }
 
+  getStars(): { filled: boolean }[] {
+    if (!this.aiScore) return [];
+    const rounded = Math.round(this.aiScore);
+    return Array.from({ length: 5 }, (_, i) => ({ filled: i < rounded }));
+  }
+
   getNextAvailableDateLabel(): string {
     if (!this.logement?.nextAvailableDate) return '';
     const date = new Date(this.logement.nextAvailableDate);

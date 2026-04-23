@@ -1,30 +1,26 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-// ========== IMPORT SPÉCIFIQUE: MES RÉSERVATIONS ==========
 import { NotificationClientService, BackendNotification } from '../../services/accommodation/notification-client.service';
-// ========== FIN IMPORT: MES RÉSERVATIONS ==========
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  // ========== SERVICE SPÉCIFIQUE: MES RÉSERVATIONS ==========
   private readonly notificationClientService = inject(NotificationClientService);
-  // ========== FIN SERVICE: MES RÉSERVATIONS ==========
 
   isLoginDialogOpen = false;
   isUserMenuOpen = false;
-  
-  // ========== PROPRIÉTÉS SPÉCIFIQUES: MES RÉSERVATIONS ==========
-  // Stockage des notifications backend pour les réservations
+
   backendNotifs: BackendNotification[] = [];
-  // ========== FIN PROPRIÉTÉS: MES RÉSERVATIONS ==========
+
+  private notifSubscription?: Subscription;
+  private pollingInterval?: ReturnType<typeof setInterval>;
 
   get isAuthenticated(): boolean {
     return this.authService.isAuthenticated();
@@ -48,41 +44,44 @@ export class NavbarComponent implements OnInit {
     return bio && bio.length > 0 ? bio : 'Ajoutez une bio depuis Mon profil';
   }
 
-  // ========== MÉTHODES SPÉCIFIQUES: MES RÉSERVATIONS ==========
-  // Méthode pour charger les notifications de réservations
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+
   ngOnInit(): void {
     if (this.isAuthenticated && this.isTouristUser()) {
       this.loadNotifications();
-      // S'abonner aux mises à jour des notifications
-      this.notificationClientService.notificationsUpdated$.subscribe(() => {
+      // Polling toutes les 30 secondes pour les nouvelles notifications
+      this.pollingInterval = setInterval(() => this.loadNotifications(), 30000);
+      // Rechargement immédiat sur événement (ex: après markAsRead)
+      this.notifSubscription = this.notificationClientService.notificationsUpdated$.subscribe(() => {
         this.loadNotifications();
       });
     }
   }
 
-  // Charger les notifications depuis le backend
+  ngOnDestroy(): void {
+    this.notifSubscription?.unsubscribe();
+    if (this.pollingInterval) clearInterval(this.pollingInterval);
+  }
+
+  // ─── Chargement notifications ───────────────────────────────────────────────
+
   loadNotifications(): void {
     this.notificationClientService.getMyNotifications().subscribe({
-      next: (ns) => {
-        this.backendNotifs = ns;
-      },
-      error: (error) => {
-        console.error('Erreur chargement notifications', error);
-        this.backendNotifs = [];
-      }
+      next: (ns) => { this.backendNotifs = ns; },
+      error: () => { this.backendNotifs = []; }
     });
   }
 
-  // Compter les notifications non lues pour le badge
   get unreadNotifsCount(): number {
-    return this.backendNotifs.filter(n => !n.isRead).length;
+    const backendUnread = this.backendNotifs.filter(n => !n.isRead).length;
+    const uid = this.authService.getCurrentUser()?.id ?? 0;
+    const localUnread = this.notificationClientService.getLocalUnreadCount(uid);
+    return backendUnread + localUnread;
   }
 
-  // Vérifier si l'utilisateur est un touriste (pour afficher le bouton Mes Réservations)
   isTouristUser(): boolean {
     return this.authService.getCurrentUser()?.role === 'CLIENT_TOURISTE';
   }
-  // ========== FIN MÉTHODES: MES RÉSERVATIONS ==========
 
   openLoginDialog(): void {
     this.isLoginDialogOpen = true;
@@ -115,10 +114,7 @@ export class NavbarComponent implements OnInit {
 
   async logout(): Promise<void> {
     this.isUserMenuOpen = false;
-    // ========== NETTOYAGE SPÉCIFIQUE: MES RÉSERVATIONS ==========
-    // Vider les notifications lors de la déconnexion
     this.backendNotifs = [];
-    // ========== FIN NETTOYAGE: MES RÉSERVATIONS ==========
     try {
       await firstValueFrom(this.authService.logout());
     } catch {

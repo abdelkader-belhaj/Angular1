@@ -100,4 +100,32 @@ export class PaymentRecordsService {
     const userId = user?.id ?? 'guest';
     return `payment_receipts_${userId}`;
   }
+
+  // ── Refund records ────────────────────────────────────────────────────────
+  private getRefundKey(): string {
+    const user = this.authService.getCurrentUser();
+    const userId = user?.id ?? 'guest';
+    return `payment_refunds_${userId}`;
+  }
+
+  saveRefund(reservationId: number, refundedAmountCents: number, refundId: string): void {
+    const key = this.getRefundKey();
+    const existing = this.getAllRefunds();
+    existing[reservationId] = { refundId, refundedAmountCents, refundedAt: new Date().toISOString() };
+    localStorage.setItem(key, JSON.stringify(existing));
+  }
+
+  getRefundForReservation(reservationId: number): { refundId: string; refundedAmountCents: number; refundedAt: string } | null {
+    const all = this.getAllRefunds();
+    return all[reservationId] ?? null;
+  }
+
+  private getAllRefunds(): Record<number, { refundId: string; refundedAmountCents: number; refundedAt: string }> {
+    try {
+      const raw = localStorage.getItem(this.getRefundKey());
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
 }

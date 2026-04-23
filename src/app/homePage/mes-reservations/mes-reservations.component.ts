@@ -4,9 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { ReservationService, ReservationResponse, ReservationRequest } from '../../services/accommodation/reservation.service';
-import { NotificationClientService, BackendNotification } from '../../services/accommodation/notification-client.service';
+import { NotificationClientService, BackendNotification, LocalClientNotification } from '../../services/accommodation/notification-client.service';
 import { SmartAccessService } from '../../services/accommodation/smart-access.service';
 import { PaymentRecordsService } from '../../services/payment/payment-records.service';
+import { StripeCheckoutService } from '../../services/payment/stripe-checkout.service';
 
 @Component({
   selector: 'app-mes-reservations',
@@ -17,6 +18,7 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
   clientReservations: ReservationResponse[] = [];
   hiddenReservationIds: Set<number> = new Set<number>();
   notifications: BackendNotification[] = [];
+  localNotifs: LocalClientNotification[] = [];
   paymentStatus: 'success' | 'cancel' | null = null;
   paymentReservationId: number | null = null;
   isDarkMode = false;
@@ -53,6 +55,12 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
   private readonly notifService = inject(NotificationClientService);
   private readonly smartAccessService = inject(SmartAccessService);
   private readonly paymentRecordsService = inject(PaymentRecordsService);
+  private readonly stripeCheckoutService = inject(StripeCheckoutService);
+
+  // ── Remboursement ──────────────────────────────────────────────────────────
+  refundConfirmReservationId: number | null = null; // ID de la réservation en cours de confirmation
+  refundingIds = new Set<number>();       // IDs en cours de traitement
+  refundDoneIds = new Set<number>();      // IDs déjà remboursés (succès)
 
   get visibleReservations(): ReservationResponse[] {
     return this.clientReservations.filter(r => !this.hiddenReservationIds.has(r.idReservation));
@@ -63,14 +71,25 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
   }
 
   get countModifiables(): number {
+    // Édition (dates/personnes) limitée à 2h — annulation libre
     return this.visibleReservations.filter(r => {
       if (r.statut !== 'confirmee' || !r.canCancelOrModify) return false;
       return this.getProgressPercentage(r.dateReservation) < 100;
     }).length;
   }
 
+  get countAnnulables(): number {
+    return this.visibleReservations.filter(r => r.statut === 'confirmee').length;
+  }
+
   get unreadNotifCount(): number {
-    return this.notifications.filter(n => !n.isRead).length;
+    const backendUnread = this.notifications.filter(n => !n.isRead).length;
+    const localUnread = this.localNotifs.filter(n => !n.isRead).length;
+    return backendUnread + localUnread;
+  }
+
+  get totalNotifCount(): number {
+    return this.notifications.length + this.localNotifs.length;
   }
 
   editResForm = this.formBuilder.group({
@@ -89,6 +108,7 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
     this.loadHiddenReservations();
     this.loadPaidReservationIds();
     this.loadReservations();
+    this.loadNotifications();
 
     this.route.queryParams.subscribe(params => {
       const paymentParam = params['payment'];
@@ -212,18 +232,16 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
 
   loadNotifications(): void {
     this.notifService.getMyNotifications().subscribe({
-      next: (ns) => {
-        this.notifications = ns;
-      },
-      error: (e) => {
-        console.error(e);
-        this.notifications = [];
-      }
+      next: (ns) => { this.notifications = ns; },
+      error: (e) => { console.error(e); this.notifications = []; }
     });
+    const uid = this.authService.getCurrentUser()?.id;
+    if (uid) this.localNotifs = this.notifService.getLocalNotifications(uid);
   }
 
   toggleNotificationsPanel(): void {
     this.showNotificationsPanel = !this.showNotificationsPanel;
+    if (this.showNotificationsPanel) this.loadNotifications();
   }
 
   closeNotificationsPanel(): void {
@@ -232,15 +250,13 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
 
   markAllNotificationsAsRead(): void {
     const unread = this.notifications.filter(n => !n.isRead);
-    if (!unread.length) return;
-
-    unread.forEach(notification => {
-      this.notifService.markAsRead(notification.id).subscribe({
-        next: () => {
-          notification.isRead = true;
-        },
-        error: (e) => console.error(e)
-      });
+    unread.forEach(n => {
+      this.notifService.markAsRead(n.id).subscribe({ next: () => n.isRead = true, error: (e) => console.error(e) });
+    });
+    const uid = this.authService.getCurrentUser()?.id ?? 0;
+    this.localNotifs.filter(n => !n.isRead).forEach(n => {
+      this.notifService.markLocalAsRead(n.id, uid);
+      n.isRead = true;
     });
   }
 
@@ -378,6 +394,19 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
     }, 220);
   }
 
+  deleteLocalNotif(notif: LocalClientNotification): void {
+    const uid = this.authService.getCurrentUser()?.id ?? 0;
+    this.notifService.deleteLocalNotification(notif.id, uid);
+    this.localNotifs = this.localNotifs.filter(n => n.id !== notif.id);
+  }
+
+  markLocalNotifAsRead(notif: LocalClientNotification): void {
+    if (notif.isRead) return;
+    const uid = this.authService.getCurrentUser()?.id ?? 0;
+    this.notifService.markLocalAsRead(notif.id, uid);
+    notif.isRead = true;
+  }
+
   isNotifRemoving(notifId: number): boolean {
     return this.notifRemovingIds.has(notifId);
   }
@@ -502,12 +531,122 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Politique de remboursement ─────────────────────────────────────────────
+  // Basée sur le TEMPS ÉCOULÉ depuis la date de réservation (dateReservation) :
+  //   < 2h   écoulées  → 90% remboursé  (10% retenus pour l'occupation)
+  //   2h–24h écoulées  → 70% remboursé
+  //   1j–3j  écoulés   → 40% remboursé
+  //   > 3j   écoulés   → 0%  non remboursable
+  getRefundPolicy(res: ReservationResponse): { pct: number; label: string; colorClass: string } {
+    if (!res.dateReservation) return { pct: 0, label: 'Non remboursable', colorClass: 'red' };
+
+    const resDateMs = this.parseReservationDateMs(res.dateReservation);
+    if (!Number.isFinite(resDateMs)) return { pct: 0, label: 'Non remboursable', colorClass: 'red' };
+
+    const elapsedHours = (Date.now() - resDateMs) / (1000 * 60 * 60);
+
+    if (elapsedHours < 2)   return { pct: 90, label: 'Remboursement rapide — 90% (< 2h)',    colorClass: 'emerald' };
+    if (elapsedHours < 24)  return { pct: 70, label: 'Remboursement — 70% (< 24h)',           colorClass: 'lime'    };
+    if (elapsedHours < 72)  return { pct: 40, label: 'Remboursement partiel — 40% (< 3j)',    colorClass: 'amber'   };
+    return                         { pct: 0,  label: 'Non remboursable (> 3 jours)',           colorClass: 'red'     };
+  }
+
+  getRefundAmountDT(res: ReservationResponse): number {
+    const receipt = this.paymentRecordsService.getReceiptByReservationId(res.idReservation);
+    if (!receipt) return 0;
+    const { pct } = this.getRefundPolicy(res);
+    // amountInCents → DT : on suppose 1 EUR ≈ 1 DT en test (même montant en cents / 100)
+    return Math.round((receipt.amountInCents * pct) / 100) / 100;
+  }
+
+  hasRefund(reservationId: number): boolean {
+    return !!this.paymentRecordsService.getRefundForReservation(reservationId);
+  }
+
+  openRefundConfirm(id: number): void {
+    this.refundConfirmReservationId = id;
+  }
+
+  closeRefundConfirm(): void {
+    this.refundConfirmReservationId = null;
+  }
+
   cancelReservation(id: number): void {
-    if (confirm('Ètes-vous sûr de vouloir annuler et supprimer cette réservation ?')) {
+    const res = this.clientReservations.find(r => r.idReservation === id);
+    if (!res) return;
+
+    const isPaid = this.paidReservationIds.has(id);
+    const receipt = isPaid ? this.paymentRecordsService.getReceiptByReservationId(id) : null;
+    const hasValidPaymentIntent = !!receipt?.paymentIntentId?.startsWith('pi_');
+    const { pct } = this.getRefundPolicy(res);
+
+    // Guard: ne jamais rembourser deux fois la même réservation
+    if (this.hasRefund(id)) {
+      this.refundConfirmReservationId = null;
+      // Le remboursement existe déjà — s'assurer que le statut backend est bien annulé
+      this.reservationService.updateReservationStatus(id, 'annuler').subscribe({
+        next: () => this.loadReservations(),
+        error: (err) => console.error('Erreur annulation (refund déjà fait)', err)
+      });
+      return;
+    }
+
+    if (isPaid && receipt && hasValidPaymentIntent && pct > 0) {
+      // Annulation avec remboursement Stripe réel
+      this.refundConfirmReservationId = null;
+      this.refundingIds.add(id);
+
+      // Cap : jamais envoyer plus que le montant initial payé
+      const rawCents = Math.round(receipt.amountInCents * pct / 100);
+      const refundCents = Math.min(rawCents, receipt.amountInCents);
+
+      this.stripeCheckoutService.requestRefund({
+        paymentIntentId: receipt.paymentIntentId,
+        amountInCents: refundCents,
+        reservationId: id
+      }).subscribe({
+        next: (refundRes) => {
+          this.paymentRecordsService.saveRefund(id, refundCents, refundRes.refundId);
+          this.refundingIds.delete(id);
+          this.refundDoneIds.add(id);
+
+          // Annuler la réservation côté backend
+          this.reservationService.updateReservationStatus(id, 'annuler').subscribe({
+            next: () => this.loadReservations(),
+            error: (err) => console.error('Erreur annulation après remboursement', err)
+          });
+
+          const refundDT = (refundCents / 100).toFixed(2);
+          this.notifService.addLocalNotification(
+            this.authService.getCurrentUser()!.id,
+            `✅ Remboursement de ${refundDT} DT traité avec succès pour la réservation "${res.nomLogement}". Votre banque peut prendre 5–10 jours.`
+          );
+        },
+        error: (err) => {
+          this.refundingIds.delete(id);
+          // Extraire le message le plus précis possible selon le type d'erreur
+          const serverMsg = err?.error?.message;
+          const statusCode = err?.status;
+          let userMsg: string;
+          if (statusCode === 0 || statusCode === undefined) {
+            userMsg = '🔌 Impossible de joindre le serveur de paiement. Vérifiez que le serveur Stripe (port 4242) est démarré.';
+          } else if (statusCode === 404) {
+            userMsg = '⚙️ Endpoint de remboursement introuvable — redémarrez le serveur Stripe.';
+          } else if (serverMsg) {
+            userMsg = `❌ Stripe : ${serverMsg}`;
+          } else {
+            userMsg = `❌ Erreur HTTP ${statusCode ?? '?'} — voir la console pour les détails.`;
+          }
+          console.error('[Refund] Erreur complète :', err);
+          alert(userMsg);
+        }
+      });
+    } else {
+      // Annulation sans remboursement (non payé ou 0%)
+      this.refundConfirmReservationId = null;
       this.reservationService.updateReservationStatus(id, 'annuler').subscribe({
         next: () => {
           this.loadReservations();
-          alert('Réservation annulée avec succès');
         },
         error: (err) => alert(err?.error?.message || 'Erreur lors de l\'annulation')
       });

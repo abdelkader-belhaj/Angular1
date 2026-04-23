@@ -45,3 +45,5 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# ...existing code...
+src/environments/environment.ts

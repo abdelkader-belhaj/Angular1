@@ -107,7 +107,6 @@
 
     <div *ngIf="paymentStatus === 'success'" class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm">
       <p class="font-semibold">Paiement Stripe confirme.</p>
-      <p class="text-sm">Votre reservation{{ paymentReservationId ? ' #' + paymentReservationId : '' }} est en cours de finalisation. Rechargez la page si le statut tarde a apparaitre.</p>
     </div>
 
     <div *ngIf="paymentStatus === 'cancel'" class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 shadow-sm">
@@ -237,8 +236,66 @@
             Réservé le {{ res.dateReservation | date:'d MMM yyyy à HH:mm' }}
           </p>
 
-          <!-- Modification Progress Window -->
-          <div *ngIf="res.canCancelOrModify && getProgressPercentage(res.dateReservation) < 100"
+          <!-- ── ANNULATION (toujours disponible) ───────────────────────── -->
+          <div *ngIf="res.statut === 'confirmee' && !refundDoneIds.has(res.idReservation)" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+
+            <!-- Badge politique de remboursement -->
+            <ng-container *ngIf="paidReservationIds.has(res.idReservation) && !hasRefund(res.idReservation)">
+              <div class="w-full rounded-xl px-3 py-2 flex items-center justify-between text-xs font-semibold border"
+                [ngClass]="{
+                  'bg-emerald-50 border-emerald-200 text-emerald-700': getRefundPolicy(res).colorClass === 'emerald',
+                  'bg-lime-50 border-lime-200 text-lime-700':         getRefundPolicy(res).colorClass === 'lime',
+                  'bg-amber-50 border-amber-200 text-amber-700':       getRefundPolicy(res).colorClass === 'amber',
+                  'bg-red-50 border-red-200 text-red-600':             getRefundPolicy(res).colorClass === 'red'
+                }">
+                <span class="flex items-center gap-1.5">
+                  <lucide-icon name="shield-check" class="w-3.5 h-3.5"></lucide-icon>
+                  {{ getRefundPolicy(res).label }}
+                </span>
+                <span *ngIf="getRefundPolicy(res).pct > 0" class="font-bold">≈ {{ getRefundAmountDT(res) }} DT</span>
+              </div>
+            </ng-container>
+
+            <!-- Badge remboursement déjà effectué -->
+            <div *ngIf="hasRefund(res.idReservation)"
+              class="w-full rounded-xl px-3 py-2 flex items-center gap-2 text-xs font-bold bg-teal-50 border border-teal-200 text-teal-700">
+              <lucide-icon name="check-circle" class="w-3.5 h-3.5"></lucide-icon>
+              Remboursement traité — virement sous 5–10 jours
+            </div>
+
+            <button *ngIf="!hasRefund(res.idReservation)"
+              class="w-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+              [disabled]="refundingIds.has(res.idReservation)"
+              (click)="openRefundConfirm(res.idReservation)">
+              <lucide-icon *ngIf="!refundingIds.has(res.idReservation)" name="x-circle" class="w-4 h-4"></lucide-icon>
+              <lucide-icon *ngIf="refundingIds.has(res.idReservation)" name="loader-2" class="w-4 h-4 animate-spin"></lucide-icon>
+              {{ refundingIds.has(res.idReservation) ? 'Traitement en cours...' : 'Annuler la réservation' }}
+            </button>
+          </div>
+
+          <!-- ── BADGE RÉSERVATION ANNULÉE (après annulation réussie) ────── -->
+          <div *ngIf="res.statut === 'annulee' || refundDoneIds.has(res.idReservation)"
+            class="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between gap-3">
+            <span class="flex items-center gap-2 text-rose-700 font-bold text-sm">
+              <lucide-icon name="x-circle" class="w-5 h-5 text-rose-500"></lucide-icon>
+              Réservation annulée
+            </span>
+            <ng-container *ngIf="hasRefund(res.idReservation)">
+              <span class="text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-3 py-1 flex items-center gap-1.5">
+                <lucide-icon name="check-circle" class="w-3.5 h-3.5"></lucide-icon>
+                Remboursement en cours
+              </span>
+            </ng-container>
+            <button *ngIf="res.statut === 'annulee'"
+              class="text-xs text-slate-400 hover:text-rose-600 transition-colors p-1 rounded-lg hover:bg-rose-100"
+              title="Supprimer de l'historique"
+              (click)="deleteReservationHistory(res.idReservation)">
+              <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+            </button>
+          </div>
+
+          <!-- ── MODIFICATION (fenêtre 2h seulement) ───────────────────────── -->
+          <div *ngIf="res.canCancelOrModify && getProgressPercentage(res.dateReservation) < 100 && res.statut === 'confirmee'"
             class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
             <div class="flex justify-between text-xs font-semibold">
               <span class="text-slate-500 flex items-center gap-1.5">
@@ -253,37 +310,18 @@
                 [style.width.%]="getProgressPercentage(res.dateReservation)">
               </div>
             </div>
-            <div class="flex gap-2 pt-1">
-              <button
-                class="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-                (click)="cancelReservation(res.idReservation)">
-                <lucide-icon name="x-circle" class="w-4 h-4"></lucide-icon> Annuler
-              </button>
-              <button
-                class="flex-1 bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-                (click)="startEditingRes(res)">
-                <lucide-icon name="edit-2" class="w-4 h-4"></lucide-icon> Modifier
-              </button>
-            </div>
+            <button
+              class="w-full bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+              (click)="startEditingRes(res)">
+              <lucide-icon name="edit-2" class="w-4 h-4"></lucide-icon> Modifier les dates / personnes
+            </button>
           </div>
 
-          <!-- Expired modification window -->
-          <div *ngIf="res.statut !== 'annulee' && (!res.canCancelOrModify || getProgressPercentage(res.dateReservation) >= 100)"
-            class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-2 text-slate-500 text-xs font-semibold">
+          <!-- Fenêtre de modification expirée -->
+          <div *ngIf="res.statut === 'confirmee' && (!res.canCancelOrModify || getProgressPercentage(res.dateReservation) >= 100)"
+            class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-2 text-slate-400 text-xs font-semibold">
             <lucide-icon name="lock" class="w-3.5 h-3.5"></lucide-icon>
-            Fenêtre de modification expirée (2h dépassées)
-          </div>
-
-          <!-- Cancelled badge with Hover Reveal to Delete -->
-          <div *ngIf="res.statut === 'annulee'" class="relative overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 group">
-            <div class="w-full transition-transform duration-300 ease-out group-hover:-translate-x-[5rem] bg-rose-100/50 p-4 flex justify-between items-center text-rose-600 text-sm font-semibold">
-              <span class="flex items-center gap-2"><lucide-icon name="x-circle" class="w-4 h-4"></lucide-icon> Cette réservation a été annulée.</span>
-              <span class="text-[10px] uppercase font-bold tracking-wider text-rose-500 flex items-center gap-1 transition-opacity duration-300 group-hover:opacity-0"><lucide-icon name="arrow-left" class="w-3 h-3"></lucide-icon> Survoler</span>
-            </div>
-            <div class="absolute top-0 right-0 h-full w-[5rem] translate-x-[5rem] group-hover:translate-x-0 transition-transform duration-300 ease-out bg-rose-600 flex items-center justify-center cursor-pointer hover:bg-rose-700 z-10"
-              (click)="deleteReservationHistory(res.idReservation)">
-              <lucide-icon name="trash-2" class="w-5 h-5 text-white animate-pulse"></lucide-icon>
-            </div>
+            Fenêtre de modification expirée — annulation toujours possible ci-dessus
           </div>
 
           <!-- ── SMART LOCK ── -->
@@ -476,12 +514,12 @@
         >
           Tout marquer comme lu
         </button>
-        <span class="text-xs text-slate-500">{{ notifications.length }} notification(s)</span>
+        <span class="text-xs text-slate-500">{{ totalNotifCount }} notification(s)</span>
       </div>
     </div>
 
     <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
-      <div *ngIf="notifications.length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+      <div *ngIf="notifications.length === 0 && localNotifs.length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
         Aucune notification pour le moment.
       </div>
 
@@ -552,6 +590,122 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Notifications locales (réponses réclamations) ── -->
+      <div *ngFor="let ln of localNotifs"
+        class="group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition-all hover:shadow-md"
+        [ngClass]="ln.isRead ? 'border-slate-200' : 'border-amber-300'">
+
+        <!-- Bouton supprimer (hover) -->
+        <button
+          type="button"
+          class="notif-hover-trash"
+          (click)="$event.stopPropagation(); deleteLocalNotif(ln)"
+          aria-label="Supprimer la notification">
+          <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+        </button>
+
+        <button
+          type="button"
+          class="w-full p-4 text-left"
+          [ngClass]="ln.isRead ? 'text-slate-500' : 'bg-amber-50/60 text-slate-900'"
+          (click)="markLocalNotifAsRead(ln)">
+          <div class="flex items-start gap-3">
+            <span class="mt-2 h-2.5 w-2.5 rounded-full shrink-0"
+              [ngClass]="ln.isRead ? 'bg-slate-300' : 'bg-amber-500'">
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium leading-6">{{ ln.message }}</p>
+              <p class="mt-1 text-xs" [ngClass]="ln.isRead ? 'text-slate-400' : 'text-amber-600 font-semibold'">
+                {{ ln.createdAt | date:'d MMM yyyy, HH:mm' }}
+              </p>
+            </div>
+            <button *ngIf="!ln.isRead"
+              type="button"
+              class="ml-2 shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-200 transition-colors"
+              (click)="$event.stopPropagation(); markLocalNotifAsRead(ln)">
+              Marquer lu
+            </button>
+          </div>
+        </button>
+      </div>
     </div>
   </aside>
+</div>
+
+<!-- ═══ MODAL CONFIRMATION ANNULATION / REMBOURSEMENT ═══════════════════════ -->
+<div *ngIf="refundConfirmReservationId !== null"
+  class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+  (click)="closeRefundConfirm()">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4" (click)="$event.stopPropagation()">
+
+    <ng-container *ngIf="clientReservations | slice:0 as allRes">
+      <ng-container *ngFor="let res of allRes">
+        <ng-container *ngIf="res.idReservation === refundConfirmReservationId">
+
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-full mx-auto flex items-center justify-center mb-3"
+              [ngClass]="getRefundPolicy(res).colorClass === 'emerald' ? 'bg-emerald-100' : getRefundPolicy(res).colorClass === 'lime' ? 'bg-lime-100' : getRefundPolicy(res).colorClass === 'amber' ? 'bg-amber-100' : 'bg-red-100'">
+              <lucide-icon name="alert-triangle" class="w-7 h-7"
+                [ngClass]="getRefundPolicy(res).colorClass === 'emerald' ? 'text-emerald-600' : getRefundPolicy(res).colorClass === 'lime' ? 'text-lime-600' : getRefundPolicy(res).colorClass === 'amber' ? 'text-amber-600' : 'text-red-600'">
+              </lucide-icon>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900">Confirmer l'annulation</h3>
+            <p class="text-sm text-slate-500 mt-1">{{ res.nomLogement }}</p>
+          </div>
+
+          <!-- Détail remboursement -->
+          <div class="rounded-2xl border p-4 space-y-2 text-sm"
+            [ngClass]="{
+              'bg-emerald-50 border-emerald-200': getRefundPolicy(res).colorClass === 'emerald',
+              'bg-lime-50 border-lime-200':       getRefundPolicy(res).colorClass === 'lime',
+              'bg-amber-50  border-amber-200':    getRefundPolicy(res).colorClass === 'amber',
+              'bg-red-50    border-red-200':      getRefundPolicy(res).colorClass === 'red'
+            }">
+            <div class="flex justify-between font-semibold"
+              [ngClass]="{
+                'text-emerald-800': getRefundPolicy(res).colorClass === 'emerald',
+                'text-lime-800':    getRefundPolicy(res).colorClass === 'lime',
+                'text-amber-800':   getRefundPolicy(res).colorClass === 'amber',
+                'text-red-700':     getRefundPolicy(res).colorClass === 'red'
+              }">
+              <span>Politique appliquée</span>
+              <span>{{ getRefundPolicy(res).label }}</span>
+            </div>
+            <ng-container *ngIf="paidReservationIds.has(res.idReservation)">
+              <div class="flex justify-between text-xs text-slate-600 pt-1 border-t border-black/10">
+                <span>Montant remboursé estimé</span>
+                <span class="font-bold text-base">{{ getRefundAmountDT(res) }} DT</span>
+              </div>
+              <p *ngIf="getRefundPolicy(res).pct > 0" class="text-[11px] text-slate-500 pt-1">
+                Le virement Stripe peut prendre <strong>5 à 10 jours ouvrables</strong>.
+              </p>
+              <p *ngIf="getRefundPolicy(res).pct === 0" class="text-[11px] text-red-600 font-semibold pt-1">
+                ⚠️ Délai dépassé (> 3 jours) — aucun remboursement possible.
+              </p>
+            </ng-container>
+            <p *ngIf="!paidReservationIds.has(res.idReservation)" class="text-xs text-slate-500">
+              Cette réservation n'a pas encore été payée.
+            </p>
+          </div>
+
+          <div class="flex gap-3 pt-1">
+            <button type="button"
+              (click)="closeRefundConfirm()"
+              class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors text-sm">
+              Retour
+            </button>
+            <button type="button"
+              (click)="cancelReservation(res.idReservation)"
+              class="flex-1 py-3 rounded-xl font-bold text-white text-sm transition-colors"
+              [ngClass]="getRefundPolicy(res).colorClass === 'emerald' ? 'bg-emerald-500 hover:bg-emerald-600' : getRefundPolicy(res).colorClass === 'lime' ? 'bg-lime-500 hover:bg-lime-600' : getRefundPolicy(res).colorClass === 'amber' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-500 hover:bg-red-600'">
+              Confirmer l'annulation
+            </button>
+          </div>
+
+        </ng-container>
+      </ng-container>
+    </ng-container>
+
+  </div>
 </div>

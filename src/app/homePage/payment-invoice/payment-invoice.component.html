@@ -14,9 +14,18 @@
         *ngIf="reservationId">
         Retour succes
       </button>
+
+      <button
+        type="button"
+        (click)="downloadPDF()"
+        [disabled]="isDownloading || !receipt"
+        class="ml-auto flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="!isDownloading">⬇ Télécharger PDF</span>
+        <span *ngIf="isDownloading">Génération...</span>
+      </button>
     </div>
 
-    <div class="invoice-sheet overflow-hidden rounded-2xl bg-white shadow-2xl" *ngIf="receipt; else missingReceipt">
+    <div #invoiceContent class="invoice-sheet overflow-hidden rounded-2xl bg-white shadow-2xl" *ngIf="receipt; else missingReceipt">
       <div class="invoice-head px-8 py-8 text-white">
         <div class="flex flex-wrap items-start justify-between gap-5">
           <div>

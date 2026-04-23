@@ -53,6 +53,7 @@ import { ReclamationsSpaceComponent } from './reclamations/reclamations-space.co
 import { PaymentPageComponent } from './homePage/payment-page/payment-page.component';
 import { PaymentSuccessComponent } from './homePage/payment-success/payment-success.component';
 import { PaymentInvoiceComponent } from './homePage/payment-invoice/payment-invoice.component';
+import { PreferencesFormComponent } from './homePage/accommodations/preferences-form/preferences-form.component';
 // Hebergeur imports
 import { HebergeurDashboardComponent } from './hebergeur/hebergeur-dashboard/hebergeur-dashboard.component';
 import { HebergeurSideNavComponent } from './hebergeur/hebergeur-side-nav/hebergeur-side-nav.component';
@@ -107,6 +108,7 @@ import { HebergeurPageComponent } from './hebergeur/hebergeur-page.component';
     PaymentPageComponent,
     PaymentSuccessComponent,
     PaymentInvoiceComponent,
+    PreferencesFormComponent,
     // Hebergeur
     HebergeurDashboardComponent,
     HebergeurSideNavComponent,

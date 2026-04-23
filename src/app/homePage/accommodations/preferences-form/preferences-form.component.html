@@ -1,0 +1,163 @@
+<div *ngIf="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="close()"></div>
+
+  <!-- Modal -->
+  <div class="relative z-10 w-full max-w-xl rounded-3xl bg-white shadow-2xl overflow-hidden">
+
+    <!-- Header gradient -->
+    <div class="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5 text-white">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg">
+            {{ stepLabel.emoji }}
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-indigo-200">Étape {{ step }} / {{ totalSteps }}</p>
+            <h2 class="text-base font-bold leading-tight">Trouvez votre séjour idéal</h2>
+          </div>
+        </div>
+        <button (click)="close()" class="rounded-full w-8 h-8 flex items-center justify-center hover:bg-white/20 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Progress bar -->
+      <div class="h-1.5 rounded-full bg-white/25">
+        <div class="h-full rounded-full bg-white transition-all duration-500 ease-out" [style.width]="progressWidth"></div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 pt-6 pb-4 min-h-[300px]">
+
+      <!-- Question title -->
+      <div class="mb-5">
+        <h3 class="text-lg font-bold text-slate-800">{{ stepLabel.title }}</h3>
+        <p class="text-sm text-slate-400 mt-0.5">{{ stepLabel.subtitle }}</p>
+      </div>
+
+      <!-- ─── STEP 1 : But du voyage ─── -->
+      <div *ngIf="step === 1" class="grid grid-cols-2 gap-3">
+        <button *ngFor="let p of purposeOptions"
+          (click)="prefs.purposeVoyage = p.value"
+          [ngClass]="prefs.purposeVoyage === p.value
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+          class="flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all">
+          <span class="text-2xl leading-none">{{ p.icon }}</span>
+          <span class="text-sm font-semibold text-slate-700 leading-tight">{{ p.label }}</span>
+          <svg *ngIf="prefs.purposeVoyage === p.value" class="ml-auto w-4 h-4 text-indigo-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ─── STEP 2 : Budget ─── -->
+      <div *ngIf="step === 2" class="grid grid-cols-2 gap-3">
+        <button *ngFor="let b of budgetOptions"
+          (click)="prefs.budgetMax = b.value"
+          [ngClass]="prefs.budgetMax === b.value
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+          class="rounded-2xl border px-4 py-4 text-left transition-all">
+          <p class="text-base font-bold text-slate-800">{{ b.label }}</p>
+          <p *ngIf="b.value < 9999" class="text-xs text-slate-400 mt-0.5">par nuit / logement</p>
+          <p *ngIf="b.value === 9999" class="text-xs text-slate-400 mt-0.5">tous les logements</p>
+        </button>
+      </div>
+
+      <!-- ─── STEP 3 : Destination ─── -->
+      <div *ngIf="step === 3">
+        <div *ngIf="villeOptions.length === 0" class="text-center py-8 text-slate-400 text-sm">
+          Chargement des destinations...
+        </div>
+        <div *ngIf="villeOptions.length > 0" class="grid grid-cols-3 gap-2.5 max-h-[260px] overflow-y-auto pr-1">
+          <button *ngFor="let v of villeOptions"
+            (click)="prefs.villePreferee = v"
+            [ngClass]="prefs.villePreferee === v
+              ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+            class="flex items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 transition-all text-center">
+            <span class="text-sm font-semibold text-slate-700 truncate">{{ v }}</span>
+            <svg *ngIf="prefs.villePreferee === v" class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+        <button (click)="prefs.villePreferee = null"
+          [ngClass]="prefs.villePreferee === null
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+          class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 transition-all">
+          <span class="text-lg">🗺️</span>
+          <span class="text-sm font-semibold text-slate-600">Peu importe la destination</span>
+        </button>
+      </div>
+
+      <!-- ─── STEP 4 : Nombre de personnes ─── -->
+      <div *ngIf="step === 4" class="space-y-3">
+        <button *ngFor="let g of groupSizes"
+          (click)="prefs.capaciteMin = g.value"
+          [ngClass]="prefs.capaciteMin === g.value
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+          class="w-full flex items-center justify-between rounded-2xl border px-5 py-4 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">{{ g.value === 1 ? '🧳' : g.value === 2 ? '💑' : g.value === 3 ? '👨‍👩‍👧‍👦' : g.value === 5 ? '🎉' : '🏢' }}</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-slate-800">{{ g.label }} personne{{ g.value > 1 ? 's' : '' }}</p>
+              <p class="text-xs text-slate-400">
+                {{ g.value === 1 ? 'Studio ou chambre' : g.value === 2 ? 'Chambre double / appartement' : g.value === 3 ? 'Appartement ou petite villa' : g.value === 5 ? 'Grande villa ou riad' : 'Propriété exclusive' }}
+              </p>
+            </div>
+          </div>
+          <svg *ngIf="prefs.capaciteMin === g.value" class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ─── STEP 5 : Équipements ─── -->
+      <div *ngIf="step === 5" class="grid grid-cols-2 gap-2.5">
+        <button *ngFor="let eq of equipementsOptions"
+          (click)="toggleEquipement(eq.value)"
+          [ngClass]="isSelected(eq.value)
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'"
+          class="flex items-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold text-slate-700 transition-all text-left">
+          <span class="text-base leading-none">{{ eq.label.split(' ')[0] }}</span>
+          <span>{{ eq.label.slice(eq.label.indexOf(' ') + 1) }}</span>
+          <svg *ngIf="isSelected(eq.value)" class="ml-auto w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </button>
+        <p class="col-span-2 text-xs text-slate-400 text-center pt-1">
+          {{ prefs.equipementsImportants.length }} service{{ prefs.equipementsImportants.length !== 1 ? 's' : '' }} sélectionné{{ prefs.equipementsImportants.length !== 1 ? 's' : '' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <button *ngIf="step > 1" (click)="back()"
+        class="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-white transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Retour
+      </button>
+      <div *ngIf="step === 1"></div>
+
+      <button *ngIf="step < totalSteps" (click)="next()"
+        class="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition-colors shadow-sm">
+        Suivant
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+
+      <button *ngIf="step === totalSteps" (click)="submit()"
+        class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all shadow-sm">
+        🔍 Trouver mes recommandations
+      </button>
+    </div>
+  </div>
+</div>

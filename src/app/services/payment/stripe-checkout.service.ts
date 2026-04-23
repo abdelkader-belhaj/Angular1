@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface CheckoutSessionRequest {
@@ -13,6 +13,19 @@ interface CheckoutSessionRequest {
 interface CheckoutSessionResponse {
   sessionId: string;
   sessionUrl?: string;
+}
+
+export interface RefundRequest {
+  paymentIntentId: string;
+  amountInCents: number;
+  reservationId: number;
+}
+
+export interface RefundResponse {
+  refundId: string;
+  status: string;
+  amountRefunded: number;
+  currency: string;
 }
 
 @Injectable({
@@ -39,5 +52,12 @@ export class StripeCheckoutService {
     }
 
     throw new Error(`Stripe session URL missing for session ${response.sessionId}.`);
+  }
+
+  requestRefund(req: RefundRequest): Observable<RefundResponse> {
+    return this.http.post<RefundResponse>(
+      `${environment.stripeBackendBaseUrl}/api/payments/refund`,
+      req
+    );
   }
 }

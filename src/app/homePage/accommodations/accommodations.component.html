@@ -59,6 +59,13 @@
             <lucide-icon name="sliders-horizontal" class="w-4 h-4"></lucide-icon>
             Filtres
           </button>
+
+          <!-- Bouton Préférences (clients uniquement) -->
+          <button *ngIf="isClient"
+            (click)="showPreferencesForm = true"
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors h-11 px-4 py-2 gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+            🔍 Mon séjour idéal
+          </button>
           
           <button class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow flex-1 h-11 bg-slate-900 hover:bg-slate-800 rounded-2xl gap-2 text-white">
             <lucide-icon name="search" class="w-4 h-4"></lucide-icon>
@@ -101,6 +108,30 @@
     </div>
   </section>
 
+  <!-- IA Bar — type Airbnb -->
+  <div *ngIf="isClient && recommendations.length > 0"
+    style="border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; background: #fafafa;">
+    <div class="max-w-7xl mx-auto px-4" style="height:44px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <!-- Gauche : indicateur IA -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:13px; font-weight:700; color:#111827; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.2);"></span>
+          Recommandations IA
+        </span>
+        <span style="font-size:12px; color:#6b7280;">—</span>
+        <span *ngIf="!activePrefs" style="font-size:12px; color:#6b7280;">{{ recommendations.length }} logements classés par score</span>
+        <span *ngIf="activePrefs" style="font-size:12px; color:#059669; font-weight:600;">✓ Triés selon vos critères personnels</span>
+      </div>
+      <!-- Droite : bouton -->
+      <button (click)="showPreferencesForm = true"
+        style="font-size:13px; font-weight:800; color:white; background:linear-gradient(135deg,#6366f1,#ec4899); border:none; border-radius:999px; padding:8px 22px; cursor:pointer; letter-spacing:0.3px; box-shadow:0 4px 18px rgba(99,102,241,0.45); transition:transform .15s, box-shadow .15s;"
+        onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 24px rgba(99,102,241,0.6)'"
+        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 18px rgba(99,102,241,0.45)'">
+        {{ activePrefs ? '✏️ Modifier mes critères' : '✨ Mon séjour idéal' }}
+      </button>
+    </div>
+  </div>
+
   <!-- Section Catégories - Épurée -->
   <section class="max-w-7xl mx-auto px-4 py-6">
     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" *ngIf="categories.length > 0">
@@ -126,11 +157,27 @@
 
   <!-- Grille unique des logements -->
   <section class="max-w-7xl mx-auto px-4 pb-20">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-light text-gray-900" *ngIf="!loading">
-        <span class="font-semibold">{{ filteredLogements.length }}</span>
-        logement{{ filteredLogements.length > 1 ? 's' : '' }} trouvé{{ filteredLogements.length > 1 ? 's' : '' }}
-      </h2>
+
+    <!-- En-tête de la grille avec indicateur IA -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div *ngIf="!loading">
+        <h2 class="text-2xl font-light text-gray-900">
+          <span class="font-semibold">{{ filteredLogements.length }}</span>
+          logement{{ filteredLogements.length > 1 ? 's' : '' }} trouvé{{ filteredLogements.length > 1 ? 's' : '' }}
+        </h2>
+        <!-- Badge indicateur de tri actif -->
+        <p *ngIf="isClient && recommendations.length > 0" class="text-sm mt-1 flex items-center gap-1.5">
+          <span *ngIf="!activePrefs" class="inline-flex items-center gap-1 text-indigo-600 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            Triés par score IA
+          </span>
+          <span *ngIf="activePrefs" class="inline-flex items-center gap-1 text-violet-600 font-medium">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Personnalisés selon vos critères ·
+            <button (click)="activePrefs = null; applyLocalFilters()" class="underline underline-offset-2 hover:text-violet-800">Réinitialiser</button>
+          </span>
+        </p>
+      </div>
       <h2 class="text-2xl font-light text-gray-900" *ngIf="loading">
         Chargement des hébergements...
       </h2>
@@ -150,7 +197,7 @@
       <div *ngFor="let item of [1,2,3]" class="bg-gray-200 rounded-3xl h-96 w-full"></div>
     </div>
 
-    <!-- Si logements trouvés -->
+    <!-- Grille principale (triée IA + préférences) -->
     <div *ngIf="!loading && filteredLogements.length > 0" 
          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
          [@listAnimation]="filteredLogements.length">
@@ -162,19 +209,25 @@
       </app-logement-card>
     </div>
 
-    <!-- Si aucun logement (pas de loading) -->
+    <!-- Si aucun logement -->
     <div *ngIf="!loading && !maintenanceCategory && filteredLogements.length === 0" class="text-center py-20 animate-in fade-in zoom-in duration-500">
-        <p class="text-xl text-gray-500 font-light mb-4">Aucun logement trouvé</p>
-        <button
-          (click)="resetFilters()"
-          class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 rounded-2xl border-gray-200 hover:bg-gray-50"
-        >
-          Réinitialiser les filtres
-        </button>
+      <p class="text-xl text-gray-500 font-light mb-4">Aucun logement trouvé</p>
+      <button (click)="resetFilters()"
+        class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors border border-input bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 rounded-2xl border-gray-200 hover:bg-gray-50">
+        Réinitialiser les filtres
+      </button>
     </div>
   </section>
 </div>
 <app-footer></app-footer>
+
+<!-- Formulaire Préférences -->
+<app-preferences-form
+  [visible]="showPreferencesForm"
+  [availableVilles]="availableVilles"
+  (closed)="showPreferencesForm = false"
+  (saved)="onPreferencesSaved($event)">
+</app-preferences-form>
 
 <style>
   @keyframes fadeUp {

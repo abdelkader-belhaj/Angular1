@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { NotificationService } from './notification.service';
+import { NotificationClientService } from './notification-client.service';
 
 export type ReclamationStatus = 'ouverte' | 'en_cours' | 'resolue';
 export type ReclamationActorRole = 'CLIENT_TOURISTE' | 'HEBERGEUR' | 'ADMIN';
@@ -58,6 +59,7 @@ export class ReclamationService {
   private readonly archiveDaysThreshold = 90; // Archive les items > 90 jours
   private readonly adminRecipientId = 0; // Canal admin global (local)
   private readonly notificationService = inject(NotificationService);
+  private readonly notificationClientService = inject(NotificationClientService);
 
   getAll(): ReclamationItem[] {
     return this.getAllInternal();
@@ -202,19 +204,15 @@ export class ReclamationService {
     this.cleanupStorage(all);
     this.persist(all);
 
-    // Toute reponse admin/hebergeur est notifiee au client
+    // Réponse admin/hébergeur → notification locale pour le CLIENT
     if (authorRole === 'ADMIN' || authorRole === 'HEBERGEUR') {
-      this.notificationService.addNotification(
+      this.notificationClientService.addLocalNotification(
         item.clientId,
-        'reclamation',
-        item.logementNom,
-        `Nouvelle réponse sur votre réclamation: ${item.title}`,
-        message.trim(),
-        { reclamationId: item.id }
+        `💬 Réponse reçue sur votre réclamation "${item.title}" : ${message.trim().slice(0, 120)}${message.trim().length > 120 ? '…' : ''}`
       );
     }
 
-    // Si admin repond, l'hebergeur est aussi notifie
+    // Si admin repond, l'hebergeur est aussi notifie (via son propre store)
     if (authorRole === 'ADMIN') {
       this.notificationService.addNotification(
         item.hebergeurId,

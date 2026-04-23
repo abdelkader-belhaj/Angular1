@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { LogementService, Logement, RecommendationResponse } from '../../services/accommodation/logement.service';
 import { CategorieService, Categorie } from '../../services/accommodation/categorie.service';
 import { AuthService } from '../../services/auth.service';
+import { UserPrefs } from './preferences-form/preferences-form.component';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
@@ -27,11 +28,14 @@ export class AccommodationsComponent implements OnInit {
   selectedCategory: string = 'all';
   priceRange: string = 'all';
   showFilters: boolean = false;
+  showPreferencesForm = false;
 
   categories: Categorie[] = [];
   allLogements: Logement[] = [];
   filteredLogements: Logement[] = [];
   recommendations: RecommendationResponse[] = [];
+  activePrefs: UserPrefs | null = null;
+  availableVilles: string[] = [];
   maintenanceCategory: Categorie | null = null;
   
   loading: boolean = true;
@@ -48,14 +52,7 @@ export class AccommodationsComponent implements OnInit {
 
     const currentUser = this.authService.getCurrentUser();
     if (currentUser?.role === 'CLIENT_TOURISTE') {
-      this.logementService.getRecommendations(currentUser.id).subscribe({
-        next: (recs) => {
-          this.recommendations = recs;
-          console.log('Recommandations chargées:', recs.length);
-          this.applyLocalFilters();
-        },
-        error: (err) => console.error('Erreur chargement recommandations', err)
-      });
+      this.loadRecommendations();
     }
 
     // Load categories first
@@ -88,6 +85,7 @@ export class AccommodationsComponent implements OnInit {
       next: (logs: Logement[]) => {
         this.allLogements = logs;
         this.filteredLogements = [...this.allLogements];
+        this.extractVilles();
         this.applyLocalFilters();
         this.loading = false;
         console.log('Tous les logements chargés:', this.filteredLogements.length);
@@ -97,6 +95,13 @@ export class AccommodationsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  extractVilles(): void {
+    const villes = this.allLogements
+      .map(l => l.ville)
+      .filter((v): v is string => !!v && v.trim() !== '');
+    this.availableVilles = [...new Set(villes)].sort();
   }
 
   loadLogementsByCategorie(idCategorie: number): void {
@@ -127,6 +132,33 @@ export class AccommodationsComponent implements OnInit {
 
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+  }
+
+  get isClient(): boolean {
+    return this.authService.getCurrentUser()?.role === 'CLIENT_TOURISTE';
+  }
+
+  loadRecommendations(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+    this.logementService.getRecommendations(currentUser.id).subscribe({
+      next: (recs) => {
+        this.recommendations = recs;
+        this.applyLocalFilters(); // retrie la grille principale selon scores IA
+      },
+      error: (err) => console.error('Erreur chargement recommandations', err)
+    });
+  }
+
+  onPreferencesSaved(prefs: UserPrefs): void {
+    this.activePrefs = prefs;
+    this.showPreferencesForm = false;
+    // Si pas encore de recs IA, les charger d'abord
+    if (this.recommendations.length === 0) {
+      this.loadRecommendations();
+    } else {
+      this.applyLocalFilters(); // retrie selon préférences + score IA
+    }
   }
 
   selectCategory(categoryId: string): void {
@@ -180,22 +212,37 @@ export class AccommodationsComponent implements OnInit {
       return matchSearch && matchPrice;
     });
 
-    // Tri pour que l'IA place les meilleurs logements recommandés en Haut !
+    // Tri : score combiné IA + bonus préférences
     this.filteredLogements.sort((a, b) => {
-      const scoreA = this.getAiScore(a.idLogement) ?? -1;
-      const scoreB = this.getAiScore(b.idLogement) ?? -1;
-      
-      return scoreB - scoreA; // Du plus grand score au plus petit
+      const scoreA = this.getCombinedScore(a);
+      const scoreB = this.getCombinedScore(b);
+      return scoreB - scoreA;
     });
   }
 
-  filterLogements(): void {
-    this.applyLocalFilters();
-  }
-
+  // Score IA brut (depuis Python)
   getAiScore(idLogement: number): number | undefined {
-    // Cherche si ce logement fait partie des recommandations de l'IA
     const rec = this.recommendations.find(r => r.logement.idLogement === idLogement);
     return rec ? rec.aiScore : undefined;
+  }
+
+  // Score combiné = aiScore + bonus préférences formulaire
+  getCombinedScore(l: Logement): number {
+    const aiScore = this.getAiScore(l.idLogement) ?? -1;
+    if (!this.activePrefs) return aiScore;
+    const p = this.activePrefs;
+    let bonus = 0;
+    if (p.budgetMax && p.budgetMax < 9999 && l.prixNuit != null) {
+      bonus += l.prixNuit <= p.budgetMax ? 2 : -1;
+    }
+    if (p.villePreferee && l.ville) {
+      bonus += l.ville.toLowerCase().includes(p.villePreferee.toLowerCase()) ? 2 : 0;
+    }
+    if (p.capaciteMin && l.capacite >= p.capaciteMin) bonus += 1;
+    if (p.equipementsImportants.length > 0 && l.description) {
+      const desc = l.description.toLowerCase();
+      bonus += p.equipementsImportants.filter(e => desc.includes(e.toLowerCase())).length * 0.5;
+    }
+    return aiScore + bonus;
   }
 }

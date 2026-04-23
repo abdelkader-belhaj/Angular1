@@ -27,6 +27,7 @@ export class SecurityPageComponent implements OnInit {
   twoFactorMessage = '';
   twoFactorError = '';
   recommendedTwoFactor = false;
+  recommendedPasswordSetup = false;
   returnToRoute = '';
   twoFactorSetup: {
     issuer: string;
@@ -36,9 +37,13 @@ export class SecurityPageComponent implements OnInit {
     qrCodeDataUrl: string;
     enabled: boolean;
   } | null = null;
+  activeSection: 'twoFactor' | 'addPassword' | 'changePassword' = 'twoFactor';
+  showOldPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
 
   readonly form = this.fb.nonNullable.group({
-    oldPassword: ['', [Validators.required]],
+    oldPassword: [''],
     newPassword: ['', [Validators.required, Validators.minLength(6)]],
     confirmPassword: ['', [Validators.required, Validators.minLength(6)]]
   });
@@ -49,15 +54,135 @@ export class SecurityPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.recommendedTwoFactor = this.route.snapshot.queryParamMap.get('recommendTwoFactor') === '1';
+    this.recommendedPasswordSetup = this.route.snapshot.queryParamMap.get('recommendPasswordSetup') === '1';
     this.returnToRoute = this.route.snapshot.queryParamMap.get('returnTo') ?? '';
+
+    if (this.showAddPasswordSection) {
+      this.activeSection = 'addPassword';
+      return;
+    }
+
+    if (!this.showTwoFactorPrompt) {
+      this.activeSection = 'changePassword';
+    }
   }
 
   get currentUser() {
     return this.authService.getCurrentUser();
   }
 
+  get usesGoogleLogin(): boolean {
+    return localStorage.getItem('auth_login_provider') === 'google';
+  }
+
   get showTwoFactorPrompt(): boolean {
     return !!this.currentUser && this.currentUser.role !== 'ADMIN' && !this.currentUser.twoFactorEnabled;
+  }
+
+  get securityScore(): number {
+    let score = 35;
+
+    if (this.currentUser?.twoFactorEnabled) {
+      score += 40;
+    }
+
+    if (!this.usesGoogleLogin || this.recommendedPasswordSetup === false) {
+      score += 25;
+    }
+
+    return Math.min(score, 100);
+  }
+
+  get securityLevelLabel(): string {
+    if (this.securityScore >= 85) {
+      return 'Excellent';
+    }
+
+    if (this.securityScore >= 60) {
+      return 'Bon niveau';
+    }
+
+    return 'A renforcer';
+  }
+
+  get passwordStatusLabel(): string {
+    return this.showAddPasswordSection && this.recommendedPasswordSetup
+      ? 'A configurer'
+      : 'Configure';
+  }
+
+  get passwordStrength(): number {
+    const value = this.form.controls.newPassword.value;
+    let score = 0;
+
+    if (value.length >= 6) score += 25;
+    if (/[A-Z]/.test(value)) score += 25;
+    if (/[0-9]/.test(value)) score += 25;
+    if (/[^A-Za-z0-9]/.test(value)) score += 25;
+
+    return score;
+  }
+
+  get passwordStrengthLabel(): string {
+    if (this.passwordStrength >= 75) {
+      return 'Fort';
+    }
+
+    if (this.passwordStrength >= 50) {
+      return 'Moyen';
+    }
+
+    if (this.passwordStrength > 0) {
+      return 'Faible';
+    }
+
+    if (this.passwordStatusLabel === 'Configure') {
+      return 'Definie';
+    }
+
+    return 'Non defini';
+  }
+
+  get hasPasswordInput(): boolean {
+    return !!(
+      this.form.controls.oldPassword.value
+      || this.form.controls.newPassword.value
+      || this.form.controls.confirmPassword.value
+    );
+  }
+
+  setActiveSection(section: 'twoFactor' | 'addPassword' | 'changePassword'): void {
+    this.activeSection = section;
+    this.message = '';
+    this.error = '';
+    this.twoFactorError = '';
+    this.twoFactorMessage = '';
+  }
+
+  togglePasswordVisibility(field: 'old' | 'new' | 'confirm'): void {
+    if (field === 'old') {
+      this.showOldPassword = !this.showOldPassword;
+      return;
+    }
+
+    if (field === 'new') {
+      this.showNewPassword = !this.showNewPassword;
+      return;
+    }
+
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  get canShowTwoFactor(): boolean {
+    return this.showTwoFactorPrompt || !!this.twoFactorSetup || !!this.currentUser?.twoFactorEnabled;
+  }
+
+  get showAddPasswordSection(): boolean {
+    if (this.recommendedPasswordSetup) {
+      return true;
+    }
+
+    return localStorage.getItem('auth_login_provider') === 'google';
   }
 
   async loadTwoFactorSetup(): Promise<void> {
@@ -124,13 +249,14 @@ export class SecurityPageComponent implements OnInit {
 
     try {
       await firstValueFrom(this.authService.changeCurrentUserPassword({
-        oldPassword: this.form.controls.oldPassword.value,
+        oldPassword: this.recommendedPasswordSetup ? undefined : this.form.controls.oldPassword.value,
         newPassword: this.form.controls.newPassword.value,
         confirmPassword: this.form.controls.confirmPassword.value
       }));
 
       this.message = 'Mot de passe modifie avec succes.';
       this.form.reset({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      this.recommendedPasswordSetup = false;
     } catch (err) {
       this.error = this.extractError(err, 'Impossible de modifier le mot de passe.');
     } finally {

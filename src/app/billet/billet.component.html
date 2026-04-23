@@ -1,0 +1,78 @@
+<div class="billet-page">
+
+  <div class="loading" *ngIf="loading">Chargement du billet...</div>
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <div class="billet-card" *ngIf="billet && !loading">
+
+    <!-- Header -->
+    <div class="billet-header">
+      <div class="airline-logo">✈ TunisiaTour</div>
+      <div class="billet-statut">✅ BILLET CONFIRMÉ</div>
+    </div>
+
+    <!-- Référence -->
+    <div class="billet-ref">{{ billet.reference }}</div>
+
+    <!-- Route -->
+    <div class="billet-route">
+      <div class="ville">
+        <span class="code">{{ billet.depart }}</span>
+        <span class="label">Départ</span>
+      </div>
+      <div class="arrow-vol">✈</div>
+      <div class="ville">
+        <span class="code">{{ billet.arrivee }}</span>
+        <span class="label">Arrivée</span>
+      </div>
+    </div>
+
+    <!-- Infos vol -->
+    <div class="billet-infos">
+      <div class="info-item">
+        <span class="info-label">Vol</span>
+        <span class="info-value">{{ billet.numeroVol }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Date</span>
+        <span class="info-value">{{ billet.dateDepart }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Heure</span>
+        <span class="info-value">{{ billet.heureDepart }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Passagers</span>
+        <span class="info-value">{{ billet.nbPassagers }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Type</span>
+        <span class="info-value">{{ billet.typeBillet }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Prix</span>
+        <span class="info-value prix">{{ billet.prixTotal }} TND</span>
+      </div>
+    </div>
+
+    <!-- Passager -->
+    <div class="billet-passager">
+      <span class="info-label">Passager</span>
+      <span class="passager-nom">{{ billet.touristeNom }}</span>
+    </div>
+
+    <!-- Validation Message -->
+    <div class="billet-validation">
+      <div class="validation-text">
+        ✅ RÉSERVATION PAYÉE ET VALIDÉE
+      </div>
+      <p class="validation-hint">Présentez cette confirmation à l'aéroport</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="billet-footer">
+      HyperCloud Travel · Bon voyage ! 🌍
+    </div>
+
+  </div>
+</div>

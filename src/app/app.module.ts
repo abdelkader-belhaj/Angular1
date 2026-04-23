@@ -143,6 +143,6 @@ import { ForumConditionsModalComponent } from './homePage/forum/forum-conditions
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 
 
-,
+
 })
 export class AppModule { }

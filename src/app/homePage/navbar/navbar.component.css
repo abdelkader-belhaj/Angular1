@@ -171,8 +171,13 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+
   gap: 10px;
   text-align: left;
+
+  justify-content: space-between;
+  gap: 10px;
+
 }
 
 .user-dropdown button:hover {
@@ -194,8 +199,22 @@
   color: #b42318 !important;
 }
 
+
 .logout-item .material-symbols-outlined {
   color: #b42318 !important;
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+
 }
 
 @media (max-width: 720px) {

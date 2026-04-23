@@ -1,11 +1,12 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+
 import { NavbarComponent } from './homePage/navbar/navbar.component';
 import { FooterComponent } from './homePage/footer/footer.component';
 import { HomePageComponent } from './homePage/home-page.component';
@@ -15,6 +16,7 @@ import { MobilitySectionComponent } from './homePage/mobility-section/mobility-s
 import { EventsSectionComponent } from './homePage/events-section/events-section.component';
 import { MarketplaceSectionComponent } from './homePage/marketplace-section/marketplace-section.component';
 import { ChroniclesSectionComponent } from './homePage/chronicles-section/chronicles-section.component';
+
 import { DashbordPageComponent } from './dashbord/dashbord-page.component';
 import { SideNavComponent } from './dashbord/side-nav/side-nav.component';
 import { DashHeaderComponent } from './dashbord/dash-header/dash-header.component';
@@ -24,10 +26,23 @@ import { InventoryCardsComponent } from './dashbord/inventory-cards/inventory-ca
 import { InquiriesPanelComponent } from './dashbord/inquiries-panel/inquiries-panel.component';
 import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.component';
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
+
 import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.component';
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
-import { AuthInterceptor } from './services/auth.interceptor';
+
+import { VolsSectionComponent } from './homePage/vols-section.component';
+import { VolsListComponent } from './homePage/vols-list.component';
+import { MesReservationsComponent } from './homePage/mes-reservations.component';
+
+// ← NOUVEAU
+import { BilletComponent } from './billet/billet.component';
+import { NouvelleReclamationComponent } from './homePage/reclamations/nouvelle-reclamation.component';
+import { MesReclamationsComponent } from './homePage/reclamations/mes-reclamations.component';
+
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
+import { ReclamationsSocieteComponent } from './societe/reclamations/reclamations-societe.component';
+
+import { AuthInterceptor } from './services/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -41,6 +56,7 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     EventsSectionComponent,
     MarketplaceSectionComponent,
     ChroniclesSectionComponent,
+
     DashbordPageComponent,
     SideNavComponent,
     DashHeaderComponent,
@@ -50,8 +66,20 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     InquiriesPanelComponent,
     DashFooterComponent,
     AdminUsersPageComponent,
+
     LoginDialogComponent,
     ResetPasswordComponent,
+
+    VolsSectionComponent,
+    VolsListComponent,
+    MesReservationsComponent,
+
+    // ← NOUVEAU
+    BilletComponent,
+    NouvelleReclamationComponent,
+    MesReclamationsComponent,
+    ReclamationsSocieteComponent,
+
     WaitingResponsePageComponent
   ],
   imports: [

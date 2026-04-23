@@ -1,34 +1,328 @@
-<section class="relative min-h-[720px] flex items-center px-8">
-  <div class="absolute inset-0 z-0">
-    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdjFDCQymtmRFdEvPIed0_A0QYdaGlhMGwSQzD1DaxxWq7hmeFV73rLhvhApoBNUCJvL0ElYnYMFMW_IfQovBHqJx9_H97kbMA2lGa9YJLrlxB-z_uszAO6YAms5ExzCTAxgkObgAJcZhc36aeCrVQDVwoJ-XtCBsxzxhETuNCLzLB7ZJH1uQITISwpAlNeKrTFhTeJJZS8PpcbRoSVJHAnSaiEa4v2rmREkQMkOxaMTp1vwWzYkU7n9bExnsarsr2OAwo7B73flU" alt="Sidi Bou Said"/>
-    <div class="absolute inset-0 bg-gradient-to-r from-primary/60 to-transparent"></div>
+<section class="hero">
+
+  <!-- ══ BACKGROUND IMAGE ══ -->
+  <div class="hero-bg">
+    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdjFDCQymtmRFdEvPIed0_A0QYdaGlhMGwSQzD1DaxxWq7hmeFV73rLhvhApoBNUCJvL0ElYnYMFMW_IfQovBHqJx9_H97kbMA2lGa9YJLrlxB-z_uszAO6YAms5ExzCTAxgkObgAJcZhc36aeCrVQDVwoJ-XtCBsxzxhETuNCLzLB7ZJH1uQITISwpAlNeKrTFhTeJJZS8PpcbRoSVJHAnSaiEa4v2rmREkQMkOxaMTp1vwWzYkU7n9bExnsarsr2OAwo7B73flU" alt="Sidi Bou Said" />
+    <div class="hero-gradient"></div>
   </div>
 
-  <div class="relative z-10 max-w-screen-2xl mx-auto w-full">
-    <div class="max-w-3xl mb-12">
-      <h1 class="text-white font-headline text-5xl md:text-7xl font-extrabold tracking-tight mb-6">Explore the Soul of the Mediterranean.</h1>
-      <p class="text-white/90 text-lg md:text-xl max-w-xl">From the ancient stones of Carthage to the golden sands of the Sahara, curate your perfect Tunisian escape.</p>
+  <!-- ══ CONTENU HERO ══ -->
+  <div class="hero-inner">
+
+    <!-- Titre -->
+    <div class="hero-text">
+      <h1 class="hero-title">Explore the Soul of the Mediterranean.</h1>
+      <p class="hero-sub">From the ancient stones of Carthage to the golden sands of the Sahara, curate your perfect Tunisian escape.</p>
     </div>
 
-    <div class="glass-card p-8 rounded-xl max-w-5xl shadow-2xl">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-surface-container-lowest p-4 rounded-md flex flex-col gap-1">
-          <label class="text-[10px] uppercase tracking-widest font-bold text-outline">Origin</label>
-          <input class="border-none p-0 focus:ring-0 bg-transparent text-primary font-bold" placeholder="From where?" type="text"/>
+    <!-- Barre de recherche glass (style original) -->
+    <div class="glass-card">
+      <div class="search-grid">
+        <div class="sf">
+          <label class="slbl">ORIGIN</label>
+          <input [(ngModel)]="depart" (input)="filtrer()" placeholder="From where?" class="sinput" />
         </div>
-        <div class="bg-surface-container-lowest p-4 rounded-md flex flex-col gap-1">
-          <label class="text-[10px] uppercase tracking-widest font-bold text-outline">Destination</label>
-          <input class="border-none p-0 focus:ring-0 bg-transparent text-primary font-bold" placeholder="Tunis (TUN)" type="text"/>
+        <div class="sf">
+          <label class="slbl">DESTINATION</label>
+          <input [(ngModel)]="arrivee" (input)="filtrer()" placeholder="Tunis (TUN)" class="sinput" />
         </div>
-        <div class="bg-surface-container-lowest p-4 rounded-md flex flex-col gap-1">
-          <label class="text-[10px] uppercase tracking-widest font-bold text-outline">Dates</label>
-          <input class="border-none p-0 focus:ring-0 bg-transparent text-primary font-bold" placeholder="Add dates" type="text"/>
+        <div class="sf">
+          <label class="slbl">DATE</label>
+          <input [(ngModel)]="date" (input)="filtrer()" type="date" class="sinput" />
         </div>
-        <button class="bg-secondary-container text-on-secondary-container p-4 rounded-md flex items-center justify-between hover:bg-secondary-fixed transition-colors" type="button">
-          <span class="font-bold">Find Flights</span>
-          <span class="material-symbols-outlined">east</span>
+        <button class="find-btn" (click)="rechercherPage()">
+          <span>Find Flights</span>
+          <span class="arrow-icon">→</span>
         </button>
       </div>
     </div>
+
+    <!-- Boutons actions -->
+    <div class="hero-btns" *ngIf="authService.isAuthenticated()">
+      <button class="hbtn panier" (click)="router.navigate(['/mes-reservations'])">
+        🎫 Mes Réservations
+      </button>
+      <button class="hbtn reserv" (click)="router.navigate(['/vols'])">
+        🛒 Mon Panier
+        <span class="pcnt" *ngIf="panierCount > 0">{{ panierCount }}</span>
+      </button>
+      <button class="hbtn reclam" (click)="router.navigate(['/reclamations/mes'])">
+        📌 Mes Réclamations
+        <span class="pcnt" *ngIf="unreadReclamations > 0">{{ unreadReclamations }}</span>
+      </button>
+    </div>
+
+    <!-- ══ SCROLLER VOLS ══ -->
+    <div class="vols-section">
+      <div class="vols-hdr">
+        <span class="vols-hdr-title">
+          {{ vols.length }} vol(s) disponible(s)
+        </span>
+        <div class="vols-hdr-actions">
+          <button class="rec-btn" (click)="getRecommendations()" *ngIf="!showRecommendations">
+            🤖 Recommandations IA
+          </button>
+          <button class="reset-btn" (click)="resetToNormal()" *ngIf="showRecommendations">
+            🔄 Afficher tout
+          </button>
+          <button class="voir-tout" (click)="voirTous()" *ngIf="!showRecommendations">Voir tout →</button>
+        </div>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div class="scroller" *ngIf="loading">
+        <div class="vcard skel" *ngFor="let i of [1,2,3,4]">
+          <div class="sk-line"></div>
+          <div class="sk-line short"></div>
+          <div class="sk-line"></div>
+        </div>
+      </div>
+
+      <!-- Recommendation indicator -->
+      <div class="rec-indicator" *ngIf="showRecommendations && vols.length > 0">
+        🤖 Vols recommandés pour vous basés sur vos réservations précédentes
+      </div>
+
+      <!-- Aucun résultat -->
+      <div class="no-result" *ngIf="!loading && vols.length === 0">
+        Aucun vol trouvé — <button class="reset-link" (click)="depart=''; arrivee=''; date=''; filtrer()">Réinitialiser</button>
+      </div>
+
+      <!-- Scroller vols -->
+      <div class="scroller" *ngIf="!loading && vols.length > 0">
+        <div
+          class="vcard"
+          *ngFor="let vol of vols"
+          [class.in-panier]="estDansPanier(vol.id)"
+        >
+          <!-- Badge panier -->
+          <div class="panier-badge" *ngIf="estDansPanier(vol.id)">✓ Dans le panier</div>
+
+          <div class="vcard-top">
+            <span class="vbadge">{{ vol.numero }}</span>
+            <span class="vsociete">{{ vol.societeNom }}</span>
+            <span class="promo-badge" *ngIf="vol.offre" 
+                  style="background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; border: 1px solid #fcd34d; margin-left: auto;">
+              PROMO -{{ vol.offre!.pourcentage }}%
+            </span>
+          </div>
+
+          <div class="vroute">
+            <div class="vcity">
+              <span class="vcode">{{ vol.depart }}</span>
+              <span class="vlbl">Départ</span>
+            </div>
+            <div class="vmid">
+              <div class="vline"></div>
+              <span class="vplane">✈</span>
+              <!-- Escales Timeline -->
+              <div class="escale-timeline" *ngIf="vol.escales && vol.escales.length > 0" 
+                   style="display: flex; justify-content: space-evenly; width: 100%; position: absolute; top: 0;">
+                <div class="dot" *ngFor="let esc of vol.escales" 
+                     [title]="esc.ville + ' (' + esc.duree + ')'"
+                     style="width: 6px; height: 6px; background: #db2777; border: 1px solid white; border-radius: 50%; margin-top: -3px;"></div>
+              </div>
+            </div>
+            <div class="vcity">
+              <span class="vcode">{{ vol.arrivee }}</span>
+              <span class="vlbl">Arrivée</span>
+            </div>
+          </div>
+
+          <!-- List of Escales -->
+          <div class="vescales-list" *ngIf="vol.escales && vol.escales.length > 0" 
+               style="font-size: 0.72rem; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; margin: 0 10px 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span *ngFor="let esc of vol.escales">🛑 {{ esc.ville }} ({{ esc.duree }})</span>
+          </div>
+
+          <div class="vinfos">
+            <div class="vinfo">
+              <span class="vil">Date</span>
+              <span class="viv">{{ vol.dateDepart | date:'dd/MM/yy' }}</span>
+            </div>
+            <div class="vinfo">
+              <span class="vil">Heure</span>
+              <span class="viv">{{ vol.heureDepart }}</span>
+            </div>
+            <div class="vinfo">
+              <span class="vil">Places</span>
+              <span class="viv" [class.low]="vol.places < 5">{{ vol.places }}</span>
+            </div>
+            <div class="vinfo" *ngIf="vol.retard && vol.retard > 0">
+              <span class="vil" style="color: #d97706;">⚠️ Retard</span>
+              <span class="viv" style="color: #d97706; font-weight: 800;">+{{ formatRetard(vol.retard) }}</span>
+            </div>
+          </div>
+
+          <div class="vfooter">
+            <div class="vprice-block" style="display: flex; flex-direction: column;">
+              <span class="vprix-old" *ngIf="vol.offre" 
+                    style="font-size: 0.82rem; color: #94a3b8; text-decoration: line-through; line-height: 1;">
+                {{ vol.prix | currency:'TND':'symbol':'1.0-2' }}
+              </span>
+              <span class="vprix" [style.color]="vol.offre ? '#ef4444' : '#0ea5e9'">
+                {{ (vol.offre ? vol.prix * (1 - vol.offre!.pourcentage/100) : vol.prix) | currency:'TND':'symbol':'1.0-2' }}
+              </span>
+            </div>
+            <div class="vactions">
+              <button
+                class="vbtn-cart"
+                [class.incart]="estDansPanier(vol.id)"
+                (click)="togglePanier(vol, $event)"
+                [disabled]="vol.places === 0"
+                [title]="estDansPanier(vol.id) ? 'Retirer du panier' : 'Ajouter au panier'"
+              >
+                {{ estDansPanier(vol.id) ? '✓' : '🛒' }}
+              </button>
+              <button
+                class="vbtn-res"
+                (click)="ouvrirReservation(vol, $event)"
+                [disabled]="vol.places === 0"
+              >
+                Réserver
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- ══ MODAL RÉSERVATION ══ -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="fermerModal()">✕</button>
+
+      <!-- ─ Étape : Confirmation aller simple / choix ─ -->
+      <div *ngIf="etape === 'confirm'">
+        <h2 class="modal-title">Réserver un vol</h2>
+
+        <!-- Vol aller -->
+        <div class="mcard" *ngIf="volAller">
+          <span class="mcard-lbl">✈ Vol aller</span>
+          <div class="mcard-route">
+            <strong>{{ volAller.depart }}</strong>
+            <span class="marrow">→</span>
+            <strong>{{ volAller.arrivee }}</strong>
+          </div>
+          <span class="mcard-num">{{ volAller.numero }} · {{ volAller.dateDepart | date:'dd/MM/yyyy' }} · {{ volAller.heureDepart }}</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volAller.offre">
+              {{ volAller.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volAller.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volAller.offre ? volAller.prix * (1 - volAller.offre!.pourcentage/100) : volAller.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
+        </div>
+
+        <!-- Vol retour sélectionné -->
+        <div class="mcard retour" *ngIf="volRetour">
+          <span class="mcard-lbl">🔁 Vol retour</span>
+          <div class="mcard-route">
+            <strong>{{ volRetour.depart }}</strong>
+            <span class="marrow">→</span>
+            <strong>{{ volRetour.arrivee }}</strong>
+          </div>
+          <span class="mcard-num">{{ volRetour.numero }} · {{ volRetour.dateDepart | date:'dd/MM/yyyy' }} · {{ volRetour.heureDepart }}</span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volRetour.offre">
+              {{ volRetour.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volRetour.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volRetour.offre ? volRetour.prix * (1 - volRetour.offre!.pourcentage/100) : volRetour.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
+          <button class="mcard-remove" (click)="annulerRetour()">✕ Retirer</button>
+        </div>
+
+        <!-- Bouton ajouter retour -->
+        <button class="btn-add-retour" (click)="choisirAllerRetour()" *ngIf="!volRetour">
+          ↔ Ajouter un vol retour
+        </button>
+
+        <!-- Passagers -->
+        <div class="nb-wrap">
+          <span class="nb-lbl">Passagers</span>
+          <div class="nb-ctrl">
+            <button (click)="nbPassagers > 1 ? nbPassagers = nbPassagers - 1 : null">−</button>
+            <span>{{ nbPassagers }}</span>
+            <button (click)="nbPassagers < 9 ? nbPassagers = nbPassagers + 1 : null">+</button>
+          </div>
+        </div>
+
+        <div class="prix-total">
+          Total : <strong>{{ prixTotal | currency:'TND':'symbol':'1.0-2' }}</strong>
+        </div>
+
+        <div class="success-msg" *ngIf="reservationSuccess">{{ reservationSuccess }}</div>
+        <div class="error-msg" *ngIf="reservationError">{{ reservationError }}</div>
+
+        <div class="mactions" *ngIf="!reservationSuccess">
+          <button class="mbtn-cancel" (click)="fermerModal()">Annuler</button>
+          <button class="mbtn-confirm" (click)="confirmerReservation()" [disabled]="reservationLoading">
+            {{ reservationLoading ? 'En cours...' : 'Confirmer' }}
+          </button>
+        </div>
+        <div class="mactions" *ngIf="reservationSuccess">
+          <button class="mbtn-confirm" (click)="router.navigate(['/mes-reservations'])">
+            Voir mes réservations
+          </button>
+          <button class="mbtn-cancel" (click)="fermerModal()">Fermer</button>
+        </div>
+      </div>
+
+      <!-- ─ Étape : Sélection vol retour ─ -->
+      <div *ngIf="etape === 'retour'">
+        <h2 class="modal-title">🔁 Choisir le vol retour</h2>
+        <p class="retour-hint">
+          Retour depuis <strong>{{ volAller?.arrivee }}</strong> vers <strong>{{ volAller?.depart }}</strong>
+          · après le {{ volAller?.dateDepart | date:'dd/MM/yyyy' }}
+        </p>
+
+        <!-- Loading return flights -->
+        <div class="loading-retour" *ngIf="loading" style="text-align: center; padding: 20px; color: #0ea5e9;">
+          <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #0ea5e9; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+          Recherche des vols retour...
+        </div>
+
+        <!-- Aucun vol retour dispo -->
+        <div class="no-retour" *ngIf="!loading && volsRetour.length === 0">
+          Aucun vol retour disponible pour cette destination.
+          <button class="reset-link" (click)="annulerRetour()">Continuer en aller simple</button>
+        </div>
+
+        <!-- Liste vols retour -->
+        <div class="retour-list" *ngIf="volsRetour.length > 0">
+          <div class="retour-card" *ngFor="let vr of volsRetour" (click)="selectionnerRetour(vr)">
+            <div class="rc-route">
+              <strong>{{ vr.depart }}</strong>
+              <span>→</span>
+              <strong>{{ vr.arrivee }}</strong>
+            </div>
+            <div class="rc-info">
+              <span>{{ vr.numero }}</span>
+              <span>{{ vr.dateDepart | date:'dd/MM/yyyy' }}</span>
+              <span>{{ vr.heureDepart }}</span>
+              <span class="rc-prix">
+                <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.65rem;" *ngIf="vr.offre">
+                  {{ vr.prix | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+                <span [style.color]="vr.offre ? '#ef4444' : '#0ea5e9'">
+                  {{ (vr.offre ? vr.prix * (1 - vr.offre!.pourcentage/100) : vr.prix) | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mactions" style="margin-top:16px">
+          <button class="mbtn-cancel" (click)="annulerRetour()">← Retour</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </section>

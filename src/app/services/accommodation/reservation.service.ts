@@ -34,7 +34,7 @@ export interface ReservationResponse {
   providedIn: 'root'
 })
 export class ReservationService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/api/reservations`;
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/accommodation/reservations`;
   private readonly pythonApiUrl = 'http://localhost:8000/negotiate';
 
   constructor(private readonly http: HttpClient) { }
@@ -66,7 +66,7 @@ export class ReservationService {
     return this.http.get<ReservationResponse[]>(this.apiUrl, { headers: this.getHeaders() });
   }
 
-  updateReservationStatus(idReservation: number, action: 'confirmer' | 'annuler'): Observable<ReservationResponse> {
+  updateReservationStatus(idReservation: number, action: 'annuler'): Observable<ReservationResponse> {
     return this.http.patch<ReservationResponse>(`${this.apiUrl}/${idReservation}/${action}`, {}, { headers: this.getHeaders() });
   }
 

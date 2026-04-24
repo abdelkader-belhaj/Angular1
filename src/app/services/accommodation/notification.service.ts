@@ -11,6 +11,7 @@ export interface HostNotification {
   reclamationId?: string;
   date: string;
   read: boolean;
+  source: 'local'; // Ajout de la propriété source pour compatibilité
 }
 
 @Injectable({ providedIn: 'root' })
@@ -41,7 +42,8 @@ export class NotificationService {
       reason,
       reclamationId: metadata?.reclamationId,
       date: new Date().toISOString(),
-      read: false
+      read: false,
+      source: 'local' // Initialisation de la propriété source
     };
     all.unshift(notif);
     this.persist(all);

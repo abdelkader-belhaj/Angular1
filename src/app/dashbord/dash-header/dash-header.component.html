@@ -1,64 +1,26 @@
 <header class="admin-header flex flex-col gap-4 mb-10 lg:flex-row lg:items-start lg:justify-between px-6 py-4 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200">
 
   <div class="flex items-center gap-6">
-    <!-- Notifications Admin -->
-    <div class="relative" (click)="$event.stopPropagation()">
-      <button (click)="toggleNotifPanel($event)" class="relative p-2.5 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all group active:scale-95">
-        <span class="material-symbols-outlined text-slate-500 group-hover:text-indigo-600">notifications</span>
-        <span *ngIf="unreadCount > 0" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-4 ring-white">
-          {{ unreadCount }}
+    <!-- Icône de connexion déplacée à gauche -->
+    <div class="admin-menu" (click)="$event.stopPropagation()">
+      <button class="admin-trigger" type="button" (click)="toggleAccountMenu($event)">
+        <span class="admin-avatar material-symbols-outlined">admin_panel_settings</span>
+        <span class="admin-meta">
+          <strong>{{ currentUserName }}</strong>
+          <small>Compte admin</small>
         </span>
+        <span class="material-symbols-outlined text-sm">expand_more</span>
       </button>
 
-      <!-- Panel Notifications -->
-      <div *ngIf="showNotifPanel" class="absolute left-0 mt-3 w-80 max-h-[480px] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200 z-50 overflow-hidden transform transition-all">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <h3 class="font-bold text-slate-800 flex items-center gap-2">
-            <span class="material-symbols-outlined text-indigo-600">notifications_active</span>
-            Réclamations 
-          </h3>
-          <button *ngIf="unreadCount > 0" (click)="markAllAsRead()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">Tout lire</button>
-        </div>
-
-        <div class="overflow-y-auto flex-1 custom-scrollbar">
-          <div *ngIf="notifications.length === 0" class="p-10 text-center">
-            <span class="material-symbols-outlined text-slate-300 text-4xl mb-2">inbox</span>
-            <p class="text-sm text-slate-500">Aucune réclamation</p>
-          </div>
-
-          <div *ngFor="let notif of notifications" 
-            [class.bg-indigo-50]="!notif.read"
-            (click)="markAsRead(notif.id)"
-            class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group relative">
-            
-            <div class="flex items-start gap-3">
-              <div class="p-2 rounded-xl bg-orange-100 text-orange-600">
-                <span class="material-symbols-outlined text-lg">warning</span>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-0.5">
-                  <p class="text-xs font-bold text-slate-900 truncate">{{ notif.logementNom }}</p>
-                  <span class="text-[10px] text-slate-400">{{ notif.date | date:'dd/MM HH:mm' }}</span>
-                </div>
-                <p class="text-xs text-slate-600 line-clamp-2">{{ notif.message }}</p>
-                <p *ngIf="notif.reason" class="text-[10px] text-slate-400 mt-1 italic mt-1 bg-white/50 p-1.5 rounded-lg border border-slate-100">
-                  {{ notif.reason }}
-                </p>
-              </div>
-            </div>
-
-            <button (click)="$event.stopPropagation(); deleteNotification(notif.id)" 
-                    class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all">
-              <span class="material-symbols-outlined text-sm">close</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="p-3 bg-slate-50 text-center border-t border-slate-100">
-          <button routerLink="/dashbord/reclamations" class="text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors">Voir tout le centre d'aide</button>
-        </div>
-      </div>
+      <ul *ngIf="isAccountMenuOpen" class="admin-dropdown" role="menu" aria-label="Menu admin">
+        <li>
+          <button type="button" role="menuitem" class="logout-item" (click)="logout()">
+            Deconnexion
+          </button>
+        </li>
+      </ul>
     </div>
+  </div>
 
 <header
   class="admin-header flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
@@ -69,22 +31,5 @@
     <p class="text-on-surface-variant">Espace administrateur pour gerer le compte courant et la session.</p>
   </div>
 
-  <div class="admin-menu" (click)="$event.stopPropagation()">
-    <button class="admin-trigger" type="button" (click)="toggleAccountMenu($event)">
-      <span class="admin-avatar material-symbols-outlined">admin_panel_settings</span>
-      <span class="admin-meta">
-        <strong>{{ currentUserName }}</strong>
-        <small>Compte admin</small>
-      </span>
-      <span class="material-symbols-outlined text-sm">expand_more</span>
-    </button>
-
-    <ul *ngIf="isAccountMenuOpen" class="admin-dropdown" role="menu" aria-label="Menu admin">
-      <li>
-        <button type="button" role="menuitem" class="logout-item" (click)="logout()">
-          Deconnexion
-        </button>
-      </li>
-    </ul>
-  </div>
+  
 </header>

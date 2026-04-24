@@ -105,9 +105,23 @@ export class HebergeurNotificationsComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  markAsRead(notif: HostNotification): void {
+  markAsRead(notif: HostNotification | UnifiedNotificationItem): void {
     if (!notif.read) {
-      this.notificationService.markAsRead(notif.id);
+      if ('source' in notif) {
+        // C'est une UnifiedNotificationItem
+        this.markUnifiedAsRead(notif as UnifiedNotificationItem);
+      } else {
+        // C'est une HostNotification
+        this.notificationService.markAsRead((notif as any).id);
+      }
+    }
+  }
+
+  private markUnifiedAsRead(notif: UnifiedNotificationItem): void {
+    if (!notif.read) {
+      if (notif.source === 'local' && notif.rawLocal) {
+        this.notificationService.markAsRead(notif.rawLocal.id);
+      }
     }
   }
 
@@ -191,24 +205,33 @@ export class HebergeurNotificationsComponent implements OnInit, OnDestroy {
     this.toggleArchive(item, event);
   }
 
-  deleteItem(item: UnifiedNotificationItem, event?: Event): void {
+  deleteItem(item: UnifiedNotificationItem | HostNotification, event?: Event): void {
     event?.stopPropagation();
 
-    if (item.source === 'local' && item.rawLocal) {
-      this.notificationService.deleteNotification(item.rawLocal.id);
-      this.localArchivedIds.delete(item.rawLocal.id);
-      this.persistArchivedLocalIds();
-      return;
-    }
+    // Vérifier si c'est une UnifiedNotificationItem ou HostNotification
+    if ('source' in item) {
+      // C'est une UnifiedNotificationItem
+      if (item.source === 'local' && 'rawLocal' in item && item.rawLocal) {
+        this.notificationService.deleteNotification(item.rawLocal.id);
+        this.localArchivedIds.delete(item.rawLocal.id);
+        this.persistArchivedLocalIds();
+        return;
+      }
 
-    if (item.source === 'backend' && item.rawBackend) {
-      this.notificationClientService.deleteNotification(item.rawBackend.id).subscribe({
-        next: () => {
-          this.backendNotifs = this.backendNotifs.filter((n) => n.id !== item.rawBackend?.id);
-          this.backendArchivedIds.delete(item.rawBackend!.id);
-          this.persistArchivedBackendIds();
-        }
-      });
+      if (item.source === 'backend' && 'rawBackend' in item && item.rawBackend) {
+        this.notificationClientService.deleteNotification(item.rawBackend.id).subscribe({
+          next: () => {
+            this.backendNotifs = this.backendNotifs.filter((n) => n.id !== item.rawBackend?.id);
+            this.backendArchivedIds.delete(item.rawBackend!.id);
+            this.persistArchivedBackendIds();
+          }
+        });
+      }
+    } else {
+      // C'est une HostNotification
+      this.notificationService.deleteNotification((item as any).id);
+      this.localArchivedIds.delete((item as any).id);
+      this.persistArchivedLocalIds();
     }
   }
 

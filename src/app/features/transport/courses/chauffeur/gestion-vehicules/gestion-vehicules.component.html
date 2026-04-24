@@ -1,0 +1,461 @@
+<div class="dashboard-container fleet-page">
+  <div class="sand-sea-orb orb-left"></div>
+  <div class="sand-sea-orb orb-right"></div>
+
+  <div class="dashboard-shell fleet-shell">
+    <app-chauffeur-sidenav
+      [activeSection]="'vehicles'"
+      [showCta]="true"
+      [ctaLabel]="'Prendre une course'"
+      [ctaDisabled]="false"
+      (ctaClick)="goToActiveCourseShortcut()"
+    ></app-chauffeur-sidenav>
+
+    <main class="fleet-main">
+      <header class="topbar">
+        <div class="search-box">
+          <input
+            type="text"
+            placeholder="Rechercher un véhicule..."
+            [(ngModel)]="searchTerm"
+            name="searchTerm"
+          />
+        </div>
+
+        <div class="profile-pill">
+          <strong>{{ currentDriverName }}</strong>
+          <span>Premium Driver</span>
+        </div>
+      </header>
+
+      <section class="hero-head">
+        <div>
+          <h2>Mes Véhicules</h2>
+          <p>
+            Gérez votre flotte personnelle et suivez l'état de vos outils de
+            travail en temps réel.
+          </p>
+        </div>
+        <button class="btn-add" type="button" (click)="openAddForm()">
+          + Ajouter un véhicule
+        </button>
+      </section>
+
+      <div class="loading" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Chargement de vos véhicules...</p>
+      </div>
+
+      <section class="stats-grid" *ngIf="!isLoading">
+        <article class="stat-card">
+          <p>Véhicules Totaux</p>
+          <h3>{{ totalVehicules | number: "2.0-0" }}</h3>
+        </article>
+        <article class="stat-card good">
+          <p>En Service</p>
+          <h3>{{ activeVehiculesCount | number: "2.0-0" }}</h3>
+        </article>
+        <article class="stat-card warn">
+          <p>Inactifs</p>
+          <h3>{{ inactiveVehiculesCount | number: "2.0-0" }}</h3>
+        </article>
+        <article class="stat-card">
+          <p>Tarif moyen</p>
+          <h3>{{ averagePrixKm | number: "1.2-2" }} <span>TND/km</span></h3>
+        </article>
+      </section>
+
+      <section class="vehicules-list" *ngIf="!isLoading">
+        <article class="vehicule-card" *ngFor="let v of filteredVehicules">
+          <div class="vehicule-photo-block">
+            <div
+              *ngIf="getVehiculePhotos(v).length; else noVehiculePhoto"
+              class="vehicule-photo-layout"
+            >
+              <button
+                type="button"
+                class="vehicule-main"
+                (click)="openVehiculeGallery(v, 0)"
+              >
+                <img
+                  class="vehicule-photo vehicule-photo-main"
+                  [src]="getVehiculeMainPhoto(v)"
+                  [alt]="'Photo principale du véhicule'"
+                  (error)="onVehiculeImageError(v, $event)"
+                />
+              </button>
+
+              <div
+                class="vehicule-thumbs"
+                *ngIf="getVehiculePhotos(v).length > 1"
+              >
+                <button
+                  type="button"
+                  class="vehicule-thumb"
+                  *ngFor="
+                    let photo of getVehiculePhotos(v) | slice: 1 : 5;
+                    let idx = index
+                  "
+                  (click)="openVehiculeGallery(v, idx + 1)"
+                >
+                  <img
+                    class="vehicule-photo vehicule-photo-thumb"
+                    [src]="resolveVehiculePhotoUrl(photo)"
+                    [alt]="'Miniature véhicule ' + (idx + 2)"
+                    (error)="onVehiculeImageError(v, $event)"
+                  />
+                </button>
+              </div>
+            </div>
+            <ng-template #noVehiculePhoto>
+              <div class="vehicule-photo vehicule-photo-placeholder">
+                Pas de photo
+              </div>
+            </ng-template>
+
+            <span
+              class="fleet-status"
+              [class.active]="v.statut === VehiculeStatut.ACTIVE"
+            >
+              {{ v.statut === VehiculeStatut.ACTIVE ? "ACTIF" : "INACTIF" }}
+            </span>
+
+            <span class="photo-count" *ngIf="getVehiculePhotos(v).length > 0">
+              {{ getVehiculePhotos(v).length }}
+            </span>
+          </div>
+
+          <div class="card-header">
+            <div>
+              <h3>{{ v.marque }} {{ v.modele }}</h3>
+              <p class="plaque">{{ v.numeroPlaque }}</p>
+            </div>
+            <div class="badge-main" *ngIf="v.statut === VehiculeStatut.ACTIVE">
+              Véhicule principal
+            </div>
+          </div>
+
+          <div class="vehicle-meta">
+            <span>{{ getTypeLabel(v.typeVehicule) }}</span>
+            <span>{{ v.capacitePassagers || 0 }} places</span>
+            <span>{{ v.prixKm || 0 }} TND/km</span>
+            <span>{{ v.prixMinute || 0 }} TND/min</span>
+          </div>
+
+          <div class="card-actions">
+            <button
+              class="action-btn action-edit"
+              type="button"
+              (click)="editVehicule(v)"
+            >
+              Détails Techniques
+            </button>
+
+            <button
+              class="action-btn action-toggle"
+              type="button"
+              (click)="activateVehicule(v)"
+              [disabled]="isActivationDisabled(v)"
+              [class.action-disabled]="isActivationDisabled(v)"
+            >
+              {{ getActivationLabel(v) }}
+            </button>
+
+            <button
+              class="action-btn action-neutral"
+              type="button"
+              *ngIf="v.statut === VehiculeStatut.ACTIVE"
+              (click)="deactivateVehicule(v)"
+            >
+              Inactiver
+            </button>
+          </div>
+        </article>
+
+        <article *ngIf="filteredVehicules.length === 0" class="no-vehicules">
+          <p>Aucun véhicule trouvé pour ce filtre.</p>
+          <button class="btn-add" type="button" (click)="openAddForm()">
+            Ajouter un véhicule
+          </button>
+        </article>
+      </section>
+
+      <section class="utility-grid" *ngIf="!isLoading">
+        <article class="renew-card">
+          <h4>Renouvellement automatique</h4>
+          <p>
+            Activez les rappels automatiques pour vos assurances et visites
+            techniques.
+          </p>
+          <button type="button">Paramétrer les alertes</button>
+        </article>
+
+        <article class="help-card">
+          <h5>Assistance rapide</h5>
+          <button type="button">Contacter un garagiste</button>
+          <button type="button">Documents officiels</button>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- Formulaire Ajout / Modification -->
+  <div class="modal-overlay" *ngIf="showAddForm" (click)="cancelForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          {{ editingVehicule ? "Modifier le véhicule" : "Ajouter un véhicule" }}
+        </h2>
+        <button class="close-btn" type="button" (click)="cancelForm()">
+          ✕
+        </button>
+      </div>
+
+      <form [formGroup]="vehiculeForm" (ngSubmit)="saveVehicule()" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marque</label>
+            <input
+              type="text"
+              formControlName="marque"
+              required
+              minlength="3"
+              maxlength="30"
+              (input)="onTextInput('marque')"
+              (blur)="onTextBlur('marque')"
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('marque')">
+              {{ getFieldError("marque") }}
+            </small>
+          </div>
+          <div class="form-group">
+            <label>Modèle</label>
+            <input
+              type="text"
+              formControlName="modele"
+              required
+              minlength="3"
+              maxlength="30"
+              (input)="onTextInput('modele')"
+              (blur)="onTextBlur('modele')"
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('modele')">
+              {{ getFieldError("modele") }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Numéro de plaque</label>
+          <input
+            type="text"
+            formControlName="numeroPlaque"
+            required
+            minlength="3"
+            maxlength="12"
+            placeholder="Ex: 123 AB 4567"
+            (input)="onNumeroPlaqueInput()"
+            (blur)="onNumeroPlaqueBlur()"
+          />
+          <small
+            >Format Tunisie: 1 à 3 chiffres, 1 à 2 lettres, 1 à 4
+            chiffres.</small
+          >
+          <small class="field-error" *ngIf="isFieldInvalid('numeroPlaque')">
+            {{ getFieldError("numeroPlaque") }}
+          </small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type de véhicule</label>
+            <select formControlName="typeVehicule" required>
+              <option [value]="TypeVehicule.ECONOMY">Économie</option>
+              <option [value]="TypeVehicule.PREMIUM">Premium</option>
+              <option [value]="TypeVehicule.VAN">Van</option>
+            </select>
+            <small class="field-error" *ngIf="isFieldInvalid('typeVehicule')">
+              {{ getFieldError("typeVehicule") }}
+            </small>
+          </div>
+          <div class="form-group">
+            <label>Nombre de places</label>
+            <input
+              type="number"
+              formControlName="capacitePassagers"
+              min="1"
+              max="9"
+              step="1"
+              required
+            />
+            <small
+              class="field-error"
+              *ngIf="isFieldInvalid('capacitePassagers')"
+            >
+              {{ getFieldError("capacitePassagers") }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prix par km (TND)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              max="10"
+              formControlName="prixKm"
+              required
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('prixKm')">
+              {{ getFieldError("prixKm") }}
+            </small>
+          </div>
+          <div class="form-group">
+            <label>Prix par minute (TND)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.05"
+              max="5"
+              formControlName="prixMinute"
+              required
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('prixMinute')">
+              {{ getFieldError("prixMinute") }}
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Photos du véhicule</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            (change)="onPhotosSelected($event)"
+          />
+          <small>Vous pouvez uploader une ou plusieurs photos.</small>
+        </div>
+
+        <div class="photos-preview" *ngIf="photoPreviews.length > 0">
+          <div
+            class="preview-item"
+            *ngFor="let preview of photoPreviews; let i = index"
+          >
+            <img [src]="preview" alt="Photo sélectionnée" />
+            <button
+              type="button"
+              class="preview-remove"
+              (click)="removeSelectedPhoto(i)"
+            >
+              Retirer
+            </button>
+          </div>
+        </div>
+
+        <div class="photos-existing" *ngIf="editingVehicule?.photoUrls?.length">
+          <p>Photos actuelles:</p>
+          <div class="existing-grid">
+            <div
+              class="existing-item"
+              *ngFor="let current of editingVehicule?.photoUrls"
+            >
+              <img
+                [src]="resolveVehiculePhotoUrl(current)"
+                alt="Photo actuelle"
+              />
+              <button
+                type="button"
+                class="existing-remove"
+                (click)="deleteExistingPhoto(editingVehicule!, current)"
+              >
+                Retirer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="cancelForm()">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="isSubmitting"
+            (click)="debugSubmitButtonClick($event)"
+          >
+            {{
+              isSubmitting
+                ? "Traitement..."
+                : editingVehicule
+                  ? "Enregistrer les modifications"
+                  : "Ajouter le véhicule"
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div
+    class="gallery-overlay"
+    *ngIf="isGalleryOpen"
+    (click)="closeVehiculeGallery()"
+  >
+    <div class="gallery-modal" (click)="$event.stopPropagation()">
+      <div class="gallery-header">
+        <strong>{{ galleryVehiculeTitle }}</strong>
+        <button
+          type="button"
+          class="gallery-close"
+          (click)="closeVehiculeGallery()"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="gallery-main">
+        <button
+          type="button"
+          class="gallery-nav"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="prevGalleryPhoto()"
+        >
+          ‹
+        </button>
+
+        <img
+          [src]="getCurrentGalleryPhotoUrl()"
+          alt="Photo véhicule agrandie"
+        />
+
+        <button
+          type="button"
+          class="gallery-nav"
+          *ngIf="galleryPhotos.length > 1"
+          (click)="nextGalleryPhoto()"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="gallery-strip" *ngIf="galleryPhotos.length > 1">
+        <button
+          type="button"
+          class="gallery-strip-item"
+          *ngFor="let photo of galleryPhotos; let i = index"
+          [class.active]="i === galleryIndex"
+          (click)="galleryIndex = i"
+        >
+          <img
+            [src]="resolveVehiculePhotoUrl(photo)"
+            alt="Miniature photo véhicule"
+          />
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

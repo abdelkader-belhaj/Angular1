@@ -178,9 +178,9 @@
         <!-- Status bar (top accent) -->
         <div class="h-1 w-full"
           [ngClass]="{
-            'bg-gradient-to-r from-amber-400 to-orange-400': res.statut === 'en_attente',
-            'bg-gradient-to-r from-emerald-400 to-teal-400': res.statut === 'confirmee',
-            'bg-gradient-to-r from-rose-500 to-red-500': res.statut === 'annulee'
+            'bg-gradient-to-r from-amber-400 to-orange-400': isStatutEnAttente(res),
+            'bg-gradient-to-r from-emerald-400 to-teal-400': isStatutConfirmee(res),
+            'bg-gradient-to-r from-rose-500 to-red-500': isStatutAnnulee(res)
           }">
         </div>
 
@@ -199,11 +199,11 @@
             <!-- Status badge -->
             <span class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-black border"
               [ngClass]="{
-                'bg-amber-50 text-amber-700 border-amber-200': res.statut === 'en_attente',
-                'bg-emerald-50 text-emerald-700 border-emerald-200': res.statut === 'confirmee',
-                'bg-rose-50 text-rose-700 border-rose-200': res.statut === 'annulee'
+                'bg-amber-50 text-amber-700 border-amber-200': isStatutEnAttente(res),
+                'bg-emerald-50 text-emerald-700 border-emerald-200': isStatutConfirmee(res),
+                'bg-rose-50 text-rose-700 border-rose-200': isStatutAnnulee(res)
               }">
-              {{ res.statut === 'en_attente' ? '⏳ En attente' : res.statut === 'confirmee' ? '✅ Confirmée' : '❌ Annulée' }}
+              {{ isStatutEnAttente(res) ? '⏳ En attente' : isStatutConfirmee(res) ? '✅ Confirmée' : '❌ Annulée' }}
             </span>
           </div>
 
@@ -274,7 +274,7 @@
           </div>
 
           <!-- ── BADGE RÉSERVATION ANNULÉE (après annulation réussie) ────── -->
-          <div *ngIf="res.statut === 'annulee' || refundDoneIds.has(res.idReservation)"
+          <div *ngIf="isStatutAnnulee(res) || refundDoneIds.has(res.idReservation)"
             class="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between gap-3">
             <span class="flex items-center gap-2 text-rose-700 font-bold text-sm">
               <lucide-icon name="x-circle" class="w-5 h-5 text-rose-500"></lucide-icon>
@@ -286,7 +286,7 @@
                 Remboursement en cours
               </span>
             </ng-container>
-            <button *ngIf="res.statut === 'annulee'"
+            <button *ngIf="isStatutAnnulee(res)"
               class="text-xs text-slate-400 hover:text-rose-600 transition-colors p-1 rounded-lg hover:bg-rose-100"
               title="Supprimer de l'historique"
               (click)="deleteReservationHistory(res.idReservation)">
@@ -295,7 +295,7 @@
           </div>
 
           <!-- ── MODIFICATION (fenêtre 2h seulement) ───────────────────────── -->
-          <div *ngIf="res.canCancelOrModify && getProgressPercentage(res.dateReservation) < 100 && res.statut === 'confirmee'"
+          <div *ngIf="res.canCancelOrModify && getProgressPercentage(res.dateReservation) < 100 && isStatutConfirmee(res)"
             class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
             <div class="flex justify-between text-xs font-semibold">
               <span class="text-slate-500 flex items-center gap-1.5">
@@ -318,20 +318,39 @@
           </div>
 
           <!-- Fenêtre de modification expirée -->
-          <div *ngIf="res.statut === 'confirmee' && (!res.canCancelOrModify || getProgressPercentage(res.dateReservation) >= 100)"
+          <div *ngIf="isStatutConfirmee(res) && (!res.canCancelOrModify || getProgressPercentage(res.dateReservation) >= 100)"
             class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-2 text-slate-400 text-xs font-semibold">
             <lucide-icon name="lock" class="w-3.5 h-3.5"></lucide-icon>
             Fenêtre de modification expirée — annulation toujours possible ci-dessus
           </div>
 
           <!-- ── SMART LOCK ── -->
-          <div *ngIf="res.statut === 'confirmee'"
+          <div *ngIf="isStatutConfirmee(res)"
             class="border-t border-slate-200 pt-4 rounded-2xl transition-all"
             [id]="'smart-lock-' + res.idReservation"
             [ngClass]="highlightedSmartLockReservationId === res.idReservation ? 'ring-2 ring-indigo-500 bg-indigo-50/60 p-3 directed-smartlock-focus' : ''">
             <h5 class="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
               <lucide-icon name="key" class="w-4 h-4 text-indigo-500"></lucide-icon> Smart Lock IoT
             </h5>
+
+          <!-- Message pour réservations annulées -->
+          <div *ngIf="isStatutAnnulee(res)" 
+               class="border-t border-slate-200 pt-4 rounded-2xl">
+            <h5 class="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
+              <lucide-icon name="key" class="w-4 h-4 text-slate-300"></lucide-icon> Smart Lock IoT
+            </h5>
+            <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-3">
+              <div class="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center border border-rose-200">
+                <lucide-icon name="lock" class="w-5 h-5 text-rose-500"></lucide-icon>
+              </div>
+              <div>
+                <p class="text-rose-800 font-bold text-sm">Accès désactivé</p>
+                <p class="text-rose-600 text-xs font-medium mt-0.5">
+                  Cette réservation est annulée - l'accès Smart Lock et la géolocalisation ne sont plus disponibles
+                </p>
+              </div>
+            </div>
+          </div>
 
             <!-- Locked state (before check-in date) -->
             <div *ngIf="!isSmartLockActive(res)"

@@ -13,33 +13,52 @@ import { firstValueFrom } from 'rxjs';
 export class CategorieComponent implements OnInit {
 
   categories: Categorie[] = [];
-  loading                 = true;
-  error                   = false;
-  showModal               = false;
-  showDeleteModal         = false;
+  loading = true;
+  error = false;
+
+  showModal = false;
+  showDeleteModal = false;
+
   selectedCategorie: Categorie | null = null;
   categorieToDelete: Categorie | null = null;
-  hasAssociatedLogements  = false;
+
+  hasAssociatedLogements = false;
   deleteRequiresConfirmation = false;
-  deleteConfirmedStep1     = false;
-  deleteConfirmedStep2     = false;
-  showFinalDeleteConfirm   = false;
-  deleteErrorMessage      = '';
+  deleteConfirmedStep1 = false;
+  deleteConfirmedStep2 = false;
+  showFinalDeleteConfirm = false;
+
+  deleteErrorMessage = '';
   deleteBlockerLogements: Logement[] = [];
-  deleteBlockerCount      = 0;
+  deleteBlockerCount = 0;
+
   currentRole = '';
 
-  formData = { nomCategorie: '', description: '', icone: '', statut: true };
+  formData = {
+    nomCategorie: '',
+    description: '',
+    icone: '',
+    statut: true
+  };
+
   formErrors: any = {};
   enhancingDescription = false;
   requestError = '';
   requestSuccess = '';
+
   isAdminUser = false;
   isHebergeurUser = false;
+
   selectedAssetIcon = '';
   imagePreviewUrl = '';
 
-  imageOptions = ['maison.jpg', 'villa.jpg', 'appartement.jpg', 'riad.jpg', 'chalet.jpg']; // Ajoutez vos images ici
+  imageOptions = [
+    'maison.jpg',
+    'villa.jpg',
+    'appartement.jpg',
+    'riad.jpg',
+    'chalet.jpg'
+  ];
 
   typeCategories = [
     'Appartements',
@@ -69,14 +88,22 @@ export class CategorieComponent implements OnInit {
     this.loadCategories();
   }
 
+  // ================= LOAD =================
   loadCategories(): void {
     this.loading = true;
     this.categorieService.getCategories().subscribe({
-      next: (data) => { this.categories = data; this.loading = false; },
-      error: () => { this.error = true; this.loading = false; }
+      next: (data) => {
+        this.categories = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = true;
+        this.loading = false;
+      }
     });
   }
 
+  // ================= MODALS =================
   openAddModal(): void {
     this.selectedCategorie = null;
     this.formData = { nomCategorie: '', description: '', icone: '', statut: true };
@@ -88,212 +115,183 @@ export class CategorieComponent implements OnInit {
 
   openEditModal(cat: Categorie): void {
     this.selectedCategorie = cat;
+
     this.formData = {
       nomCategorie: cat.nomCategorie,
-      description:  cat.description,
-      icone:        cat.icone,
-      statut:       cat.statut
+      description: cat.description,
+      icone: cat.icone,
+      statut: cat.statut
     };
+
     this.selectedAssetIcon = cat.icone;
     this.imagePreviewUrl = this.getImage(cat.icone);
     this.formErrors = {};
     this.showModal = true;
   }
 
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedCategorie = null;
+    this.imagePreviewUrl = '';
+  }
+
+  // ================= DELETE =================
   openDeleteModal(cat: Categorie): void {
     this.categorieToDelete = cat;
     this.showDeleteModal = true;
+
     this.hasAssociatedLogements = !!cat.nbLogements && cat.nbLogements > 0;
     this.deleteRequiresConfirmation = this.hasAssociatedLogements;
+
     this.deleteConfirmedStep1 = !this.deleteRequiresConfirmation;
     this.deleteConfirmedStep2 = !this.deleteRequiresConfirmation;
+
     this.showFinalDeleteConfirm = false;
     this.deleteErrorMessage = '';
     this.deleteBlockerLogements = [];
     this.deleteBlockerCount = cat.nbLogements || 0;
+
     this.loadDeletePreview(cat.idCategorie);
   }
 
   loadDeletePreview(id: number): void {
     this.categorieService.getLogementsByCategorie(id).subscribe({
-      next: (logements) => {
+      next: (logements: Logement[]) => {
         this.deleteBlockerLogements = logements || [];
         this.deleteBlockerCount = this.deleteBlockerLogements.length;
+
         this.hasAssociatedLogements = this.deleteBlockerCount > 0;
+
         if (this.hasAssociatedLogements) {
           this.deleteRequiresConfirmation = true;
           this.deleteConfirmedStep1 = false;
           this.deleteConfirmedStep2 = false;
-          this.deleteErrorMessage = `Cette catégorie contient ${this.deleteBlockerCount} logement(s). En confirmant, vous supprimerez également tous ces logements.`;
+
+          this.deleteErrorMessage =
+            `Cette catégorie contient ${this.deleteBlockerCount} logement(s).`;
         }
       },
       error: () => {
-        // Si l'aperçu échoue, le modal reste affiché sans détails supplémentaires.
+        console.warn('Erreur chargement logements');
       }
     });
   }
 
-  closeModal(): void { 
-    this.showModal = false; 
-    this.selectedCategorie = null;
-    this.selectedAssetIcon = '';
-    this.imagePreviewUrl = '';
-  }
-
-  selectImageFromAssets(imageName: string): void {
-    this.formData.icone = imageName;
-    if (imageName) {
-      this.imagePreviewUrl = this.getImage(imageName);
-    } else {
-      this.imagePreviewUrl = '';
-    }
-  }
   closeDeleteModal(): void {
     this.showDeleteModal = false;
     this.categorieToDelete = null;
-    this.hasAssociatedLogements = false;
-    this.deleteRequiresConfirmation = false;
-    this.deleteConfirmedStep1 = false;
-    this.deleteConfirmedStep2 = false;
-    this.showFinalDeleteConfirm = false;
     this.deleteErrorMessage = '';
-    this.deleteBlockerLogements = [];
-    this.deleteBlockerCount = 0;
-    this.selectedAssetIcon = '';
-    this.imagePreviewUrl = '';
-  }
-
-  saveCategorie(): void {
-    if (!this.validate()) return;
-    const token = localStorage.getItem('auth_token');
-    const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-    if (!token || (user.role !== 'ADMIN' && user.role !== 'HEBERGEUR')) {
-      alert('Vous devez être connecté en tant qu\'admin ou hébergeur pour effectuer cette action.');
-      return;
-    }
-    if (this.selectedCategorie) {
-      this.categorieService.updateCategorie(this.selectedCategorie.idCategorie, this.formData).subscribe({
-        next: () => { this.loadCategories(); this.closeModal(); },
-        error: (err) => console.error('Erreur update:', err)
-      });
-    } else {
-      this.categorieService.createCategorie(this.formData).subscribe({
-        next: () => { this.loadCategories(); this.closeModal(); },
-        error: (err) => console.error('Erreur create:', err)
-      });
-    }
   }
 
   confirmDelete(): void {
     if (!this.categorieToDelete) return;
-    const token = localStorage.getItem('auth_token');
-    const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-    if (!token || (user.role !== 'ADMIN' && user.role !== 'HEBERGEUR')) {
-      alert('Vous devez être connecté en tant qu\'admin ou hébergeur pour effectuer cette action.');
-      return;
-    }
-    if (this.deleteRequiresConfirmation && (!this.deleteConfirmedStep1 || !this.deleteConfirmedStep2)) {
-      this.deleteErrorMessage = 'Cochez les deux confirmations pour supprimer cette catégorie et tous les logements associés.';
-      return;
-    }
+
     if (!this.showFinalDeleteConfirm) {
       this.showFinalDeleteConfirm = true;
       return;
     }
+
     this.categorieService.deleteCategorie(this.categorieToDelete.idCategorie).subscribe({
       next: () => {
         this.loadCategories();
         this.closeDeleteModal();
       },
       error: (err) => {
-        console.error('Erreur delete:', err);
-        if (err.status === 400 || err.status === 409) {
-          const payload = err.error || {};
-          const logements = payload.logements || payload.associatedLogements || [];
-          this.deleteBlockerLogements = Array.isArray(logements) ? logements : [];
-          this.deleteBlockerCount = this.deleteBlockerLogements.length || this.categorieToDelete?.nbLogements || 0;
-          this.deleteErrorMessage = payload.message
-            || `Impossible de supprimer cette catégorie car elle contient ${this.deleteBlockerCount} logement(s).`;
-          this.deleteRequiresConfirmation = true;
-          this.deleteConfirmedStep1 = false;
-          this.deleteConfirmedStep2 = false;
-          this.showFinalDeleteConfirm = false;
-        }
+        console.error(err);
       }
     });
   }
 
   cancelFinalDelete(): void {
     this.showFinalDeleteConfirm = false;
-    this.deleteErrorMessage = '';
   }
 
-  scrollModalTop(element: HTMLElement): void {
-    element.scrollTop = 0;
+  // ================= SAVE =================
+  saveCategorie(): void {
+    if (!this.validate()) return;
+
+    const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+
+    if (user.role !== 'ADMIN' && user.role !== 'HEBERGEUR') {
+      alert('Non autorisé');
+      return;
+    }
+
+    if (this.selectedCategorie) {
+      this.categorieService.updateCategorie(this.selectedCategorie.idCategorie, this.formData)
+        .subscribe(() => this.loadCategories());
+    } else {
+      this.categorieService.createCategorie(this.formData)
+        .subscribe(() => this.loadCategories());
+    }
+
+    this.closeModal();
   }
 
-  scrollModalBottom(element: HTMLElement): void {
-    element.scrollTop = element.scrollHeight;
+  // ================= UTIL =================
+  selectImageFromAssets(imageName: string): void {
+    this.formData.icone = imageName;
+    this.imagePreviewUrl = this.getImage(imageName);
   }
 
-  async logout(): Promise<void> {
-     await firstValueFrom(this.authService.logout());
-    await this.router.navigate(['/']);
+  getImage(icone: string): string {
+    if (!icone) return '/assets/images/default.jpg';
+    if (icone.startsWith('http')) return icone;
+    if (icone.startsWith('data:')) return icone;
+    return `/assets/images/${icone}`;
   }
 
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('fr-FR');
+  }
+
+  // ================= VALIDATION =================
   validate(): boolean {
     this.formErrors = {};
-    if (!this.formData.nomCategorie.trim())
+
+    if (!this.formData.nomCategorie.trim()) {
       this.formErrors.nom = 'Nom obligatoire';
-    if (!this.formData.description.trim() || this.formData.description.trim().length < 10)
-      this.formErrors.description = 'Description minimum 10 caractères';
-    if (!this.formData.icone.trim())
+    }
+
+    if (!this.formData.description || this.formData.description.length < 10) {
+      this.formErrors.description = 'Description min 10 caractères';
+    }
+
+    if (!this.formData.icone) {
       this.formErrors.icone = 'Image obligatoire';
+    }
+
     return Object.keys(this.formErrors).length === 0;
   }
 
+  // ================= DESCRIPTION IA =================
+  enhanceDescription(): void {
+    if (!this.formData.description) return;
+
+    this.enhancingDescription = true;
+
+    this.predictorService.enhanceDescription(this.formData.description)
+      .subscribe({
+        next: (res: string) => {
+          this.formData.description = res;
+          this.enhancingDescription = false;
+        },
+        error: () => {
+          this.enhancingDescription = false;
+        }
+      });
+  }
+
+  // ================= FILE =================
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     this.formData.icone = file.name;
   }
 
-  formatDate(date: string): string { return new Date(date).toLocaleDateString('fr-FR'); }
-
-  getImage(icone: string): string {
-    if (!icone) return '/assets/images/default.jpg';
-    if (icone.startsWith('http')) return icone;
-    if (icone.startsWith('data:')) return icone;
-    // Accepte n'importe quel fichier dans assets/images (pas de whitelist)
-    return `/assets/images/${icone}`;
-  }
-
-  enhanceDescription() {
-    if (!this.formData.description) {
-      this.formErrors.description = 'Veuillez rédiger une description avant de la corriger.';
-      return;
-    }
-
-    this.enhancingDescription = true;
-    this.formErrors.description = '';
-
-    this.predictorService.enhanceDescription(this.formData.description).subscribe({
-      next: (enhancedText) => {
-        if (enhancedText !== this.formData.description) {
-          this.formData.description = enhancedText;
-          this.requestSuccess = '✅ Description corrigée et améliorée';
-          setTimeout(() => this.requestSuccess = '', 5000);
-        } else {
-          this.requestSuccess = 'ℹ️ Description déjà correcte';
-          setTimeout(() => this.requestSuccess = '', 3000);
-        }
-        this.enhancingDescription = false;
-      },
-      error: (err) => {
-        this.enhancingDescription = false;
-        this.requestError = typeof err === 'string' ? err : (err.message || "Impossible de corriger la description.");
-        setTimeout(() => this.requestError = '', 5000);
-      }
-    });
+  // ================= AUTH =================
+  async logout(): Promise<void> {
+    await firstValueFrom(this.authService.logout());
+    await this.router.navigate(['/']);
   }
 }

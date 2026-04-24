@@ -1,0 +1,1378 @@
+<section class="page-wrapper" *ngIf="reservation; else loadingState">
+  <!-- Alerts -->
+  <div class="banner banner-error" *ngIf="error">
+    <span class="material-symbols-outlined icon-small">error</span>
+    <span>{{ error }}</span>
+  </div>
+  <div class="banner banner-success" *ngIf="success">
+    <span class="material-symbols-outlined icon-small">check_circle</span>
+    <span>{{ success }}</span>
+  </div>
+
+  <main class="main-content max-w-7xl mx-auto p-6 md-p-10 flex-col gap-8">
+    <!-- Hero Info Row -->
+    <section
+      class="hero-section flex-row md-flex-between items-end gap-6 pb-4 border-b border-light"
+    >
+      <div class="hero-left flex-col gap-2">
+        <div class="flex-row items-center gap-3">
+          <h2
+            class="text-4xl font-headline font-black text-primary tracking-tight"
+          >
+            {{ getClientLabel() }}
+          </h2>
+          <span class="badge badge-status uppercase tracking-wider font-bold">{{
+            getStatusLabel(reservation.statut)
+          }}</span>
+        </div>
+        <p class="text-xl font-medium text-muted">{{ getVehicleLabel() }}</p>
+      </div>
+
+      <div class="hero-right flex-col items-end gap-2 text-right">
+        <p class="text-xs uppercase font-bold text-muted">Total Réservation</p>
+        <p class="text-3xl font-headline font-extrabold text-primary">
+          {{ displayedTotalAmount | currency: "TND" : "symbol" : "1.0-0" }}
+        </p>
+      </div>
+    </section>
+
+    <!-- Véhicule loué (visuel + fiche) -->
+    <section
+      class="rented-vehicle card premium-shadow bg-lowest p-6 rounded-lg border border-light w-full"
+    >
+      <div class="rented-vehicle__layout">
+        <div class="rented-vehicle__media">
+          <div
+            class="rented-vehicle__hero-img"
+            *ngIf="
+              getRentedVehiclePhotos().length > 0;
+              else agencyNoVehiclePhoto
+            "
+          >
+            <img
+              [src]="resolveRentedVehiclePhotoUrl(getRentedVehiclePhotos()[0])"
+              [alt]="getVehicleLabel() || 'Véhicule'"
+            />
+          </div>
+          <ng-template #agencyNoVehiclePhoto>
+            <div class="rented-vehicle__placeholder">
+              <span class="material-symbols-outlined">directions_car</span>
+            </div>
+          </ng-template>
+          <div
+            class="rented-vehicle__thumbs"
+            *ngIf="getRentedVehiclePhotos().length > 1"
+          >
+            <img
+              *ngFor="let p of getRentedVehiclePhotos().slice(1, 5)"
+              [src]="resolveRentedVehiclePhotoUrl(p)"
+              alt=""
+              class="rented-vehicle__thumb"
+            />
+          </div>
+        </div>
+        <div class="rented-vehicle__body flex-col gap-2 flex-1">
+          <p
+            class="text-[10px] font-black text-muted uppercase tracking-widest"
+          >
+            Véhicule loué
+          </p>
+          <h3
+            class="text-2xl font-headline font-black text-primary tracking-tight"
+          >
+            {{ getVehicleLabel() || "Véhicule de location" }}
+          </h3>
+          <div class="flex-row flex-wrap gap-4 text-sm text-dark">
+            <span
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Immat.</span
+              >
+              {{ getRentedVehiclePlate() }}</span
+            >
+            <span *ngIf="getRentedVehicleType()"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Type</span
+              >
+              {{ getRentedVehicleType() }}</span
+            >
+            <span *ngIf="getRentedVehiclePassengers() != null"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Places</span
+              >
+              {{ getRentedVehiclePassengers() }}</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions Rapides -->
+    <div
+      class="flex-row flex-wrap items-center gap-4 py-4 px-6 bg-surface-low rounded-lg border border-light shadow-sm w-full mb-2"
+    >
+      <button
+        class="btn btn-primary flex-row gap-2 shadow-sm text-sm"
+        *ngIf="showFinalInvoiceDetails"
+        (click)="downloadFinalInvoicePdf()"
+      >
+        <span class="material-symbols-outlined icon-small">description</span>
+        Facture Locale
+      </button>
+      <button
+        class="btn btn-surface flex-row gap-2 bg-white shadow-sm text-sm"
+        *ngIf="canDownloadContract"
+        (click)="downloadContract()"
+      >
+        <span class="material-symbols-outlined icon-small">picture_as_pdf</span>
+        Contrat Juridique
+      </button>
+      <button
+        class="btn btn-primary shadow-btn flex-row gap-2 text-sm"
+        *ngIf="canConfirmReservation"
+        (click)="confirmReservation()"
+      >
+        <span class="material-symbols-outlined icon-small">check_circle</span>
+        Confirmer
+      </button>
+      <a
+        href="/transport/location/agence/reservations"
+        class="btn btn-surface bg-white flex-row gap-2 shadow-sm text-sm text-dark"
+      >
+        <span class="material-symbols-outlined icon-small">arrow_back</span>
+        Retour liste
+      </a>
+
+      <div class="flex-grow"></div>
+
+      <button
+        class="btn btn-danger-outline shadow-sm flex-row gap-2 bg-white ml-auto text-sm"
+        *ngIf="canCancelReservation"
+        (click)="cancelReservation()"
+      >
+        <span class="material-symbols-outlined icon-small">cancel</span> Annuler
+      </button>
+    </div>
+
+    <!-- Horizontal Workflow Progression -->
+    <div
+      class="card premium-shadow bg-lowest rounded-lg p-6 w-full border border-light-subtle mb-6 overflow-x-auto"
+    >
+      <div
+        class="flex flex-col md-flex-row md-items-center justify-between mb-8 gap-4 border-b border-light pb-4"
+      >
+        <h3
+          class="font-headline font-bold text-lg text-primary flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">timeline</span> Progression du
+          Dossier
+        </h3>
+        <div class="flex gap-2">
+          <div
+            class="badge badge-warning text-[10px] font-bold px-3 py-1 uppercase shadow-sm"
+            *ngIf="showFinalPaymentRequiredBadge"
+          >
+            Paiement Final Requis
+          </div>
+          <div
+            class="text-[10px] bg-surface-high px-3 py-1 text-muted border border-light rounded-md font-bold"
+            *ngIf="agencyWorkflowHint"
+          >
+            Info: {{ agencyWorkflowHint }}
+          </div>
+        </div>
+      </div>
+      <div class="flex-between items-start relative w-full min-w-[600px] px-8">
+        <div
+          class="absolute top-[16px] left-[10%] right-[10%] h-[2px] bg-surface-high z-0"
+        ></div>
+        <div
+          class="flex-col items-center relative z-10 text-center flex-1 px-2"
+          *ngFor="let step of processSteps; let last = last"
+          [class.opacity-50]="!step.done && !step.active"
+        >
+          <div
+            class="h-9 w-9 rounded-full flex-center text-sm shadow-sm mx-auto mb-3 border-2 transition-transform bg-lowest"
+            [ngClass]="
+              step.done
+                ? 'bg-success text-white border-success'
+                : step.active
+                  ? 'text-primary border-primary shadow-md ring-4 ring-primary-20 scale-110'
+                  : 'bg-surface border-light text-muted'
+            "
+          >
+            <span
+              class="material-symbols-outlined text-[16px]"
+              *ngIf="step.done"
+              >check</span
+            >
+            <span
+              class="material-symbols-outlined text-[16px]"
+              *ngIf="step.active"
+              >edit</span
+            >
+            <span
+              class="material-symbols-outlined text-[16px] opacity-40"
+              *ngIf="!step.done && !step.active"
+              >horizontal_rule</span
+            >
+          </div>
+          <p
+            class="font-bold text-[11px] leading-tight"
+            [ngClass]="
+              step.done
+                ? 'text-dark'
+                : step.active
+                  ? 'text-primary'
+                  : 'text-muted'
+            "
+          >
+            {{ step.label }}
+          </p>
+          <p
+            class="text-[9px] uppercase text-success mt-1 font-bold"
+            *ngIf="step.done"
+          >
+            Terminé
+          </p>
+          <p
+            class="text-[9px] uppercase text-primary mt-1 font-bold"
+            *ngIf="step.active"
+          >
+            En cours
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two columns layout -->
+    <div class="layout-grid grid-12 gap-8">
+      <!-- Left Column: Informations -->
+      <div class="col-left lg-col-7 flex-col gap-8">
+        <!-- Voyage Details Card -->
+        <div class="card premium-shadow bg-lowest p-8 rounded-lg">
+          <div class="flex-row items-center gap-3 mb-6">
+            <span class="material-symbols-outlined text-primary"
+              >event_note</span
+            >
+            <h3 class="font-headline font-bold text-xl">Détails de location</h3>
+          </div>
+
+          <div class="grid-2 gap-8 border-b border-light pb-6 mb-6">
+            <div class="data-group space-y-1">
+              <p class="text-xs font-bold text-muted uppercase tracking-wider">
+                Période
+              </p>
+              <p class="text-lg font-semibold">
+                {{ reservation.dateDebut | date: "mediumDate" }} —
+                {{ reservation.dateFin | date: "mediumDate" }}
+              </p>
+            </div>
+            <div class="data-group space-y-1">
+              <p class="text-xs font-bold text-muted uppercase tracking-wider">
+                Agence & Lieu
+              </p>
+              <p class="text-lg font-semibold">{{ getAgencyAddress() }}</p>
+            </div>
+          </div>
+
+          <div class="financial-summary space-y-4">
+            <div class="flex-between items-center group-row">
+              <div class="flex-row items-center gap-2">
+                <span class="material-symbols-outlined text-success"
+                  >check_circle</span
+                >
+                <span class="font-medium"
+                  >Acompte (<span class="text-xs uppercase">{{
+                    reservation.advanceStatus || "-"
+                  }}</span
+                  >)</span
+                >
+              </div>
+              <div class="flex-row gap-2 items-center">
+                <span class="font-bold">{{
+                  displayedAdvanceAmount | currency: "TND" : "symbol" : "1.0-0"
+                }}</span>
+              </div>
+            </div>
+            <div class="flex-between items-center group-row">
+              <div class="flex-row items-center gap-2">
+                <span class="material-symbols-outlined text-primary">lock</span>
+                <span class="font-medium">Caution</span>
+              </div>
+              <div class="flex-row items-center gap-2">
+                <span
+                  class="badge"
+                  [ngClass]="
+                    reservation.depositStatus === 'HELD'
+                      ? 'badge-primary'
+                      : 'badge-surface'
+                  "
+                  >{{ getDepositStatusLabel(reservation.depositStatus) }}</span
+                >
+                <span class="font-bold">{{
+                  displayedDepositAmount | currency: "TND" : "symbol" : "1.0-0"
+                }}</span>
+              </div>
+            </div>
+            <div
+              class="flex-between items-center group-row pt-4 border-t border-light"
+            >
+              <div class="flex-row items-center gap-2">
+                <span class="material-symbols-outlined text-warning"
+                  >payments</span
+                >
+                <span class="font-bold text-lg">Reste à payer</span>
+              </div>
+              <div class="flex-col items-end gap-1 text-right">
+                <span class="font-headline font-black text-xl">{{
+                  remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+                }}</span>
+                <span
+                  class="badge"
+                  [ngClass]="
+                    isFinalPaymentCompleted
+                      ? 'badge-success'
+                      : 'badge-warning-light text-warning'
+                  "
+                  >Client:
+                  {{ isFinalPaymentCompleted ? "Validé" : "En attente" }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-muted mt-4 italic">
+            {{ financialSummaryLabel }}
+          </p>
+          <div
+            class="mt-4 p-4 bg-surface rounded-md border border-light"
+            *ngIf="clientNote"
+          >
+            <span class="text-xs font-bold text-muted uppercase"
+              >Note client:</span
+            >
+            <p class="text-sm font-medium mt-1">{{ clientNote }}</p>
+          </div>
+        </div>
+
+        <!-- Identity & AI Verification -->
+        <div class="card premium-shadow bg-lowest rounded-lg overflow-hidden">
+          <div
+            class="p-8 border-b border-light flex-between items-center bg-surface-low"
+          >
+            <div class="flex-row items-center gap-3">
+              <span class="material-symbols-outlined text-primary">badge</span>
+              <h3 class="font-headline font-bold text-xl">
+                Conducteur & Permis
+              </h3>
+            </div>
+            <span
+              class="badge gap-1 flex-center"
+              *ngIf="hasAiLicenseVerification"
+              [ngClass]="
+                reservation.licenseAiValid === true
+                  ? 'badge-success'
+                  : reservation.licenseAiValid === false
+                    ? 'badge-error'
+                    : 'badge-surface'
+              "
+            >
+              <span class="material-symbols-outlined icon-small">verified</span>
+              {{ aiLicenseVerificationLabel }}
+            </span>
+          </div>
+
+          <div class="grid-2 md-gap-8 p-8 gap-6 block-sm">
+            <div class="flex-col gap-6">
+              <div class="space-y-1">
+                <p
+                  class="text-xs font-bold text-muted uppercase tracking-wider"
+                >
+                  Titulaire
+                </p>
+                <p class="text-lg font-semibold">
+                  {{ reservation.prenom || "-" }} {{ reservation.nom || "-" }}
+                </p>
+                <p class="text-sm text-muted">
+                  Né le
+                  {{
+                    reservation.dateNaiss
+                      ? (reservation.dateNaiss | date: "mediumDate")
+                      : "-"
+                  }}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p
+                  class="text-xs font-bold text-muted uppercase tracking-wider"
+                >
+                  Numéro de permis
+                </p>
+                <p class="text-lg font-semibold">
+                  {{ reservation.numeroPermis || "-" }}
+                </p>
+                <p class="text-sm text-muted">
+                  Statut: {{ reservation.licenseStatus || "-" }}
+                </p>
+              </div>
+
+              <!-- AI Block Mini -->
+              <div
+                class="bg-surface-high p-4 rounded-md space-y-3"
+                *ngIf="hasAiLicenseVerification"
+              >
+                <p
+                  class="text-[10px] font-black uppercase text-muted tracking-[0.2em] mb-2"
+                >
+                  Résultats Analyse IA
+                </p>
+                <div
+                  class="flex-between items-center text-sm"
+                  *ngIf="reservation.licenseAiExtractedNumero"
+                >
+                  <span class="text-muted">Numéro extrait</span>
+                  <span class="font-bold text-primary">{{
+                    reservation.licenseAiExtractedNumero
+                  }}</span>
+                </div>
+                <div
+                  class="flex-between items-center text-sm"
+                  *ngIf="reservation.licenseAiExtractedDate"
+                >
+                  <span class="text-muted">Date extraite</span>
+                  <span class="font-bold text-primary">{{
+                    reservation.licenseAiExtractedDate
+                  }}</span>
+                </div>
+                <div
+                  class="text-xs mt-2 text-muted italic"
+                  *ngIf="reservation.licenseAiMessage"
+                >
+                  "{{ reservation.licenseAiMessage }}"
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="relative group cursor-pointer img-preview-container h-full min-h-[200px]"
+              *ngIf="permitImageUrl"
+              (click)="
+                openPhoto({ url: permitImageUrl, label: 'Permis client' })
+              "
+            >
+              <img
+                [src]="permitImageUrl"
+                alt="Permis Document"
+                class="rounded-md w-full h-full object-cover border border-light transition-all group-hover:brightness-110"
+              />
+              <div
+                class="absolute inset-0 flex-center opacity-0 group-hover:opacity-100 transition-opacity bg-primary-20 backdrop-blur-sm rounded-md"
+              >
+                <span
+                  class="bg-white text-primary px-4 py-2 rounded-full text-xs font-bold flex-center gap-2"
+                >
+                  <span class="material-symbols-outlined text-sm">zoom_in</span>
+                  Agrandir document
+                </span>
+              </div>
+            </div>
+            <div
+              class="flex-col flex-center text-muted border-2 border-dashed border-light rounded-md min-h-[200px] bg-surface"
+              *ngIf="!permitImageUrl"
+            >
+              <span class="material-symbols-outlined icon-3xl opacity-50 mb-2"
+                >no_photography</span
+              >
+              <span class="text-sm font-medium">Aucun permis uploadé</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Administrative Review (Central) -->
+        <div
+          class="card premium-shadow bg-lowest rounded-lg border border-primary-light"
+          *ngIf="canReviewLicense || agencyAiVerification"
+        >
+          <div class="p-6 border-b border-light flex-row items-center gap-3">
+            <span class="material-symbols-outlined text-primary"
+              >fact_check</span
+            >
+            <h3 class="font-headline font-bold text-xl">
+              Vérification Administrative Centrale
+            </h3>
+          </div>
+          <div class="p-6">
+            <p class="text-sm text-muted mb-6" *ngIf="canReviewLicense">
+              Validez ou rejetez le permis fourni par le client. Vous pouvez
+              lancer une analyse IA préalable.
+            </p>
+
+            <div class="grid-2 gap-6" *ngIf="canReviewLicense">
+              <div class="bg-surface-low p-4 rounded-md border border-light">
+                <p
+                  class="text-xs font-black uppercase text-muted tracking-widest mb-3"
+                >
+                  Saisies Client
+                </p>
+                <ul class="text-sm space-y-2 text-dark">
+                  <li class="flex-between">
+                    <span>Nom:</span>
+                    <strong>{{ clientEnteredLastName }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Prénom:</span>
+                    <strong>{{ clientEnteredFirstName }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Né le:</span>
+                    <strong>{{ clientEnteredBirthDate }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Permis:</span>
+                    <strong>{{ clientEnteredLicenseNumber }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Expire le:</span>
+                    <strong>{{ clientEnteredLicenseExpiryDate }}</strong>
+                  </li>
+                </ul>
+              </div>
+              <div class="flex-col gap-3 justify-center">
+                <button
+                  class="btn btn-secondary w-full"
+                  (click)="verifyLicenseWithAi()"
+                  [disabled]="isVerifyingLicenseAi"
+                >
+                  <span class="material-symbols-outlined">smart_toy</span>
+                  {{
+                    isVerifyingLicenseAi
+                      ? "Analyse IA en cours..."
+                      : "Lancer Vérification IA"
+                  }}
+                </button>
+                <button
+                  class="btn btn-primary w-full"
+                  (click)="approveLicense()"
+                >
+                  <span class="material-symbols-outlined">thumb_up</span>
+                  Valider Permis
+                </button>
+                <button
+                  class="btn btn-danger-outline w-full hover:bg-error-light hover:text-error hover:border-error"
+                  (click)="startRejectLicense()"
+                >
+                  <span class="material-symbols-outlined">thumb_down</span>
+                  Rejeter Permis
+                </button>
+              </div>
+            </div>
+
+            <!-- Rejection Reason Input -->
+            <div
+              class="mt-4 p-4 border border-error bg-error-light rounded-md"
+              *ngIf="showRejectReasonInput"
+            >
+              <p class="text-error font-bold text-sm mb-2">
+                Motif obligatoire de rejet
+              </p>
+              <textarea
+                [(ngModel)]="decisionReason"
+                name="decisionReason"
+                rows="2"
+                class="w-full text-sm border-error rounded-md p-2 outline-none focus:ring-2 focus:ring-error"
+                placeholder="Motif..."
+              ></textarea>
+              <div class="flex-row gap-2 mt-3 justify-end">
+                <button
+                  class="btn text-sm px-4 py-2 border border-muted hover:bg-surface text-muted rounded-md"
+                  (click)="cancelRejectLicense()"
+                >
+                  Annuler
+                </button>
+                <button class="btn btn-danger py-2" (click)="rejectLicense()">
+                  Confirmer Rejet
+                </button>
+              </div>
+            </div>
+
+            <!-- AI Agency Live Verification -->
+            <div
+              class="mt-6 p-5 border rounded-md"
+              [ngClass]="
+                agencyAiVerification?.valid
+                  ? 'border-success bg-success-light'
+                  : 'border-error bg-error-light'
+              "
+              *ngIf="hasAgencyAiVerification"
+            >
+              <div
+                class="flex-row items-center gap-2 mb-4"
+                [ngClass]="
+                  agencyAiVerification?.valid ? 'text-success' : 'text-error'
+                "
+              >
+                <span class="material-symbols-outlined">{{
+                  agencyAiVerification?.valid ? "verified" : "warning"
+                }}</span>
+                <h4 class="font-bold">
+                  {{
+                    agencyAiVerification?.valid
+                      ? "IA : Correspondance Validée"
+                      : "IA : Anomalie Potentielle"
+                  }}
+                </h4>
+              </div>
+
+              <div class="grid-2 gap-4 text-sm text-dark mb-4">
+                <ul class="space-y-1">
+                  <li class="flex-between">
+                    <span>Numéro extrait:</span>
+                    <strong>{{
+                      agencyAiVerification?.numeroExtrait || "-"
+                    }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Nom extrait:</span>
+                    <strong>{{
+                      agencyAiVerification?.nomExtrait || "-"
+                    }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Prénom extrait:</span>
+                    <strong>{{
+                      agencyAiVerification?.prenomExtrait || "-"
+                    }}</strong>
+                  </li>
+                </ul>
+                <ul class="space-y-1">
+                  <li class="flex-between">
+                    <span>Validité extraite:</span>
+                    <strong>{{
+                      agencyAiVerification?.dateExtraite || "-"
+                    }}</strong>
+                  </li>
+                  <li class="flex-between">
+                    <span>Naissance extraite:</span>
+                    <strong>{{
+                      agencyAiVerification?.dateNaissExtraite || "-"
+                    }}</strong>
+                  </li>
+                </ul>
+              </div>
+
+              <div
+                class="flex-row gap-2 flex-wrap mb-2"
+                *ngIf="showAgencyAiComparison"
+              >
+                <span
+                  class="badge"
+                  [ngClass]="
+                    agencyAiVerification?.numeroMatch
+                      ? 'badge-outline-success'
+                      : 'badge-outline-error'
+                  "
+                >
+                  <span class="material-symbols-outlined icon-xs">{{
+                    agencyAiVerification?.numeroMatch ? "check" : "close"
+                  }}</span>
+                  Numéro
+                  {{ agencyAiVerification?.numeroMatch ? "OK" : "Errone" }}
+                </span>
+                <span
+                  class="badge"
+                  [ngClass]="
+                    agencyAiVerification?.dateMatch
+                      ? 'badge-outline-success'
+                      : 'badge-outline-error'
+                  "
+                >
+                  <span class="material-symbols-outlined icon-xs">{{
+                    agencyAiVerification?.dateMatch ? "check" : "close"
+                  }}</span>
+                  Date {{ agencyAiVerification?.dateMatch ? "OK" : "Erronee" }}
+                </span>
+                <span
+                  class="badge"
+                  [ngClass]="
+                    agencyAiVerification?.nomMatch &&
+                    agencyAiVerification?.prenomMatch
+                      ? 'badge-outline-success'
+                      : 'badge-outline-error'
+                  "
+                >
+                  <span class="material-symbols-outlined icon-xs">{{
+                    agencyAiVerification?.nomMatch &&
+                    agencyAiVerification?.prenomMatch
+                      ? "check"
+                      : "close"
+                  }}</span>
+                  Identité
+                  {{
+                    agencyAiVerification?.nomMatch &&
+                    agencyAiVerification?.prenomMatch
+                      ? "OK"
+                      : "Erronee"
+                  }}
+                </span>
+              </div>
+              <p class="text-xs text-muted" *ngIf="agencyAiVerificationAt">
+                Vérifié à: {{ agencyAiVerificationAt | date: "short" }}
+              </p>
+              <div
+                class="p-3 bg-white bg-opacity-60 rounded border border-warning text-warning-dark text-xs mt-3"
+                *ngIf="agencyAiWeakSignalHint"
+              >
+                <span class="font-bold">Alerte IA:</span>
+                {{ agencyAiWeakSignalHint }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Process & Actions -->
+      <div class="col-right lg-col-5 flex-col gap-8">
+        <!-- Real-time Chrono -->
+        <div
+          class="card p-6 bg-surface-low border-l-4 border-warning shadow-sm rounded-lg"
+          *ngIf="reservation"
+        >
+          <div class="flex-row items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-warning">schedule</span>
+            <p class="text-xs font-black uppercase tracking-[0.1em] text-muted">
+              Échéances Opérationnelles
+            </p>
+          </div>
+          <div class="grid-2 gap-4">
+            <div class="flex-col">
+              <p
+                class="text-[10px] font-bold text-muted uppercase tracking-wider mb-1"
+              >
+                Départ dans
+              </p>
+              <p class="text-xl font-headline font-black text-primary">
+                {{ departureCountdown || "-" }}
+              </p>
+            </div>
+            <div class="flex-col">
+              <p
+                class="text-[10px] font-bold text-muted uppercase tracking-wider mb-1"
+              >
+                Retour Client dans
+              </p>
+              <p class="text-xl font-headline font-black text-dark">
+                {{ returnCountdown || "-" }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Extensions -->
+          <div class="mt-5 pt-5 border-t border-light" *ngIf="extensionRequest">
+            <span
+              class="text-xs font-bold text-primary uppercase flex items-center gap-1 mb-2"
+              ><span class="material-symbols-outlined icon-small"
+                >more_time</span
+              >
+              Prolongation: {{ extensionStatusLabel }}</span
+            >
+            <div class="bg-surface p-3 rounded border text-sm text-muted">
+              <p>
+                +{{ extensionRequest.extraDays }} jour(s) jusqu'au
+                {{ extensionRequest.proposedEndDate | date: "mediumDate" }}
+              </p>
+              <p>
+                Nouveau total:
+                <strong class="text-dark">{{
+                  extensionRequest.proposedTotalPrice
+                    | currency: "TND" : "symbol" : "1.0-0"
+                }}</strong>
+              </p>
+              <p>
+                Nouvelle caution:
+                <strong class="text-dark">{{
+                  extensionRequest.proposedDepositAmount
+                    | currency: "TND" : "symbol" : "1.0-0"
+                }}</strong>
+              </p>
+            </div>
+            <div
+              class="mt-2 p-2 bg-surface text-xs font-medium border-l-2 border-primary"
+              *ngIf="extensionRequest.reason"
+            >
+              "{{ extensionRequest.reason }}"
+            </div>
+            <p
+              class="text-xs text-muted mt-2"
+              *ngIf="extensionRequest.reviewReason"
+            >
+              <strong>Motif Agence:</strong> {{ extensionRequest.reviewReason }}
+            </p>
+
+            <div class="mt-3 space-y-2" *ngIf="hasPendingExtensionRequest">
+              <textarea
+                rows="2"
+                [(ngModel)]="extensionDecisionReason"
+                class="w-full text-sm border-light rounded-md p-2 outline-none focus:ring-1 focus:ring-primary bg-surface"
+                placeholder="Motif optionnel de décision..."
+              ></textarea>
+              <div class="flex gap-2">
+                <button
+                  class="btn btn-primary flex-1 py-2 text-xs"
+                  (click)="approveExtensionRequest()"
+                  [disabled]="isReviewingExtension"
+                >
+                  {{ isReviewingExtension ? "..." : "Accepter" }}
+                </button>
+                <button
+                  class="btn btn-danger flex-1 py-2 text-xs"
+                  (click)="rejectExtensionRequest()"
+                  [disabled]="isReviewingExtension"
+                >
+                  Refuser
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car Inspection / Etat des Lieux -->
+        <div
+          class="card premium-shadow bg-lowest p-8 rounded-lg"
+          *ngIf="canDisplayEtatDesLieuxByType"
+        >
+          <div class="flex-between items-center mb-6">
+            <h3 class="font-headline font-bold text-lg">
+              État des Lieux (Check-in/Out)
+            </h3>
+            <span class="badge badge-surface text-[10px] uppercase"
+              >Documentation</span
+            >
+          </div>
+
+          <!-- Check IN -->
+          <div class="border border-light bg-surface-low rounded-lg p-4 mb-4">
+            <div class="flex-between items-center mb-3">
+              <h4 class="font-bold text-sm">Départ (Check-in)</h4>
+              <span class="text-[10px] text-muted"
+                >Photos du véhicule avant location</span
+              >
+            </div>
+
+            <div
+              *ngIf="!hideCheckInForm; else checkInDoneBlock"
+              class="space-y-3"
+            >
+              <label
+                class="border-2 border-dashed border-light bg-surface hover:border-primary/50 transition-colors rounded-lg w-full flex-col flex-center py-4 cursor-pointer text-muted hover:text-primary"
+              >
+                <span class="material-symbols-outlined mb-1">add_a_photo</span>
+                <span class="text-xs font-bold uppercase tracking-wider"
+                  >Tagger Photos</span
+                >
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  (change)="onCheckInFilesSelected($event)"
+                  class="hidden"
+                />
+              </label>
+
+              <ul
+                class="text-[11px] text-primary bg-primary-fixed/30 rounded p-2 px-3 list-disc list-inside"
+                *ngIf="checkInFileNames.length"
+              >
+                <li *ngFor="let name of checkInFileNames" class="truncate">
+                  {{ name }}
+                </li>
+              </ul>
+
+              <button
+                class="btn btn-primary w-full py-2 shadow-sm text-sm"
+                (click)="submitCheckIn()"
+                [disabled]="isSubmittingEtatLieux || !canSubmitCheckIn"
+              >
+                {{
+                  isSubmittingEtatLieux
+                    ? "Enregistrement..."
+                    : "Confirmer Check-in"
+                }}
+              </button>
+              <p
+                class="text-[10px] text-error font-medium leading-tight mt-1"
+                *ngIf="!canSubmitCheckIn"
+              >
+                Condition: Confirmée, Caution HELD et Paiement Final validé.
+              </p>
+            </div>
+            <ng-template #checkInDoneBlock>
+              <div
+                class="bg-success-light text-success text-xs font-bold px-3 py-2 rounded-md flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined icon-small"
+                  >check_circle</span
+                >
+                Check-in Terminé
+              </div>
+            </ng-template>
+
+            <!-- Gallery IN -->
+            <div class="grid grid-cols-3 gap-2 mt-3" *ngIf="hasCheckInPhotos">
+              <figure
+                *ngFor="let photo of checkInGallery"
+                class="aspect-square bg-surface rounded flex-center border border-light relative group overflow-hidden"
+              >
+                <img
+                  [src]="photo.url"
+                  [alt]="photo.label"
+                  class="w-full h-full object-cover"
+                />
+                <button
+                  class="absolute inset-0 bg-primary/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                  (click)="openPhoto(photo)"
+                >
+                  <span class="material-symbols-outlined text-xl"
+                    >fullscreen</span
+                  >
+                </button>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Check OUT -->
+          <div class="border border-light bg-surface rounded-lg p-4">
+            <div class="flex-between items-center mb-3">
+              <h4 class="font-bold text-sm">Retour (Check-out)</h4>
+              <span class="text-[10px] text-muted">Photos post-location</span>
+            </div>
+
+            <div
+              *ngIf="!hideCheckOutForm; else checkOutDoneBlock"
+              class="space-y-3"
+            >
+              <label
+                class="border-2 border-dashed border-light bg-surface-low hover:border-warning/50 transition-colors rounded-lg w-full flex-col flex-center py-4 cursor-pointer text-muted hover:text-warning"
+              >
+                <span class="material-symbols-outlined mb-1">add_a_photo</span>
+                <span class="text-xs font-bold uppercase tracking-wider"
+                  >Tagger Photos</span
+                >
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  (change)="onCheckOutFilesSelected($event)"
+                  class="hidden"
+                />
+              </label>
+
+              <ul
+                class="text-[11px] text-dark bg-warning-light rounded p-2 px-3 list-disc list-inside"
+                *ngIf="checkOutFileNames.length"
+              >
+                <li *ngFor="let name of checkOutFileNames" class="truncate">
+                  {{ name }}
+                </li>
+              </ul>
+
+              <div
+                class="bg-surface-low border border-light rounded-md p-3 space-y-3"
+              >
+                <p
+                  class="text-[10px] font-black uppercase tracking-wider text-muted"
+                >
+                  Gestion Caution au Retour
+                </p>
+
+                <label
+                  class="flex-row items-center gap-2 text-sm font-medium text-dark cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="checkoutHasDamages"
+                    (ngModelChange)="onCheckoutDamageToggle()"
+                  />
+                  Constat de dommages
+                </label>
+
+                <div class="grid-2 gap-3" *ngIf="checkoutHasDamages">
+                  <label
+                    class="flex-col gap-1 text-xs font-bold text-muted uppercase tracking-wide"
+                  >
+                    Montant estimé réparations (TND)
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      [(ngModel)]="checkoutDamageAmount"
+                      (ngModelChange)="onCheckoutDamageAmountChange()"
+                      class="w-full text-sm border-light rounded-md p-2 outline-none focus:ring-1 focus:ring-warning bg-white text-dark"
+                    />
+                    <span
+                      class="text-[10px] text-warning"
+                      *ngIf="
+                        checkoutDamageAmountNormalized > depositAmountValue
+                      "
+                    >
+                      ⚠ Dépasse la caution: max retenu =
+                      {{
+                        depositAmountValue
+                          | currency: "TND" : "symbol" : "1.0-0"
+                      }}
+                    </span>
+                  </label>
+
+                  <label
+                    class="flex-col gap-1 text-xs font-bold text-muted uppercase tracking-wide"
+                  >
+                    Montant retenu sur caution (TND)
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="checkoutRetainedMax"
+                      step="0.01"
+                      [(ngModel)]="checkoutRetainedAmount"
+                      (ngModelChange)="onCheckoutRetainedAmountChange()"
+                      class="w-full text-sm border-light rounded-md p-2 outline-none focus:ring-1 focus:ring-warning bg-white text-dark"
+                    />
+                    <span class="text-[10px] text-muted"
+                      >✅ Doit être ≤ caution totale et ≤ montant
+                      réparations</span
+                    >
+                  </label>
+                </div>
+
+                <p class="text-[10px] text-muted" *ngIf="checkoutHasDamages">
+                  La retenue peut être inférieure au coût estimé (geste
+                  commercial / prise en charge partielle), mais jamais
+                  supérieure au montant des réparations ni à la caution totale.
+                </p>
+
+                <label
+                  class="flex-col gap-1 text-xs font-bold text-muted uppercase tracking-wide"
+                  *ngIf="checkoutHasDamages"
+                >
+                  Description des dommages
+                  <textarea
+                    rows="3"
+                    [(ngModel)]="checkoutDamageDescription"
+                    class="w-full text-sm border-light rounded-md p-2 outline-none focus:ring-1 focus:ring-warning bg-white text-dark"
+                    placeholder="Ex: Rayure pare-chocs avant, rétroviseur fissuré..."
+                  ></textarea>
+                </label>
+
+                <div
+                  class="text-xs bg-white border border-light rounded-md p-2 space-y-1"
+                >
+                  <div class="flex-between text-dark">
+                    <span>Caution totale (lecture seule)</span
+                    ><strong>{{
+                      depositAmountValue | currency: "TND" : "symbol" : "1.0-0"
+                    }}</strong>
+                  </div>
+                  <div class="flex-between text-warning">
+                    <span>Montant retenu</span
+                    ><strong>{{
+                      checkoutRetainedNormalized
+                        | currency: "TND" : "symbol" : "1.0-0"
+                    }}</strong>
+                  </div>
+                  <div class="flex-between text-success">
+                    <span>Montant restitué (auto)</span
+                    ><strong>{{
+                      checkoutRestitutedAmount
+                        | currency: "TND" : "symbol" : "1.0-0"
+                    }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="btn btn-warning text-dark w-full py-2 shadow-sm text-sm"
+                (click)="submitCheckOut()"
+                [disabled]="isSubmittingEtatLieux || !canSubmitCheckOut"
+              >
+                {{
+                  isSubmittingEtatLieux
+                    ? "Enregistrement..."
+                    : "Valider le Check-out"
+                }}
+              </button>
+              <p
+                class="text-[10px] text-error font-medium leading-tight mt-1"
+                *ngIf="!canSubmitCheckOut"
+              >
+                Condition: La location doit être en cours.
+              </p>
+            </div>
+            <ng-template #checkOutDoneBlock>
+              <div
+                class="bg-success-light text-success text-xs font-bold px-3 py-2 rounded-md flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined icon-small"
+                  >check_circle</span
+                >
+                Check-out Terminé
+              </div>
+            </ng-template>
+
+            <!-- Gallery OUT -->
+            <div class="grid grid-cols-3 gap-2 mt-3" *ngIf="hasCheckOutPhotos">
+              <figure
+                *ngFor="let photo of checkOutGallery"
+                class="aspect-square bg-surface-low rounded flex-center border border-warning relative group overflow-hidden"
+              >
+                <img
+                  [src]="photo.url"
+                  [alt]="photo.label"
+                  class="w-full h-full object-cover"
+                />
+                <button
+                  class="absolute inset-0 bg-warning/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                  (click)="openPhoto(photo)"
+                >
+                  <span class="material-symbols-outlined text-xl"
+                    >fullscreen</span
+                  >
+                </button>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <!-- Facture Finale Section (If not in header, details displayed here) -->
+        <div
+          class="card premium-shadow bg-surface-low border border-primary-light rounded-lg p-6"
+          *ngIf="showFinalInvoiceDetails"
+        >
+          <div class="flex-row items-center gap-2 mb-4 text-primary">
+            <span class="material-symbols-outlined">receipt</span>
+            <h3 class="font-headline font-bold text-lg">
+              Résumé Financier Clôture
+            </h3>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex-between">
+              <span>Prix Total Location:</span>
+              <strong>{{
+                displayedTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between">
+              <span>Avance Payée:</span>
+              <strong>{{
+                displayedAdvanceAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between">
+              <span>Paiement Final Reçu:</span>
+              <strong>{{
+                remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between">
+              <span>Caution Configurée:</span>
+              <strong>{{
+                displayedDepositAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div
+              class="flex-between"
+              *ngIf="reservation.montantDommages != null"
+            >
+              <span>Montant dommages:</span>
+              <strong>{{
+                reservation.montantDommages
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div
+              class="flex-between"
+              *ngIf="reservation.montantCautionRetenu != null"
+            >
+              <span>Caution retenue:</span>
+              <strong class="text-warning">{{
+                reservation.montantCautionRetenu
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div
+              class="flex-between"
+              *ngIf="reservation.montantCautionRestitue != null"
+            >
+              <span>Caution restituée:</span>
+              <strong class="text-success">{{
+                reservation.montantCautionRestitue
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pb-2 border-b border-light">
+              <span>Caution Remboursée:</span>
+              <strong
+                [ngClass]="isDepositRefunded ? 'text-success' : 'text-muted'"
+                >{{ depositRefundDisplayLabel }}</strong
+              >
+            </div>
+            <div class="flex-between text-base pt-1">
+              <span class="text-primary font-bold">Total Facture:</span>
+              <strong class="text-primary font-black">{{
+                totalInvoiceAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Refund Button Mega Action -->
+        <button
+          class="btn btn-mega-danger w-full mt-2"
+          *ngIf="canRefundDeposit"
+          (click)="openDepositRefundModal()"
+          [disabled]="isRefundingDeposit"
+        >
+          <span class="material-symbols-outlined">money_off</span>
+          {{
+            isRefundingDeposit
+              ? "Traitement Bancaire..."
+              : "Rembourser la Caution (Refund)"
+          }}
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Refund Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="depositRefundModalOpen"
+    (click)="cancelDepositRefundModal()"
+  >
+    <div class="modal-content zoom-in" (click)="$event.stopPropagation()">
+      <div class="modal-header border-b border-light pb-4 mb-4 flex-between">
+        <h2 class="font-headline font-bold text-xl text-dark">
+          Remboursement Caution
+        </h2>
+        <button
+          class="btn-icon"
+          (click)="cancelDepositRefundModal()"
+          [disabled]="isRefundingDeposit"
+          aria-label="Fermer"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body overflow-y-auto w-full px-1">
+        <div class="bg-surface-low border border-light p-4 rounded-md mb-6">
+          <div class="flex-between text-sm mb-2 text-muted">
+            <span>Caution Bloquée (Client)</span>
+            <strong>{{
+              displayedDepositAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div
+            class="flex-between text-lg pt-3 border-t border-light mt-2 text-dark font-black"
+          >
+            <span>Montant à Rembourser</span>
+            <span class="text-warning">{{
+              refundPaymentDetails?.montant ?? refundDepositAmount
+                | currency: "TND" : "symbol" : "1.0-0"
+            }}</span>
+          </div>
+          <p class="text-xs text-muted mt-3 italic">
+            Déclenchable uniquement après que le check-out (retour véhicule)
+            soit validé par l'agence.
+          </p>
+        </div>
+
+        <div class="mb-4">
+          <h3 class="font-bold text-sm mb-3">Intégration Stripe (Test)</h3>
+          <!-- STRIPE MOUNT POINT - DO NOT CHANGE ID -->
+          <div
+            id="card-element-refund"
+            class="border border-light p-3 rounded-md bg-white"
+          ></div>
+          <p class="text-xs text-muted mt-2">
+            Le remboursement sera processé sur la carte mémorisée.
+          </p>
+          <p
+            class="text-xs text-primary font-bold mt-1"
+            *ngIf="isPreparingRefundPayment"
+          >
+            Préparation Stripe en cours...
+          </p>
+        </div>
+
+        <div class="banner banner-error mb-4" *ngIf="refundModalError">
+          {{ refundModalError }}
+        </div>
+      </div>
+
+      <div
+        class="modal-footer pt-4 border-t border-light flex justify-end gap-3 w-full"
+      >
+        <button
+          class="btn btn-surface px-6"
+          (click)="cancelDepositRefundModal()"
+          [disabled]="isRefundingDeposit"
+        >
+          Annuler
+        </button>
+        <button
+          class="btn btn-primary px-6 shadow-md"
+          (click)="confirmDepositRefund()"
+          [disabled]="
+            isPreparingRefundPayment ||
+            isRefundingDeposit ||
+            !refundPaymentDetails
+          "
+        >
+          {{ isRefundingDeposit ? "Validation..." : "Confirmer Remboursement" }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Enlarge Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="enlargedPhoto"
+    (click)="onPhotoOverlayClick($event)"
+  >
+    <div class="modal-photo fade-in" (click)="$event.stopPropagation()">
+      <button
+        class="absolute top-4 right-4 bg-black/60 text-white w-10 h-10 rounded-full flex-center hover:bg-black/80 transition shadow-lg z-50 border-none cursor-pointer"
+        (click)="closePhoto()"
+        aria-label="Fermer l'aperçu"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <img
+        [src]="enlargedPhoto.url"
+        [alt]="enlargedPhoto.label || 'Aperçu photo'"
+        class="max-w-full max-h-[85vh] object-contain rounded-md bg-dark mx-auto shadow-2xl"
+      />
+      <p class="text-center text-white mt-4 font-medium">
+        {{ enlargedPhoto.label || "Document" }}
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- NgTemplate Fallback -->
+<ng-template #loadingState>
+  <div class="fixed inset-0 bg-background flex-center flex-col z-[100]">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"
+    ></div>
+    <p class="text-muted font-medium" *ngIf="isLoading">
+      Chargement des données hub...
+    </p>
+    <div
+      class="banner banner-error max-w-md text-center shadow-lg mt-4"
+      *ngIf="!isLoading && error"
+    >
+      <span class="material-symbols-outlined text-3xl mb-2">error</span>
+      <p>{{ error }}</p>
+    </div>
+  </div>
+</ng-template>

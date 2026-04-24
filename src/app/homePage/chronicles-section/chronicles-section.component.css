@@ -1,3 +1,178 @@
 :host {
   display: block;
 }
+
+.chronicles-hero {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.chronicles-kicker,
+.chronicles-card-kicker,
+.chronicles-tag-label {
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0b3e78;
+}
+
+.chronicles-hero h2 {
+  margin: 0;
+  color: #063a75;
+  font-family: Manrope, 'Segoe UI', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.chronicles-copy {
+  margin: 0.7rem auto 0;
+  color: #4b5c72;
+  line-height: 1.65;
+  max-width: 64ch;
+}
+
+.chronicles-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.chronicles-summary-card,
+.chronicles-quote-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 57, 116, 0.08);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 57, 116, 0.08);
+}
+
+.chronicles-summary-card {
+  padding: 1.2rem;
+  grid-row: span 2;
+}
+
+.chronicles-summary-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.chronicles-summary-card h3 {
+  margin: 0.2rem 0 0.3rem;
+  color: #003974;
+  font-family: Manrope, 'Segoe UI', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.chronicles-summary-card p {
+  margin: 0;
+  color: #5a6b86;
+  font-size: 0.92rem;
+}
+
+.chronicles-score {
+  display: grid;
+  justify-items: end;
+  gap: 0.2rem;
+}
+
+.chronicles-score strong {
+  color: #003974;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.chronicles-score span {
+  color: #6e7b92;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.chronicles-summary-text {
+  margin: 0.95rem 0 0;
+  color: #24344b;
+  line-height: 1.7;
+}
+
+.chronicles-tag-grid {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.chronicles-chip-row {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chronicles-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  font-size: 0.79rem;
+  font-weight: 700;
+}
+
+.chronicles-chip.positive {
+  background: rgba(20, 166, 110, 0.12);
+  color: #136649;
+}
+
+.chronicles-chip.warning {
+  background: rgba(230, 164, 39, 0.14);
+  color: #8b5305;
+}
+
+.chronicles-quote-card {
+  padding: 1rem;
+}
+
+.chronicles-quote-card-offset {
+  transform: translateY(1.25rem);
+}
+
+.chronicles-quote-card p {
+  margin: 0;
+  line-height: 1.65;
+}
+
+@media (max-width: 1024px) {
+  .chronicles-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chronicles-summary-card {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .chronicles-grid,
+  .chronicles-tag-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chronicles-summary-head {
+    display: grid;
+  }
+
+  .chronicles-score {
+    justify-items: start;
+  }
+
+  .chronicles-quote-card-offset {
+    transform: none;
+  }
+}

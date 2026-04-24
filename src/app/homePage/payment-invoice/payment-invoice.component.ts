@@ -37,7 +37,7 @@ export class PaymentInvoiceComponent implements OnInit {
   }
 
   backToReservations(): void {
-    void this.router.navigate(['/mes-reservations']);
+    void this.router.navigate(['/mes-reservations-logement']);
   }
 
   backToSuccess(): void {

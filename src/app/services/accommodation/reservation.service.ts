@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ReservationRequest {
@@ -9,6 +10,28 @@ export interface ReservationRequest {
   dateFin: string;
   nbPersonnes: number;
   prixFinalNegocie?: number;
+}
+
+export type StatutReservation = 'en_attente' | 'confirmee' | 'annulee' | 'terminee';
+
+// Interface pour la réponse brute du backend
+interface BackendReservationResponse {
+  idReservation: number;
+  idLogement: number;
+  nomLogement: string;
+  villeLogement: string;
+  idClient: number;
+  nomClient: string;
+  dateDebut: string;
+  dateFin: string;
+  nbPersonnes: number;
+  prixTotal: string;
+  statut: string; // Le backend envoie string
+  dateReservation: string;
+  canCancelOrModify?: boolean;
+  capaciteLogement?: number;
+  smartLockCode?: string;
+  archived?: boolean;
 }
 
 export interface ReservationResponse {
@@ -22,7 +45,7 @@ export interface ReservationResponse {
   dateFin: string;
   nbPersonnes: number;
   prixTotal: string;
-  statut: string;
+  statut: StatutReservation;
   dateReservation: string;
   canCancelOrModify?: boolean;
   capaciteLogement?: number;
@@ -34,7 +57,7 @@ export interface ReservationResponse {
   providedIn: 'root'
 })
 export class ReservationService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/api/accommodation/reservations`;
+  private readonly apiUrl = 'http://localhost:8080/api/reservations-logement';
   private readonly pythonApiUrl = 'http://localhost:8000/negotiate';
 
   constructor(private readonly http: HttpClient) { }
@@ -59,7 +82,15 @@ export class ReservationService {
   }
 
   getAllReservations(): Observable<ReservationResponse[]> {
-    return this.http.get<ReservationResponse[]>(this.apiUrl, { headers: this.getHeaders() });
+    return this.http.get<BackendReservationResponse[]>(this.apiUrl, { headers: this.getHeaders() })
+      .pipe(
+        map((backendReservations: BackendReservationResponse[]) => 
+          backendReservations.map((backendRes: BackendReservationResponse): ReservationResponse => ({
+            ...backendRes,
+            statut: backendRes.statut as StatutReservation
+          }))
+        )
+      );
   }
 
   getReservationsByHebergeur(idHebergeur: number): Observable<ReservationResponse[]> {

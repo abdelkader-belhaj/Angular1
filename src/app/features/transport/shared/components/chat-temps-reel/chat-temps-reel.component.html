@@ -1,0 +1,162 @@
+<div class="chat-container">
+  <!-- Header du chat -->
+  <div class="chat-header">
+    <div class="chat-title">
+      <h3>Chat - {{ recipientName }}</h3>
+      <span class="chat-subtitle">
+        {{ isLoading ? 'Chargement...' : messages.length + ' messages' }}
+      </span>
+    </div>
+    <div class="chat-translate-controls">
+      <label for="chat-target-lang">Traduire vers</label>
+      <select
+        id="chat-target-lang"
+        [(ngModel)]="selectedTargetLang"
+        name="selectedTargetLang"
+      >
+        <option *ngFor="let option of languageOptions" [value]="option.code">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Zone des messages -->
+  <div class="messages-container" #messagesContainer>
+    <div *ngIf="isLoading" class="loading-spinner">
+      <p>Chargement de l'historique...</p>
+    </div>
+
+    <div *ngIf="!isLoading && messages.length === 0" class="empty-state">
+      <p>Pas encore de messages. Commencez la conversation!</p>
+    </div>
+
+    <div *ngFor="let message of messages; let i = index" class="message-item">
+      <div
+        class="message"
+        [class.sent]="isCurrentUserMessage(message)"
+        [class.received]="!isCurrentUserMessage(message)"
+      >
+        <!-- Badge du rôle (côté reçu) -->
+        <div *ngIf="!isCurrentUserMessage(message)" class="message-role">
+          {{ message.senderRole }}
+        </div>
+
+        <!-- Contenu du message -->
+        <div class="message-content">
+          <p class="message-text">{{ message.contenu }}</p>
+
+          <div class="message-actions">
+            <button
+              type="button"
+              class="translate-btn"
+              [disabled]="!canTranslateMessage(message, i)"
+              (click)="translateMessage(message, i)"
+            >
+              {{ getTranslateButtonLabel(message, i) }}
+            </button>
+            <button
+              type="button"
+              class="speak-btn"
+              [class.playing]="isSpeakingMessage(message, i)"
+              (click)="speakMessage(message, i)"
+            >
+              {{ getSpeakButtonLabel(message, i) }}
+            </button>
+            <span class="translate-hint" *ngIf="isTranslating(message, i)">
+              requete envoyee...
+            </span>
+          </div>
+
+          <span
+            class="detected-lang-badge"
+            *ngIf="getDetectedLanguageBadge(message, i) as detectedLang"
+          >
+            Langue detectee: {{ detectedLang }}
+          </span>
+
+          <p class="translated-text" *ngIf="getTranslatedText(message, i)">
+            {{ getTranslatedText(message, i) }}
+          </p>
+          <p class="translated-error" *ngIf="getTranslationError(message, i)">
+            {{ getTranslationError(message, i) }}
+          </p>
+
+          <span class="message-time">{{ formatTime(message.dateEnvoi) }}</span>
+        </div>
+
+        <!-- Indicateur de statut (côté envoyé) -->
+        <div
+          *ngIf="isCurrentUserMessage(message)"
+          class="message-status"
+          [class.delivered]="message.delivered"
+          [class.read]="message.isRead"
+        >
+          <span *ngIf="!message.delivered" class="icon">⏱️</span>
+          <span *ngIf="message.delivered && !message.isRead" class="icon"
+            >✓</span
+          >
+          <span *ngIf="message.isRead" class="icon">✓✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone d'entrée -->
+  <div class="message-input-area">
+    <div class="stt-toolbar">
+      <div class="stt-language-selector">
+        <label for="stt-lang">Langue STT</label>
+        <select
+          id="stt-lang"
+          [(ngModel)]="selectedSttLanguage"
+          name="selectedSttLanguage"
+        >
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+      <button
+        type="button"
+        class="mic-button"
+        [class.listening]="isSpeechListening"
+        [disabled]="isSending || !isSpeechToTextSupported"
+        (click)="toggleSpeechToText()"
+      >
+        {{ getSpeechButtonLabel() }}
+      </button>
+
+      <span
+        class="stt-status"
+        [class.listening]="isSpeechListening"
+        [class.unsupported]="!isSpeechToTextSupported"
+      >
+        {{ getSpeechStatusLabel() }}
+      </span>
+    </div>
+
+    <p class="stt-interim" *ngIf="speechInterimText">{{ speechInterimText }}</p>
+    <p class="stt-error" *ngIf="speechErrorMessage">{{ speechErrorMessage }}</p>
+
+    <form (ngSubmit)="sendMessage()" class="message-form">
+      <textarea
+        [(ngModel)]="newMessageText"
+        name="messageText"
+        placeholder="Écrivez votre message... (Enter pour envoyer)"
+        [disabled]="isSending"
+        (keydown)="onKeyDown($event)"
+        class="message-input"
+      ></textarea>
+
+      <button
+        type="submit"
+        [disabled]="isSending || !newMessageText.trim()"
+        class="send-button"
+      >
+        <span *ngIf="!isSending">Envoyer</span>
+        <span *ngIf="isSending">Envoi...</span>
+      </button>
+    </form>
+  </div>
+</div>

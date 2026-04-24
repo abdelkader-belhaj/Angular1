@@ -1,0 +1,97 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h1> Mes réclamations</h1>
+      <p class="sub">Consultez vos demandes et les réponses du support.</p>
+    </div>
+    <div>
+      <button class="btn-primary" (click)="nouvelle()">Nouvelle réclamation</button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">Chargement...</div>
+  <div class="error" *ngIf="!loading && error">{{ error }}</div>
+
+  <div class="empty" *ngIf="!loading && !error && reclamations.length === 0">
+    <p>Aucune réclamation pour le moment.</p>
+  </div>
+
+  <div class="list" *ngIf="!loading && reclamations.length > 0">
+    <div class="card" *ngFor="let r of reclamations" (click)="ouvrir(r)">
+      <div class="row">
+        <span class="priorite" [ngClass]="prioriteClass(r.priorite)">{{ badgePriorite(r.priorite) }}</span>
+        <span class="statut" [class.repondue]="lc(r.statut)==='repondue'">
+          {{ statutLabel(r.statut) }}
+        </span>
+        <span class="unread" *ngIf="lc(r.statut)==='repondue' && r.clientLu===false">
+          Nouveau
+        </span>
+      </div>
+      <div class="sujet">{{ r.sujet }}</div>
+      <div class="meta">
+        <span *ngIf="r.reservationReference">🎫 {{ r.reservationReference }}</span>
+        <span>🕒 {{ r.dateCreation | date:'dd MMM yyyy, HH:mm' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Détail -->
+  <div class="dialog-overlay" *ngIf="selected" (click)="fermer()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-head">
+        <div>
+          <div class="title">Réclamation</div>
+          <div class="small" *ngIf="selected.reservationReference">Réservation: <strong>{{ selected.reservationReference }}</strong></div>
+        </div>
+        <button class="x" type="button" (click)="fermer()">✕</button>
+      </div>
+
+      <div class="chips">
+        <span class="priorite" [ngClass]="prioriteClass(selected.priorite)">{{ badgePriorite(selected.priorite) }}</span>
+        <span class="statut" [class.repondue]="lc(selected.statut)==='repondue'">
+          {{ statutLabel(selected.statut) }}
+        </span>
+        <span class="mark" *ngIf="markingRead">Mise à jour...</span>
+      </div>
+
+      <div class="block" *ngIf="!editMode">
+        <div class="b-title">Votre sujet</div>
+        <div class="b-text">{{ selected.sujet }}</div>
+        <div class="actions" *ngIf="peutModifierSelected()">
+          <button class="btn-secondary" type="button" (click)="activerEdition()">Modifier</button>
+        </div>
+      </div>
+
+      <div class="block" *ngIf="editMode">
+        <div class="b-title">Modifier la réclamation</div>
+        <label class="mini-label">Type</label>
+        <select class="select" [(ngModel)]="editPriorite">
+          <option value="normale">Normale</option>
+          <option value="urgent">Urgent</option>
+          <option value="tres_urgent">Très urgent</option>
+        </select>
+
+        <label class="mini-label" style="margin-top:10px;">Sujet / description</label>
+        <textarea class="textarea" rows="7" [(ngModel)]="editSujet"></textarea>
+        <div class="msg" *ngIf="editMessage">{{ editMessage }}</div>
+        <div class="actions">
+          <button class="btn-secondary" type="button" (click)="annulerEdition()" [disabled]="savingEdit">Annuler</button>
+          <button class="btn-primary" type="button" (click)="enregistrerEdition()" [disabled]="savingEdit">
+            {{ savingEdit ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="block" *ngIf="lc(selected.statut)==='repondue'">
+        <div class="b-title">Réponse</div>
+        <div class="b-text">{{ selected.reponse }}</div>
+        <div class="b-meta" *ngIf="selected.dateReponse">🕒 {{ selected.dateReponse | date:'dd MMM yyyy, HH:mm' }}</div>
+      </div>
+
+      <div class="block waiting" *ngIf="lc(selected.statut)!=='repondue'">
+        En attente de réponse.
+      </div>
+    </div>
+  </div>
+</div>
+

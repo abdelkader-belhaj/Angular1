@@ -1,0 +1,608 @@
+<div class="cac-shell">
+  <!-- ═══════════════════════════════════════════════════
+       STATUS BANNER  (ACCEPTED state)
+  ════════════════════════════════════════════════════ -->
+  <section
+    class="cac-status-banner"
+    *ngIf="course?.statut === courseStatus.ACCEPTED"
+  >
+    <div class="csb-icon">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+      >
+        <path d="M9 12l2 2 4-4" />
+        <circle cx="12" cy="12" r="9" />
+      </svg>
+    </div>
+    <div class="csb-text">
+      <strong>{{
+        requiresClientConfirmationForStart
+          ? 'En attente de confirmation client'
+          : 'Confirmation client reçue — Prête à démarrer'
+      }}</strong>
+      <span *ngIf="requiresClientConfirmationForStart">
+        Le client doit confirmer depuis son écran avant le démarrage.
+      </span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════
+       UNREAD CHAT ALERT
+  ════════════════════════════════════════════════════ -->
+  <div class="cac-chat-alert" *ngIf="unreadChatCount > 0">
+    <div class="cca-left">
+      <svg
+        class="cca-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      </svg>
+      <span>{{ unreadChatCount }} nouveau(x) message(s) client</span>
+    </div>
+    <button type="button" class="cca-btn" (click)="openChatSection()">
+      Voir le chat
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE HEADER
+  ════════════════════════════════════════════════════ -->
+  <header class="cac-header">
+    <div>
+      <h1 class="cac-title">Course en cours</h1>
+      <p class="cac-subtitle">
+        <span class="cac-stat-pill">{{ course?.statut }}</span>
+        <span *ngIf="course?.idCourse"
+          >&nbsp;·&nbsp;Réf. #{{ course?.idCourse }}</span
+        >
+      </p>
+    </div>
+    <p class="start-locked-note" *ngIf="requiresClientConfirmationForStart">
+      <svg viewBox="0 0 20 20" fill="currentColor" class="sln-icon">
+        <path
+          fill-rule="evenodd"
+          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Démarrage verrouillé — en attente de confirmation client
+    </p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN GRID
+  ════════════════════════════════════════════════════ -->
+  <div class="cac-grid">
+    <!-- ──────────────────────────────────────────────
+         LEFT COLUMN : Client info + Chat
+    ─────────────────────────────────────────────── -->
+    <div class="cac-col-left">
+      <!-- Client Card -->
+      <div class="cac-card client-card">
+        <div class="client-card-header">
+          <div class="client-avatar-wrap">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              class="client-avatar-svg"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+          </div>
+          <div class="client-info">
+            <h3 class="client-name">
+              {{ course?.demande?.client?.username || 'Client' }}
+            </h3>
+            <span class="client-role-tag">Passager confirmé</span>
+          </div>
+        </div>
+
+        <div class="route-visual">
+          <div class="rv-marker rv-marker--pickup">
+            <span class="rv-dot rv-dot--pickup"></span>
+          </div>
+          <div class="rv-line"></div>
+          <div class="rv-marker rv-marker--dropoff">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="rv-pin-svg">
+              <path
+                fill-rule="evenodd"
+                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <div class="rv-labels">
+            <div class="rv-label">
+              <span class="rv-label-title">Prise en charge</span>
+              <span class="rv-label-value">{{
+                course?.localisationDepart?.adresse || 'Non disponible'
+              }}</span>
+            </div>
+            <div class="rv-label">
+              <span class="rv-label-title">Destination</span>
+              <span class="rv-label-value">{{
+                course?.localisationArrivee?.adresse || 'Non disponible'
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="client-card-footer">
+          <div>
+            <p class="ccf-label">{{ displayedRidePriceLabel }}</p>
+            <p class="ccf-price">
+              {{ displayedRidePrice.toFixed(2) }}
+              <span class="ccf-currency">TND</span>
+            </p>
+          </div>
+          <div *ngIf="showCompletedPriceDifference" class="ccf-delta">
+            <span class="delta-ref"
+              >Réf.: {{ estimatedRidePrice.toFixed(2) }} TND</span
+            >
+            <span
+              class="delta-val"
+              [class.delta-pos]="completedPriceDifference > 0"
+              [class.delta-neg]="completedPriceDifference < 0"
+            >
+              Écart {{ completedPriceDifference > 0 ? '+' : ''
+              }}{{ completedPriceDifference.toFixed(2) }} TND
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat box -->
+      <div class="cac-card chat-card" #chatSection>
+        <div class="chat-card-header">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="chat-hdr-icon"
+          >
+            <path
+              d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+            />
+          </svg>
+          <span>Chat avec le client</span>
+        </div>
+        <div class="chat-card-body" (click)="clearUnreadChatBadge()">
+          <app-chat-temps-reel
+            [courseId]="courseId"
+            [recipientName]="course?.demande?.client?.username || 'Client'"
+            [recipientRole]="'CLIENT'"
+          ></app-chat-temps-reel>
+        </div>
+      </div>
+    </div>
+    <!-- /col-left -->
+
+    <!-- ──────────────────────────────────────────────
+         RIGHT COLUMN : Map + Workflow + Payment + Cancel
+    ─────────────────────────────────────────────── -->
+    <div class="cac-col-right">
+      <!-- Map Section (compact) -->
+      <div class="cac-card map-card">
+        <div class="map-card-header">
+          <span class="mch-title">Navigation en direct</span>
+          <button
+            type="button"
+            class="follow-toggle-btn"
+            (click)="toggleFollowDriver()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="ftb-icon"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+              />
+            </svg>
+            {{ isFollowingDriver ? 'Suivi ON' : 'Suivi OFF' }}
+          </button>
+        </div>
+        <div #rideMap class="ride-map"></div>
+        <div class="map-metrics-bar">
+          <div class="mmb-item">
+            <span class="mmb-label">ETA</span>
+            <strong class="mmb-value"
+              >{{ etaMinutes }} <small>min</small></strong
+            >
+          </div>
+          <div class="mmb-divider"></div>
+          <div class="mmb-item">
+            <span class="mmb-label">Restant</span>
+            <strong class="mmb-value"
+              >{{ distanceToArrivalKm }} <small>km</small></strong
+            >
+          </div>
+          <div class="mmb-divider"></div>
+          <div class="mmb-item mmb-legend">
+            <span><i class="dot dot-driver"></i> Vous</span>
+            <span><i class="dot dot-client"></i> Client</span>
+            <span><i class="dot dot-start"></i> Départ</span>
+            <span><i class="dot dot-end"></i> Arrivée</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow Actions -->
+      <div class="cac-card workflow-card">
+        <h3 class="wc-title">Actions de course</h3>
+        <div class="workflow-actions">
+          <button
+            type="button"
+            class="wf-btn wf-btn--start"
+            (click)="demarrerCourse()"
+            [disabled]="
+              course?.statut !== courseStatus.ACCEPTED ||
+              requiresClientConfirmationForStart ||
+              isStartingCourse
+            "
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" class="wf-icon">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            {{ startButtonLabel }}
+          </button>
+          <button
+            type="button"
+            class="wf-btn wf-btn--progress"
+            (click)="passerEnCours()"
+            [disabled]="course?.statut !== courseStatus.STARTED"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              class="wf-icon"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            En cours
+          </button>
+          <button
+            type="button"
+            class="wf-btn wf-btn--finish"
+            (click)="terminerCourse()"
+            [disabled]="course?.statut !== courseStatus.IN_PROGRESS"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              class="wf-icon"
+            >
+              <path d="M9 12l2 2 4-4" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            Terminer + Paiement
+          </button>
+        </div>
+      </div>
+
+      <!-- ──── PAYMENT VALIDATION (COMPLETED state) ─────── -->
+      <section
+        *ngIf="course?.statut === courseStatus.COMPLETED"
+        class="cac-card payment-card"
+      >
+        <h3 class="pc-title">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="pc-icon"
+          >
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+          </svg>
+          Validation du paiement client
+        </h3>
+
+        <p *ngIf="!hasClientPayment" class="payment-state waiting">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="ps-icon"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 7 12 12 15 15" />
+          </svg>
+          En attente du paiement client…
+        </p>
+
+        <div *ngIf="hasClientPayment">
+          <p class="payment-state paid">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="ps-icon"
+            >
+              <path d="M9 12l2 2 4-4" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            Paiement client détecté.
+          </p>
+          <p class="payment-date" *ngIf="paymentRecord?.clientConfirmedAt">
+            Date paiement:
+            <strong>{{
+              paymentRecord?.clientConfirmedAt | date: 'short'
+            }}</strong>
+          </p>
+
+          <p *ngIf="isPaymentDriverVerified" class="payment-state verified">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="ps-icon"
+            >
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            Paiement validé par le chauffeur.
+          </p>
+
+          <div *ngIf="!isPaymentDriverVerified" class="verify-row">
+            <input
+              type="text"
+              class="verify-input"
+              [(ngModel)]="paymentCodeInput"
+              maxlength="6"
+              placeholder="Code client (6 chiffres)"
+            />
+            <button
+              type="button"
+              class="verify-btn"
+              (click)="validerPaiementParCode()"
+            >
+              Valider le code
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="refresh-btn"
+          (click)="refreshPaymentRecord()"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="refresh-icon"
+          >
+            <polyline points="23 4 23 10 17 10" />
+            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+          </svg>
+          Rafraîchir statut paiement
+        </button>
+      </section>
+
+      <!-- ──── CANCELLATION FINANCIAL (CANCELLED state) ─── -->
+      <section
+        *ngIf="
+          course?.statut === courseStatus.CANCELLED &&
+          hasCancellationFinancialData
+        "
+        class="cac-card cancelled-result-card"
+      >
+        <h3 class="crc-title">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="crc-icon"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          Règlement annulation
+        </h3>
+        <div class="crc-row">
+          <span class="crc-label">Pénalité appliquée</span>
+          <span class="crc-value crc-value--penalty"
+            >{{ cancellationPenaltyAmount.toFixed(2) }} TND</span
+          >
+        </div>
+        <div class="crc-row">
+          <span class="crc-label">Remboursement client</span>
+          <span class="crc-value"
+            >{{ cancellationRefundAmount.toFixed(2) }} TND</span
+          >
+        </div>
+        <p
+          *ngIf="isCancellationPenaltyPaid"
+          class="payment-state verified mt-8"
+        >
+          Pénalité encaissée et validée.
+        </p>
+        <p
+          *ngIf="!isCancellationPenaltyPaid && cancellationPenaltyAmount > 0"
+          class="crc-pending"
+        >
+          Pénalité enregistrée, en attente de traitement final.
+        </p>
+      </section>
+
+      <!-- ──── CANCEL SECTION ─────────────────────────── -->
+      <section *ngIf="canCancel" class="cac-card cancel-card">
+        <h3 class="cc-title">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="cc-hdr-icon"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          Annuler la course
+        </h3>
+        <div class="cancel-policy-box">
+          <div class="cpb-row">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="cpb-icon">
+              <path
+                fill-rule="evenodd"
+                d="M18 10c0 4.418-3.582 8-8 8S2 14.418 2 10s3.582-8 8-8 8 3.582 8 8zm-7-4a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span>
+              Fenêtre gratuite: <strong>2 min</strong> (<span
+                [class.ok]="estimatedFreeWindowActive"
+                [class.warn]="!estimatedFreeWindowActive"
+              >
+                {{ estimatedFreeWindowActive ? 'active' : 'expirée' }} </span
+              >)
+            </span>
+          </div>
+          <div class="cpb-row">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="cpb-icon">
+              <path
+                d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.077 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.077-2.354-1.253V5z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span>Pénalité après 2 min: <strong>20%</strong></span>
+          </div>
+          <div class="cpb-estimate">
+            <div class="cpbe-row">
+              <span>Temps écoulé</span>
+              <strong>{{ minutesSinceCourseCreation }} min</strong>
+            </div>
+            <div class="cpbe-row">
+              <span>Pénalité estimée</span>
+              <strong
+                [class.warn]="isPenaltyLikely"
+                [class.ok]="!isPenaltyLikely"
+              >
+                ~ {{ estimatedPenaltyAmount.toFixed(2) }} TND
+              </strong>
+            </div>
+            <div class="cpbe-row">
+              <span>Remboursement estimé</span>
+              <strong>~ {{ estimatedRefundAmount.toFixed(2) }} TND</strong>
+            </div>
+          </div>
+        </div>
+
+        <textarea
+          class="cancel-textarea"
+          [(ngModel)]="cancelReason"
+          rows="2"
+          placeholder="Raison d'annulation (optionnel)"
+        ></textarea>
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="annulerCourse()"
+          [disabled]="isCancelling"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="cancel-btn-icon"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          {{ isCancelling ? 'Annulation en cours…' : 'Annuler la course' }}
+        </button>
+
+        <div class="cancel-result" *ngIf="hasAnnulationResult">
+          <h4 class="cr-title">Résultat de l'annulation</h4>
+          <div class="cr-row">
+            <span>Pénalité appliquée</span>
+            <strong class="cr-penalty"
+              >{{
+                (annulationResult?.montantPenalite ?? 0).toFixed(2)
+              }}
+              TND</strong
+            >
+          </div>
+          <div class="cr-row">
+            <span>Remboursement</span>
+            <strong
+              >{{
+                (annulationResult?.montantRemboursement ?? 0).toFixed(2)
+              }}
+              TND</strong
+            >
+          </div>
+          <div class="cr-row" *ngIf="annulationResult?.raison">
+            <span>Motif enregistré</span>
+            <strong>{{ annulationResult?.raison }}</strong>
+          </div>
+          <button
+            type="button"
+            class="back-btn"
+            (click)="retournerDashboardChauffeur()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Retourner au dashboard
+          </button>
+        </div>
+      </section>
+
+      <!-- Policy Note -->
+      <div class="policy-note">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="pn-icon">
+          <path
+            fill-rule="evenodd"
+            d="M18 10c0 4.418-3.582 8-8 8S2 14.418 2 10s3.582-8 8-8 8 3.582 8 8zm-9-3a1 1 0 000 2h1v3H9a1 1 0 100 2h4a1 1 0 100-2h-1V8a1 1 0 00-1-1h-2z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <p>
+          Le calcul officiel de pénalité/remboursement est toujours validé côté
+          backend au moment de l'annulation.
+        </p>
+      </div>
+    </div>
+    <!-- /col-right -->
+  </div>
+  <!-- /cac-grid -->
+</div>

@@ -7,7 +7,15 @@
       <li><a routerLink="/" fragment="voyages">Voyages</a></li>
       <li><a routerLink="/" fragment="hotels">Hotels</a></li>
       <li><a routerLink="/" fragment="bons-plans">Bons Plans</a></li>
+    
+
+    <li>
+  <a routerLink="/" fragment="community">Community</a>
+</li>
       <li><a routerLink="/" fragment="contact">Contact</a></li>
+      
+
+
     </ul>
 
     <div class="auth-section">
@@ -18,14 +26,14 @@
       <ng-container *ngIf="isAuthenticated">
         <div style="display: flex; align-items: center; gap: 15px;">
           
-          <!-- Bouton Mes Réservations (calendrier) avec badge notifications -->
+          <!-- Bouton Mes Réservations (calendrier) avec badge notifications§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ -->
           <button 
-            *ngIf="isTouristUser()" 
-            routerLink="/mes-reservations" 
+            *ngIf="isClientTouriste" 
+            routerLink="/mes-reservations-logement" 
             class="reservations-btn" 
             style="padding: 8px; position: relative; margin-right: 15px;" 
             title="Mes Réservations">
-            <lucide-icon name="calendar" class="w-5 h-5 text-slate-700"></lucide-icon>
+            <span class="material-symbols-outlined w-5 h-5 text-slate-700">calendar_month</span>
             <span *ngIf="unreadNotifsCount > 0" class="notif-badge">{{ unreadNotifsCount }}</span>
             <span *ngIf="unreadNotifsCount > 0" class="notif-badge-ping" aria-hidden="true"></span>
           </button>
@@ -54,6 +62,7 @@
           </div>
         </div>
       </ng-container>
+
     </div>
   </div>
 </header>

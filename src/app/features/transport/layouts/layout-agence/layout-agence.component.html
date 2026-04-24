@@ -1,0 +1,60 @@
+<div class="layout-agence">
+  <aside class="agency-dock glass-surface">
+    <div class="dock-brand">
+      <h2>TunisiaTour</h2>
+      <p>Espace agence</p>
+    </div>
+
+    <nav class="dock-nav">
+      <a
+        class="dock-link"
+        routerLink="/transport/location/agence/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <mat-icon>dashboard</mat-icon>
+        <span>Tableau de bord</span>
+      </a>
+
+      <a
+        class="dock-link"
+        routerLink="/transport/location/agence/flotte"
+        routerLinkActive="active"
+      >
+        <mat-icon>directions_car</mat-icon>
+        <span>Ma flotte</span>
+      </a>
+
+      <a
+        class="dock-link"
+        routerLink="/transport/location/agence/reservations"
+        routerLinkActive="active"
+      >
+        <mat-icon>calendar_today</mat-icon>
+        <span>Réservations</span>
+      </a>
+
+      <a
+        class="dock-link"
+        routerLink="/transport/location/agence/portefeuille"
+        routerLinkActive="active"
+      >
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span>Portefeuille</span>
+      </a>
+
+      <a
+        class="dock-link"
+        routerLink="/transport/location/agence/statistiques"
+        routerLinkActive="active"
+      >
+        <mat-icon>analytics</mat-icon>
+        <span>Statistiques</span>
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

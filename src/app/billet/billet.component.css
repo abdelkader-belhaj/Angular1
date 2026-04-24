@@ -1,0 +1,201 @@
+.billet-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.billet-card {
+  background: white;
+  border-radius: 24px;
+  max-width: 420px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.billet-header {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.airline-logo {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.billet-statut {
+  background: #22c55e;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.billet-ref {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #0284c7;
+  letter-spacing: 3px;
+  padding: 20px;
+  border-bottom: 2px dashed #e2e8f0;
+}
+
+.billet-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ville {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.code {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.arrow-vol {
+  font-size: 1.5rem;
+  color: #0ea5e9;
+}
+
+.billet-infos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-item {
+  background: white;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.info-value.prix {
+  color: #0ea5e9;
+}
+
+.billet-passager {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 2px dashed #e2e8f0;
+}
+
+.passager-nom {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.billet-qr {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-img {
+  width: 160px;
+  height: 160px;
+  border: 3px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.qr-hint {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.billet-validation {
+  background: linear-gradient(135deg, #10b981, #059669);
+  padding: 24px;
+  text-align: center;
+  border-radius: 16px;
+  margin: 20px;
+}
+
+.validation-text {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.validation-hint {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
+.billet-footer {
+  background: #f8fafc;
+  text-align: center;
+  padding: 14px;
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.loading {
+  color: white;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.error {
+  background: white;
+  color: #dc2626;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  font-weight: 600;
+}

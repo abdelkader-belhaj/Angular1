@@ -1,0 +1,395 @@
+<div class="attente-shell">
+  <div class="attente-container">
+    <header class="hero-block">
+      <p class="hero-kicker">LUXE TN</p>
+      <h1>En attente d'un chauffeur</h1>
+      <p class="intro">
+        Votre demande est en cours de traitement par notre réseau premium.
+      </p>
+    </header>
+
+    <div *ngIf="isLoading" class="state-block">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Chargement de votre demande...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading && demande as d">
+      <section
+        class="wait-timer"
+        *ngIf="showWaitCountdown"
+        aria-label="Timer attente chauffeur"
+      >
+        <div>
+          <h2>Recherche d'un chauffeur en cours</h2>
+          <p>
+            Annulation automatique dans
+            <strong>{{ waitSecondsLeft }}s</strong>.
+          </p>
+        </div>
+        <div class="timer-pill">{{ waitSecondsLeft }}</div>
+      </section>
+
+      <section class="notice-stack" aria-label="Informations importantes">
+        <p>
+          Nous connectons actuellement votre demande aux chauffeurs disponibles
+          les plus proches de votre position. Les informations sont mises a jour
+          automatiquement.
+        </p>
+        <p class="notice-warning">
+          <strong>Attention:</strong> Une fois le chauffeur accepte, toute
+          annulation tardive peut declencher une penalite de pre-autorisation.
+        </p>
+      </section>
+
+      <section class="demande-details" aria-label="Détails de la demande">
+        <div class="details-head">
+          <h2>Details de la demande</h2>
+          <span class="badge" [attr.data-statut]="d.statut">{{
+            libelleStatut[d.statut]
+          }}</span>
+        </div>
+
+        <dl class="detail-grid">
+          <dt>Demande</dt>
+          <dd>#{{ d.idDemande ?? d.id }}</dd>
+          <dt>Type de vehicule</dt>
+          <dd>
+            {{
+              d.typeVehiculeDemande
+                ? libelleTypeVehicule[d.typeVehiculeDemande]
+                : '-'
+            }}
+          </dd>
+          <dt>Prix estime</dt>
+          <dd>
+            {{
+              d.prixEstime != null
+                ? (d.prixEstime | number: '1.2-2') + ' TND'
+                : '-'
+            }}
+          </dd>
+          <dt>Depart</dt>
+          <dd>
+            {{
+              d.localisationDepart.adresse ??
+                (d.localisationDepart.latitude != null &&
+                d.localisationDepart.longitude != null
+                  ? d.localisationDepart.latitude +
+                    ', ' +
+                    d.localisationDepart.longitude
+                  : '-')
+            }}
+          </dd>
+          <dt>Arrivee</dt>
+          <dd>
+            {{
+              d.localisationArrivee.adresse ??
+                (d.localisationArrivee.latitude != null &&
+                d.localisationArrivee.longitude != null
+                  ? d.localisationArrivee.latitude +
+                    ', ' +
+                    d.localisationArrivee.longitude
+                  : '-')
+            }}
+          </dd>
+        </dl>
+      </section>
+
+      <section
+        class="acceptance-confirmation"
+        *ngIf="requiresAcceptanceConfirmation"
+        aria-label="Confirmation client"
+      >
+        <div class="accepted-driver-card" *ngIf="d.course as acceptedCourse">
+          <h3>Chauffeur trouve</h3>
+          <div class="driver-meta-grid">
+            <p><strong>Nom:</strong> {{ getDriverDisplayName(d) }}</p>
+            <p>
+              <strong>Telephone:</strong>
+              {{ acceptedCourse.chauffeur.telephone || '-' }}
+            </p>
+            <p class="driver-vehicle-line">
+              <strong>Vehicule:</strong>
+              {{ acceptedCourse.vehicule.marque || '' }}
+              {{ acceptedCourse.vehicule.modele || '' }}
+              ({{ acceptedCourse.vehicule.numeroPlaque || '-' }})
+            </p>
+          </div>
+
+          <div
+            class="accepted-vehicle-gallery"
+            *ngIf="getDriverVehiclePhotos(d) as vehiclePhotos"
+          >
+            <button
+              type="button"
+              class="accepted-vehicle-cover-btn"
+              *ngIf="vehiclePhotos.length > 0"
+              (click)="openDriverVehicleGallery(d, 0)"
+            >
+              <img
+                class="accepted-vehicle-photo"
+                [src]="vehiclePhotos[0]"
+                alt="Photo principale du véhicule"
+              />
+              <span class="accepted-vehicle-count"
+                >{{ vehiclePhotos.length }} photo{{
+                  vehiclePhotos.length > 1 ? 's' : ''
+                }}</span
+              >
+            </button>
+
+            <div
+              class="accepted-vehicle-thumbs"
+              *ngIf="vehiclePhotos.length > 1"
+            >
+              <button
+                type="button"
+                class="accepted-thumb-btn"
+                *ngFor="let photo of vehiclePhotos; let i = index"
+                (click)="openDriverVehicleGallery(d, i)"
+              >
+                <img [src]="photo" [alt]="'Photo véhicule ' + (i + 1)" />
+              </button>
+            </div>
+          </div>
+
+          <section
+            class="smart-review-panel driver-review"
+            aria-label="Synthèse IA des avis chauffeur"
+          >
+            <p class="smart-review-loading" *ngIf="isLoadingDriverReviews">
+              Analyse IA des avis du chauffeur en cours...
+            </p>
+
+            <div
+              class="smart-review-summary"
+              *ngIf="!isLoadingDriverReviews && driverSmartReviewSummary"
+            >
+              <h3>🤖 Synthèse IA des Avis Chauffeur</h3>
+              <p class="subtitle">
+                Analyse de <strong>{{ nombreAvis }} avis clients</strong> pour
+                ce chauffeur
+              </p>
+
+              <div class="average-score">
+                <span class="score">{{ noteMoyenne | number: '1.1-1' }}</span>
+                <span class="sur5">/ 5</span>
+                <span class="label">Note moyenne</span>
+              </div>
+
+              <div class="ai-summary">
+                <p>{{ smartSummary }}</p>
+              </div>
+
+              <div class="points-grid">
+                <div class="points-forts">
+                  <h4>✅ Points forts</h4>
+                  <ul>
+                    <li *ngFor="let point of pointsForts">{{ point }}</li>
+                  </ul>
+                </div>
+                <div class="points-surveiller">
+                  <h4>⚠️ Points à surveiller</h4>
+                  <ul>
+                    <li *ngFor="let point of pointsSurveiller">{{ point }}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <small class="source">Basé sur des avis réels du chauffeur</small>
+
+              <button
+                type="button"
+                class="btn-toggle"
+                (click)="toggleReviews()"
+              >
+                {{
+                  showAllReviews
+                    ? 'Masquer les avis détaillés'
+                    : 'Voir les ' + nombreAvis + ' avis détaillés'
+                }}
+              </button>
+
+              <div *ngIf="showAllReviews" class="reviews-list">
+                <div *ngFor="let review of reviews" class="review-card">
+                  <div class="review-header">
+                    <span class="email">{{ review.email }}</span>
+                    <span class="date">{{
+                      review.date | date: 'dd/MM/yyyy'
+                    }}</span>
+                  </div>
+                  <div class="stars">
+                    <span
+                      *ngFor="let star of [1, 2, 3, 4, 5]"
+                      [class.filled]="star <= review.note"
+                      >★</span
+                    >
+                  </div>
+                  <p class="commentaire">{{ review.commentaire }}</p>
+                </div>
+              </div>
+            </div>
+
+            <p
+              class="smart-review-empty"
+              *ngIf="!isLoadingDriverReviews && !driverSmartReviewSummary"
+            >
+              Ce chauffeur n'a pas encore assez d'avis clients pour générer un
+              résumé IA.
+            </p>
+          </section>
+        </div>
+
+        <div class="safety-panel">
+          <h2>Validation de securite</h2>
+          <p>
+            Veuillez confirmer que le vehicule et le chauffeur correspondent aux
+            informations affichees avant de demarrer la course.
+          </p>
+          <button
+            type="button"
+            class="btn-confirm-course"
+            (click)="confirmerCourseAcceptee()"
+            [disabled]="isConfirmingAcceptance"
+          >
+            {{
+              isConfirmingAcceptance ? 'Confirmation...' : 'Confirmer la course'
+            }}
+          </button>
+          <button
+            type="button"
+            class="btn-cancel-confirmation"
+            (click)="annulerConfirmationCourseAcceptee()"
+            [disabled]="isConfirmingAcceptance"
+          >
+            Refuser ce chauffeur et relancer la recherche
+          </button>
+        </div>
+      </section>
+
+      <section class="attente-map-section">
+        <h2>Itineraire prevu</h2>
+        <div class="attente-map-grid">
+          <article
+            class="attente-map-card"
+            *ngIf="getMapEmbedUrl(d.localisationDepart) as departMapUrl"
+          >
+            <h3>Point de depart</h3>
+            <iframe
+              [src]="departMapUrl"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Départ"
+            ></iframe>
+            <a
+              *ngIf="getMapLinkUrl(d.localisationDepart) as departLink"
+              [href]="departLink"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ouvrir dans OpenStreetMap
+            </a>
+          </article>
+
+          <article
+            class="attente-map-card"
+            *ngIf="getMapEmbedUrl(d.localisationArrivee) as arriveeMapUrl"
+          >
+            <h3>Point d'arrivee</h3>
+            <iframe
+              [src]="arriveeMapUrl"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Arrivée"
+            ></iframe>
+            <a
+              *ngIf="getMapLinkUrl(d.localisationArrivee) as arriveeLink"
+              [href]="arriveeLink"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ouvrir dans OpenStreetMap
+            </a>
+          </article>
+        </div>
+
+        <p
+          class="attente-map-empty"
+          *ngIf="
+            !getMapEmbedUrl(d.localisationDepart) &&
+            !getMapEmbedUrl(d.localisationArrivee)
+          "
+        >
+          Coordonnees GPS non disponibles pour cette demande.
+        </p>
+      </section>
+
+      <div class="cancel-zone">
+        <button
+          type="button"
+          class="btn-annuler"
+          (click)="annulerDemande()"
+          [disabled]="d.statut === DemandeStatus.CANCELLED"
+        >
+          Annuler la demande de trajet
+        </button>
+      </div>
+
+      <div
+        class="vehicle-gallery-overlay"
+        *ngIf="isVehicleGalleryOpen"
+        (click)="closeDriverVehicleGallery()"
+      >
+        <div class="vehicle-gallery-modal" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="vehicle-gallery-close"
+            (click)="closeDriverVehicleGallery()"
+          >
+            x
+          </button>
+
+          <div class="vehicle-gallery-main">
+            <button
+              type="button"
+              class="vehicle-gallery-nav"
+              *ngIf="vehicleGalleryPhotos.length > 1"
+              (click)="prevVehicleGalleryPhoto()"
+            >
+              <
+            </button>
+
+            <img
+              [src]="getCurrentVehicleGalleryPhoto()"
+              alt="Photo véhicule agrandie"
+            />
+
+            <button
+              type="button"
+              class="vehicle-gallery-nav"
+              *ngIf="vehicleGalleryPhotos.length > 1"
+              (click)="nextVehicleGalleryPhoto()"
+            >
+              >
+            </button>
+          </div>
+
+          <div
+            class="vehicle-gallery-strip"
+            *ngIf="vehicleGalleryPhotos.length > 1"
+          >
+            <button
+              type="button"
+              class="vehicle-gallery-strip-item"
+              *ngFor="let photo of vehicleGalleryPhotos; let i = index"
+              [class.active]="i === vehicleGalleryIndex"
+              (click)="vehicleGalleryIndex = i"
+            >
+              <img [src]="photo" [alt]="'Miniature photo ' + (i + 1)" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

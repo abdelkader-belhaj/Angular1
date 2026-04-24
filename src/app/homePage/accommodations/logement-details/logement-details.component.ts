@@ -273,7 +273,7 @@ export class LogementDetailsComponent implements OnInit, AfterViewChecked {
   }
 
   goToSmartLockGuide(): void {
-    this.router.navigate(['/mes-reservations'], {
+    this.router.navigate(['/mes-reservations-logement'], {
       queryParams: { openLockGuide: 1 }
     });
   }

@@ -150,10 +150,7 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
     this.apiErrorMessage = '';
     this.reservationService.getAllReservations().subscribe({
       next: (res) => {
-        this.clientReservations = res.map(r => ({
-          ...r,
-          statut: (r.statut || '').toLowerCase()
-        }));
+        this.clientReservations = res;
         this.loading = false;
         this.loadPaidReservationIds();
       },
@@ -685,6 +682,19 @@ export class MesReservationsComponent implements OnInit, OnDestroy {
       error: (err) => alert(err?.error?.message || 'Erreur modification')
     });
   }
+  // Helper methods pour éviter les erreurs de comparaison TypeScript
+  isStatutEnAttente(res: ReservationResponse): boolean {
+    return res.statut === 'en_attente';
+  }
+
+  isStatutConfirmee(res: ReservationResponse): boolean {
+    return res.statut === 'confirmee';
+  }
+
+  isStatutAnnulee(res: ReservationResponse): boolean {
+    return res.statut === 'annulee';
+  }
+
   getProgressPercentage(dateStr: string): number {
     if (!dateStr) return 100;
     const resDateMs = this.parseReservationDateMs(dateStr);

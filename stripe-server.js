@@ -36,7 +36,7 @@ app.use(cors({
     callback(new Error(`Origin not allowed by CORS: ${origin}`));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  credentials: false
+  credentials: true
 }));
 
 app.get('/api/payments/health', (_req, res) => {

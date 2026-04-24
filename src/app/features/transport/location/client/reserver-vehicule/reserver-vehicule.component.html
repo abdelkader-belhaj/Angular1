@@ -1,0 +1,885 @@
+<section
+  class="page-container relative bg-background"
+  *ngIf="vehicle; else loadingState"
+>
+  <main
+    class="main-content max-w-7xl mx-auto p-6 md-p-10 flex-col gap-8 w-full"
+  >
+    <!-- Hero Section -->
+    <header
+      class="flex-col md-flex-row md-items-end justify-between gap-6 pb-6 border-b border-light"
+    >
+      <div class="flex-col gap-2">
+        <p class="text-xs uppercase font-bold text-secondary tracking-widest">
+          {{ getVehicleAgencyLabel(vehicle) }}
+        </p>
+        <h1
+          class="text-4xl font-headline font-extrabold text-primary tracking-tighter"
+        >
+          {{ vehicle.marque }} {{ vehicle.modele }}
+        </h1>
+        <p class="text-muted font-medium text-lg">
+          {{ vehicle.numeroPlaque }} &nbsp;|&nbsp; {{ vehicle.typeVehicule }}
+        </p>
+      </div>
+      <div
+        class="flex-col justify-end items-start md-items-end gap-1 text-left md-text-right"
+      >
+        <p class="text-xs uppercase font-bold text-muted">Tarif Journalier</p>
+        <strong class="text-3xl font-headline font-extrabold text-primary"
+          >{{ vehicle.prixJour || 0 | currency: "TND" : "symbol" : "1.0-0" }} /
+          j</strong
+        >
+      </div>
+    </header>
+
+    <div class="grid-12 gap-8">
+      <!-- Left Column (lg-col-4) -->
+      <div class="lg-col-5 flex-col gap-6">
+        <!-- Gallery -->
+        <div class="card premium-shadow bg-lowest p-6 rounded-lg">
+          <div
+            class="flex-between items-center mb-4 border-b border-light pb-4"
+          >
+            <h2 class="font-headline font-bold text-xl flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary"
+                >directions_car</span
+              >
+              Détails véhicule
+            </h2>
+          </div>
+
+          <div
+            class="grid-2 gap-2 mb-4"
+            *ngIf="getVehiclePhotos(vehicle).length; else noVehiclePhoto"
+          >
+            <button
+              type="button"
+              class="aspect-square w-full rounded-md border border-light overflow-hidden group relative cursor-pointer block border-none bg-surface"
+              *ngFor="
+                let photo of getVehiclePhotos(vehicle).slice(0, 4);
+                let idx = index
+              "
+              (click)="openGallery(idx)"
+            >
+              <img
+                [src]="resolvePhotoUrl(photo)"
+                [alt]="'Photo véhicule ' + (idx + 1)"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+              <div
+                class="absolute inset-0 bg-primary-20 opacity-0 group-hover:opacity-100 transition-opacity flex-center rounded-md backdrop-blur-sm"
+                *ngIf="idx === 3 && getVehiclePhotos(vehicle).length > 4"
+              >
+                <span class="text-white font-bold text-xl"
+                  >+{{ getVehiclePhotos(vehicle).length - 4 }}</span
+                >
+              </div>
+            </button>
+          </div>
+          <ng-template #noVehiclePhoto>
+            <div
+              class="flex-col flex-center text-muted border-2 border-dashed border-light rounded-md p-8 bg-surface mb-4"
+            >
+              <span class="material-symbols-outlined icon-3xl opacity-50 mb-2"
+                >no_photography</span
+              >
+              <span class="text-sm font-medium">Aucune photo disponible</span>
+            </div>
+          </ng-template>
+
+          <div class="space-y-3 mt-4 text-sm text-dark">
+            <div class="flex-between pb-2 border-b border-light-subtle">
+              <span
+                class="text-muted text-xs uppercase font-bold tracking-wider"
+                >Capacité:</span
+              >
+              <strong>{{ vehicle.capacitePassagers || "-" }} pers.</strong>
+            </div>
+            <div class="flex-between pb-2 border-b border-light-subtle">
+              <span
+                class="text-muted text-xs uppercase font-bold tracking-wider"
+                >Tarif:</span
+              >
+              <strong>{{
+                vehicle.prixJour || 0 | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pb-2 border-b border-light-subtle">
+              <span
+                class="text-muted flex-row items-center gap-1 text-xs uppercase font-bold tracking-wider"
+                ><span class="material-symbols-outlined icon-small"
+                  >lock_outline</span
+                >
+                Caution:</span
+              >
+              <strong>{{
+                (vehicle.prixVehicule || 0) * 0.1
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pt-1">
+              <span
+                class="text-muted text-xs uppercase font-bold tracking-wider"
+                >Statut:</span
+              >
+              <span
+                class="badge badge-success text-[10px] font-bold tracking-widest"
+                >{{ vehicle.statut }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Cancellation Policy -->
+        <div
+          class="card premium-shadow bg-surface-low border border-warning rounded-lg p-6"
+        >
+          <div class="flex-row items-center gap-2 text-warning-dark mb-2">
+            <span class="material-symbols-outlined">gavel</span>
+            <h3 class="font-bold text-base">Règlement d'annulation</h3>
+          </div>
+          <p
+            class="text-xs text-muted mb-4 border-b border-warning pb-3 opacity-80"
+          >
+            Ces règles s'appliquent automatiquement et seront reprises dans la
+            facture PDF si un remboursement est dû.
+          </p>
+          <ul
+            class="text-xs space-y-3 text-dark list-disc list-inside leading-loose"
+          >
+            <li>
+              <span class="font-bold text-warning-dark">Avant paiement:</span>
+              annulation sans frais.
+            </li>
+            <li>
+              <span class="font-bold text-warning-dark"
+                >Avant confirmation:</span
+              >
+              100% remboursé.
+            </li>
+            <li>
+              <span class="font-bold text-warning-dark"
+                >Après confirmation:</span
+              >
+              caution remboursée, avance conservée.
+            </li>
+            <li>
+              <span class="font-bold text-warning-dark">Refus agence:</span>
+              100% remboursé.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right Column (lg-col-8) -->
+      <div class="lg-col-7 flex-col gap-6">
+        <div
+          class="card premium-shadow bg-lowest p-8 rounded-lg rv-booking-card"
+        >
+          <div
+            class="flex-between items-center mb-6 border-b border-light pb-4"
+          >
+            <div class="flex-row items-center gap-3">
+              <span class="material-symbols-outlined text-primary icon-2xl"
+                >drive_eta</span
+              >
+              <h2 class="font-headline font-bold text-2xl text-dark">
+                Créer la réservation
+              </h2>
+            </div>
+            <span
+              class="badge badge-primary-light uppercase font-bold text-xs tracking-widest"
+              >Étape 1/2</span
+            >
+          </div>
+
+          <form
+            id="rv-booking-form"
+            [formGroup]="bookingForm"
+            (ngSubmit)="reserve()"
+            class="flex-col gap-6"
+            novalidate
+          >
+            <!-- Période — timeline glass -->
+            <div class="rv-bento rv-bento--period">
+              <div class="rv-bento__glow" aria-hidden="true"></div>
+              <div class="rv-bento__head">
+                <span class="material-symbols-outlined rv-bento__icon"
+                  >calendar_month</span
+                >
+                <div>
+                  <p class="rv-bento__title">Période de location</p>
+                  <p class="rv-bento__subtitle">
+                    Retrait puis retour — min. 1 jour, max. 30 jours
+                  </p>
+                </div>
+              </div>
+
+              <div class="rv-timeline">
+                <div class="rv-timeline__node">
+                  <span class="rv-timeline__dot">1</span>
+                  <div
+                    class="rv-field"
+                    [class.rv-field--invalid]="isFieldInvalid('dateDebut')"
+                  >
+                    <label class="rv-float-label" for="rv-date-debut"
+                      >Retrait</label
+                    >
+                    <input
+                      id="rv-date-debut"
+                      type="date"
+                      formControlName="dateDebut"
+                      class="input-form w-full rv-input-glass"
+                      [min]="minDateRetrait"
+                      autocomplete="off"
+                    />
+                    <p
+                      class="rv-field-msg rv-field-msg--err"
+                      *ngIf="fieldError('dateDebut') as msg"
+                    >
+                      {{ msg }}
+                    </p>
+                  </div>
+                </div>
+                <div class="rv-timeline__rail" aria-hidden="true">
+                  <div class="rv-timeline__pulse"></div>
+                  <div class="rv-timeline__badge" *ngIf="estimatedDays > 0">
+                    {{ estimatedDays }} j
+                  </div>
+                  <div
+                    class="rv-timeline__badge rv-timeline__badge--muted"
+                    *ngIf="estimatedDays === 0"
+                  >
+                    —
+                  </div>
+                </div>
+                <div class="rv-timeline__node">
+                  <span class="rv-timeline__dot">2</span>
+                  <div
+                    class="rv-field"
+                    [class.rv-field--invalid]="isFieldInvalid('dateFin')"
+                  >
+                    <label class="rv-float-label" for="rv-date-fin"
+                      >Retour</label
+                    >
+                    <input
+                      id="rv-date-fin"
+                      type="date"
+                      formControlName="dateFin"
+                      class="input-form w-full rv-input-glass"
+                      [min]="minDateRetour"
+                      autocomplete="off"
+                    />
+                    <p
+                      class="rv-field-msg rv-field-msg--err"
+                      *ngIf="fieldError('dateFin') as msg"
+                    >
+                      {{ msg }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p
+                class="rv-field-msg rv-field-msg--err rv-field-msg--block"
+                *ngIf="bookingPeriodHint as hint"
+              >
+                {{ hint }}
+              </p>
+
+              <div class="rv-availability">
+                <div class="rv-availability__head">
+                  <p class="rv-availability__title">
+                    Calendrier de disponibilite
+                  </p>
+                  <span
+                    class="rv-availability__loader"
+                    *ngIf="
+                      isLoadingAvailability || isCheckingPeriodAvailability
+                    "
+                  >
+                    {{
+                      isCheckingPeriodAvailability
+                        ? "Verification en temps reel..."
+                        : "Mise a jour..."
+                    }}
+                  </span>
+                </div>
+
+                <p class="rv-availability__subtitle">
+                  Jours indisponibles si reservation existante avec statut:
+                  {{ blockingStatusLabels }}.
+                </p>
+
+                <div
+                  class="rv-availability__list"
+                  *ngIf="hasUnavailablePeriods; else noUnavailablePeriods"
+                >
+                  <div
+                    class="rv-availability__item"
+                    *ngFor="let period of unavailablePeriodsPreview"
+                  >
+                    <div>
+                      <p class="rv-availability__dates">{{ period.label }}</p>
+                    </div>
+                    <span class="rv-availability__badge">{{
+                      period.statut
+                    }}</span>
+                  </div>
+                </div>
+
+                <ng-template #noUnavailablePeriods>
+                  <p class="rv-availability__empty">
+                    Aucune periode bloquee detectee pour ce vehicule.
+                  </p>
+                </ng-template>
+
+                <p
+                  class="rv-field-msg rv-field-msg--err rv-field-msg--block"
+                  *ngIf="selectedPeriodConflictMessage as conflict"
+                >
+                  {{ conflict }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Identité — split glass -->
+            <div class="rv-bento rv-bento--identity">
+              <div class="rv-bento__head">
+                <span class="material-symbols-outlined rv-bento__icon"
+                  >person</span
+                >
+                <div>
+                  <p class="rv-bento__title">Identité du conducteur</p>
+                  <p class="rv-bento__subtitle">
+                    Comme sur le permis — lettres uniquement (2 à 50 caractères)
+                  </p>
+                </div>
+              </div>
+              <div class="rv-split">
+                <div
+                  class="rv-field"
+                  [class.rv-field--invalid]="isFieldInvalid('prenom')"
+                >
+                  <label class="rv-float-label" for="rv-prenom">Prénom</label>
+                  <input
+                    id="rv-prenom"
+                    type="text"
+                    formControlName="prenom"
+                    class="input-form w-full rv-input-glass"
+                    placeholder="Ex. Mohamed-Ali"
+                    autocomplete="given-name"
+                  />
+                  <p
+                    class="rv-field-msg rv-field-msg--err"
+                    *ngIf="fieldError('prenom') as msg"
+                  >
+                    {{ msg }}
+                  </p>
+                </div>
+                <div
+                  class="rv-field"
+                  [class.rv-field--invalid]="isFieldInvalid('nom')"
+                >
+                  <label class="rv-float-label" for="rv-nom">Nom</label>
+                  <input
+                    id="rv-nom"
+                    type="text"
+                    formControlName="nom"
+                    class="input-form w-full rv-input-glass"
+                    placeholder="Ex. Ben Salah"
+                    autocomplete="family-name"
+                  />
+                  <p
+                    class="rv-field-msg rv-field-msg--err"
+                    *ngIf="fieldError('nom') as msg"
+                  >
+                    {{ msg }}
+                  </p>
+                </div>
+              </div>
+              <div
+                class="rv-field rv-field--birth"
+                [class.rv-field--invalid]="isFieldInvalid('dateNaiss')"
+              >
+                <label class="rv-float-label" for="rv-naiss"
+                  >Date de naissance</label
+                >
+                <input
+                  id="rv-naiss"
+                  type="date"
+                  formControlName="dateNaiss"
+                  class="input-form w-full rv-input-glass"
+                  autocomplete="bday"
+                />
+                <p
+                  class="rv-field-msg rv-field-msg--err"
+                  *ngIf="fieldError('dateNaiss') as msg"
+                >
+                  {{ msg }}
+                </p>
+                <p
+                  class="rv-field-msg rv-field-msg--err rv-field-msg--block"
+                  *ngIf="bookingIdentityHint as hint"
+                >
+                  {{ hint }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Permis — polaroid + mesh -->
+            <div class="rv-bento rv-bento--license">
+              <div class="rv-bento__head">
+                <span class="material-symbols-outlined rv-bento__icon"
+                  >id_card</span
+                >
+                <div>
+                  <p class="rv-bento__title">Permis de conduire</p>
+                  <p class="rv-bento__subtitle">
+                    Numéro tunisien, validité pendant toute la location, photo
+                    obligatoire
+                  </p>
+                </div>
+              </div>
+              <div class="rv-split">
+                <div
+                  class="rv-field"
+                  [class.rv-field--invalid]="isFieldInvalid('numeroPermis')"
+                >
+                  <label class="rv-float-label" for="rv-permis-no"
+                    >Numéro</label
+                  >
+                  <input
+                    id="rv-permis-no"
+                    type="text"
+                    formControlName="numeroPermis"
+                    class="input-form w-full rv-input-glass"
+                    placeholder="8 chiffres, ou TN-2026-14589"
+                    autocomplete="off"
+                  />
+                  <p
+                    class="rv-field-msg rv-field-msg--err"
+                    *ngIf="fieldError('numeroPermis') as msg"
+                  >
+                    {{ msg }}
+                  </p>
+                </div>
+                <div
+                  class="rv-field"
+                  [class.rv-field--invalid]="
+                    isFieldInvalid('licenseExpiryDate')
+                  "
+                >
+                  <label class="rv-float-label" for="rv-permis-exp"
+                    >Expiration</label
+                  >
+                  <input
+                    id="rv-permis-exp"
+                    type="date"
+                    formControlName="licenseExpiryDate"
+                    class="input-form w-full rv-input-glass"
+                    autocomplete="off"
+                  />
+                  <p
+                    class="rv-field-msg rv-field-msg--err"
+                    *ngIf="fieldError('licenseExpiryDate') as msg"
+                  >
+                    {{ msg }}
+                  </p>
+                </div>
+              </div>
+              <p
+                class="rv-field-msg rv-field-msg--err rv-field-msg--block"
+                *ngIf="bookingPermisHint as hint"
+              >
+                {{ hint }}
+              </p>
+
+              <div class="rv-polaroid">
+                <div class="rv-polaroid__mesh" aria-hidden="true"></div>
+                <label
+                  class="rv-polaroid__drop"
+                  [class.rv-polaroid__drop--ok]="!!licenseImageBase64"
+                  [class.rv-polaroid__drop--err]="
+                    isFieldInvalid('licenseProof')
+                  "
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onLicenseFileSelected($event)"
+                    class="hidden"
+                  />
+                  <ng-container *ngIf="!licenseImageBase64">
+                    <span class="material-symbols-outlined rv-polaroid__cam"
+                      >add_a_photo</span
+                    >
+                    <span class="rv-polaroid__cta"
+                      >Glisser-déposer ou cliquer</span
+                    >
+                    <span class="rv-polaroid__hint"
+                      >Recto lisible · JPEG/PNG · compression auto</span
+                    >
+                  </ng-container>
+                  <div class="rv-polaroid__preview" *ngIf="licenseImageBase64">
+                    <img [src]="licenseImageBase64" alt="Aperçu permis" />
+                    <span class="rv-polaroid__fname">{{
+                      selectedLicenseFileName
+                    }}</span>
+                  </div>
+                </label>
+              </div>
+              <p
+                class="rv-field-msg rv-field-msg--err"
+                *ngIf="fieldError('licenseProof') as msg"
+              >
+                {{ msg }}
+              </p>
+            </div>
+
+            <!-- AI Verification -->
+            <div
+              class="alert-banner"
+              [ngClass]="
+                licenseVerification?.valid ? 'alert-success' : 'alert-error'
+              "
+              *ngIf="canShowLicenseVerification"
+            >
+              <span class="material-symbols-outlined icon-2xl">{{
+                licenseVerification?.valid ? "verified" : "warning_amber"
+              }}</span>
+              <div class="flex-col flex-grow">
+                <p class="font-bold text-sm">
+                  {{
+                    licenseVerification?.valid
+                      ? "Permis Validé par IA !"
+                      : "Anomalie IA Détectée"
+                  }}
+                </p>
+                <p class="text-xs leading-tight opacity-90 mt-1">
+                  {{ licenseVerification?.message }}
+                </p>
+
+                <div
+                  class="rv-ai-compare"
+                  *ngIf="licenseVerification as verification"
+                >
+                  <p class="rv-ai-compare__title">Comparaison numéro permis</p>
+                  <div class="rv-ai-compare__row">
+                    <span class="rv-ai-compare__label">Numéro saisi</span>
+                    <strong class="rv-ai-compare__value">{{
+                      bookingForm.get("numeroPermis")?.value || "—"
+                    }}</strong>
+                  </div>
+                  <div class="rv-ai-compare__row">
+                    <span class="rv-ai-compare__label">Numéro extrait IA</span>
+                    <strong class="rv-ai-compare__value">{{
+                      verification.numeroExtrait || "Non détecté"
+                    }}</strong>
+                  </div>
+                  <div class="rv-ai-compare__row">
+                    <span class="rv-ai-compare__label">Résultat</span>
+                    <strong
+                      class="rv-ai-compare__value"
+                      [class.rv-ai-compare__value--ok]="
+                        verification.numeroMatch
+                      "
+                      [class.rv-ai-compare__value--ko]="
+                        !verification.numeroMatch
+                      "
+                    >
+                      {{
+                        verification.numeroMatch ? "Identique" : "Non identique"
+                      }}
+                    </strong>
+                  </div>
+                </div>
+
+                <div
+                  class="text-[10px] italic mt-2 opacity-80 border-t border-error-dark/20 pt-2"
+                  *ngIf="!licenseVerification?.valid"
+                >
+                  <p>
+                    Nom match:
+                    <strong>{{
+                      licenseVerification?.nomMatch ? "Oui" : "Non"
+                    }}</strong>
+                    | Prénom:
+                    <strong>{{
+                      licenseVerification?.prenomMatch ? "Oui" : "Non"
+                    }}</strong>
+                    | Naiss:
+                    <strong>{{
+                      licenseVerification?.dateNaissMatch ? "Oui" : "Non"
+                    }}</strong>
+                  </p>
+                  <p class="mt-1 font-bold text-error">
+                    Vous pouvez continuer. L'agence vérifiera ce permis
+                    manuellement avant confirmation.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex-col bg-surface p-5 rounded-md border border-light"
+              *ngIf="selectedLicenseFileName && !licenseVerification?.valid"
+            >
+              <div class="flex-between items-center mb-3">
+                <p
+                  class="text-[10px] uppercase font-black text-primary tracking-widest"
+                >
+                  Vérification IA facultative
+                </p>
+                <span class="badge badge-primary-light text-[9px]"
+                  ><span class="material-symbols-outlined icon-small"
+                    >smart_toy</span
+                  >
+                  Agent IA</span
+                >
+              </div>
+              <p
+                class="text-xs text-muted mb-4 leading-relaxed bg-surface-low p-3 border border-light-subtle rounded"
+              >
+                Notre système anti-fraude peut analyser votre document et
+                comparer : <br />
+                <strong class="text-dark"
+                  >Numéro, Date d'expiration, Nom, Prénom, Naissance.</strong
+                >
+                <br />Si l'IA ne répond pas, vous pouvez quand même transmettre
+                la réservation.
+              </p>
+              <button
+                class="btn btn-primary w-full shadow-sm"
+                type="button"
+                (click)="verifyLicenseWithAi()"
+                [disabled]="isVerifyingLicense || !hasSelectedLicenseFile"
+              >
+                <span
+                  class="material-symbols-outlined icon-small"
+                  *ngIf="!isVerifyingLicense"
+                  >auto_awesome</span
+                >
+                <div
+                  class="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full mr-2"
+                  *ngIf="isVerifyingLicense"
+                ></div>
+                {{
+                  isVerifyingLicense
+                    ? "Analyse en cours..."
+                    : "Lancer la vérification instantanée"
+                }}
+              </button>
+            </div>
+
+            <!-- Notes -->
+            <div class="rv-note">
+              <label class="rv-float-label" for="rv-note"
+                >Information complémentaire
+                <span class="text-muted font-medium">(optionnel)</span></label
+              >
+              <textarea
+                id="rv-note"
+                formControlName="note"
+                rows="2"
+                placeholder="Siège enfant, créneau de retrait…"
+                class="input-form w-full rv-input-glass"
+              ></textarea>
+            </div>
+
+            <!-- Terms -->
+            <div
+              class="rv-terms"
+              [class.rv-terms--invalid]="isFieldInvalid('acceptedTerms')"
+            >
+              <input
+                id="rv-terms"
+                formControlName="acceptedTerms"
+                type="checkbox"
+                class="rv-terms__check accent-primary"
+              />
+              <label for="rv-terms" class="rv-terms__label">
+                J'ai lu et j'accepte les conditions générales de location et je
+                certifie l'exactitude de ces informations.
+              </label>
+            </div>
+            <p
+              class="rv-field-msg rv-field-msg--err"
+              *ngIf="fieldError('acceptedTerms') as msg"
+            >
+              {{ msg }}
+            </p>
+          </form>
+        </div>
+
+        <!-- Payment Quote -->
+        <div
+          class="card premium-shadow bg-lowest p-8 border-l-4 border-warning rounded-lg mt-6"
+          *ngIf="reservationQuote"
+        >
+          <div
+            class="flex-between items-center mb-6 pb-4 border-b border-light"
+          >
+            <div class="flex-row items-center gap-3">
+              <span class="material-symbols-outlined text-warning icon-2xl"
+                >receipt_long</span
+              >
+              <h3 class="font-headline font-bold text-xl text-dark">
+                Devis Instantané
+              </h3>
+            </div>
+            <span class="badge badge-warning text-xs font-bold tracking-wider"
+              >{{ estimatedDays }} Jours</span
+            >
+          </div>
+
+          <div class="space-y-4 px-2 text-sm text-dark">
+            <div class="flex-between pb-3 border-b border-light-subtle">
+              <span class="text-muted font-medium"
+                >Prix Total Estimé (Locations)</span
+              >
+              <strong class="text-base">{{
+                estimatedTotalPrice | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pb-3 border-b border-light-subtle">
+              <span class="text-muted font-medium">Avance Requise (30%)</span>
+              <strong class="text-base">{{
+                advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pb-3 border-b border-light-subtle">
+              <span class="text-muted font-medium flex-row gap-1 items-center"
+                ><span class="material-symbols-outlined icon-small">lock</span>
+                Caution à bloquer</span
+              >
+              <strong class="text-base">{{
+                depositAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+            <div class="flex-between pt-3">
+              <span class="font-bold text-primary tracking-wide text-base"
+                >Paiement Initial à prévoir</span
+              >
+              <strong class="font-headline font-black text-2xl text-primary">{{
+                upfrontPaymentAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </div>
+          </div>
+          <div
+            class="bg-warning-light p-3 rounded text-warning-dark text-xs italic mt-6 border border-warning/20"
+          >
+            <span class="font-bold">Information:</span>
+            {{ paymentSummaryLabel }}
+          </div>
+        </div>
+
+        <!-- Global Alerts -->
+        <div class="alert-banner alert-error mt-4" *ngIf="error">
+          <span class="material-symbols-outlined">error</span>
+          <span class="text-sm">{{ error }}</span>
+        </div>
+        <div class="alert-banner alert-success mt-4" *ngIf="success">
+          <span class="material-symbols-outlined">check_circle</span>
+          <span class="text-sm">{{ success }}</span>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="flex-col gap-3 mt-6">
+          <button
+            class="btn btn-primary w-full py-4 shadow-premium text-lg uppercase tracking-wider"
+            type="submit"
+            form="rv-booking-form"
+            [disabled]="isSaving || isVerifyingLicense || !canSubmitReservation"
+          >
+            <span class="material-symbols-outlined mr-2" *ngIf="!isSaving"
+              >payments</span
+            >
+            <div
+              class="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full mr-2"
+              *ngIf="isSaving"
+            ></div>
+            {{
+              isSaving
+                ? "Enregistrement sécurisé..."
+                : "Transmettre la Réservation"
+            }}
+          </button>
+          <a
+            routerLink="/transport/location/client/recherche"
+            class="btn btn-surface w-full hover:bg-surface-high border border-medium py-3 text-sm font-bold text-muted transition"
+          >
+            Annuler et retourner à la recherche
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- Gallery Modal -->
+<div class="modal-overlay" *ngIf="isGalleryOpen" (click)="closeGallery()">
+  <div class="modal-photo fade-in" (click)="$event.stopPropagation()">
+    <div class="flex-between items-center w-full mb-4 px-2">
+      <span class="text-white font-bold text-lg drop-shadow-md"
+        >{{ vehicle?.marque }} {{ vehicle?.modele }}</span
+      >
+      <button
+        class="bg-black/60 text-white w-10 h-10 border-none rounded-full flex-center hover:bg-black/80 transition cursor-pointer"
+        (click)="closeGallery()"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div
+      class="relative flex-center w-full bg-[#050b14] rounded-xl overflow-hidden shadow-premium h-[75vh] border border-white/10"
+    >
+      <button
+        class="absolute left-4 bg-white/10 backdrop-blur-md text-white w-12 h-12 border-none rounded-full flex-center hover:bg-white/20 transition z-50 cursor-pointer"
+        *ngIf="galleryPhotos.length > 1"
+        (click)="prevGalleryPhoto()"
+      >
+        <span class="material-symbols-outlined icon-2xl">chevron_left</span>
+      </button>
+
+      <img
+        [src]="getCurrentGalleryPhotoUrl()"
+        alt="Photo véhicule"
+        class="max-w-full max-h-full object-contain select-none pointer-events-none"
+      />
+
+      <button
+        class="absolute right-4 bg-white/10 backdrop-blur-md text-white w-12 h-12 border-none rounded-full flex-center hover:bg-white/20 transition z-50 cursor-pointer"
+        *ngIf="galleryPhotos.length > 1"
+        (click)="nextGalleryPhoto()"
+      >
+        <span class="material-symbols-outlined icon-2xl">chevron_right</span>
+      </button>
+    </div>
+
+    <div class="flex-center gap-2 mt-6">
+      <span
+        class="text-white font-medium text-sm bg-black/50 px-4 py-1.5 rounded-full border border-white/20"
+        >{{ galleryIndex + 1 }} / {{ galleryPhotos.length }}</span
+      >
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingState>
+  <div class="flex-col flex-center min-h-[50vh] w-full" *ngIf="isLoading">
+    <div
+      class="animate-spin h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full mb-4"
+    ></div>
+    <p class="text-muted font-bold tracking-wider uppercase text-xs">
+      Chargement du véhicule...
+    </p>
+  </div>
+  <div class="flex-center min-h-[50vh] w-full" *ngIf="!isLoading && error">
+    <div class="alert-banner alert-error max-w-lg shadow-md">
+      <span class="material-symbols-outlined icon-2xl">error</span>
+      <span>{{ error }}</span>
+    </div>
+  </div>
+</ng-template>

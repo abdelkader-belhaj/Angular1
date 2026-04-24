@@ -1,0 +1,51 @@
+<aside class="driver-dock glass-surface">
+  <div class="dock-brand">
+    <h2>TunisiaTour</h2>
+    <p>Espace transporteur</p>
+  </div>
+  <nav class="dock-nav">
+    <button
+      class="dock-link"
+      [class.active]="activeSection === 'overview'"
+      type="button"
+      [routerLink]="['/transport/chauffeur-dashboard']"
+    >
+      <span>Vue d'ensemble</span>
+    </button>
+    <button
+      class="dock-link"
+      [class.active]="activeSection === 'courses'"
+      type="button"
+      [routerLink]="['/transport/chauffeur-historique-courses']"
+    >
+      <span>Mes Courses</span>
+    </button>
+    <button
+      class="dock-link"
+      [class.active]="activeSection === 'vehicles'"
+      type="button"
+      [routerLink]="['/transport/gestion-vehicules']"
+    >
+      <span>Mes Véhicules</span>
+    </button>
+
+    <button
+      class="dock-link"
+      [class.active]="activeSection === 'wallet'"
+      type="button"
+      [routerLink]="['/transport/chauffeur-portefeuille']"
+    >
+      <span>Portefeuille</span>
+    </button>
+
+    <button
+      class="dock-link"
+      [class.active]="activeSection === 'statistics'"
+      type="button"
+      [routerLink]="['/transport/chauffeur-statistiques']"
+    >
+      <span>Statistiques</span>
+    </button>
+  </nav>
+</aside>
+ 

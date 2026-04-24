@@ -1,0 +1,62 @@
+
+<section class="community-section">
+
+  <div class="section-header">
+    <h2>Community Hub</h2>
+    <p>
+      Rejoignez des discussions actives et partagez vos idées avec des passionnés du monde entier.
+    </p>
+    <p *ngIf="statusMessage" class="mt-3 text-sm text-blue-900 font-medium">{{ statusMessage }}</p>
+  </div>
+
+  <div class="community-grid">
+
+    <article
+      class="community-card"
+      *ngFor="let community of communities"
+      (click)="goToCommunity(community.id!)"
+    >
+
+      <!-- IMAGE -->
+      <div class="card-image-wrapper">
+        <img
+          class="card-image"
+          [src]="getImage(community.category)"
+          [alt]="community.name"
+        />
+      </div>
+
+      <!-- INFO -->
+      <div class="card-info">
+
+        <h4 class="card-name">{{ community.name }}</h4>
+
+        <p class="card-description">
+          {{ community.description }}
+        </p>
+
+        <div class="card-footer">
+          <span class="card-category">{{ community.category }}</span>
+          <span class="card-stats">
+            👥 {{ community.totalMembers || 0 }} membres
+          </span>
+        </div>
+
+        <div class="join-container">
+          <button
+            class="join-btn-pro"
+            [class.pending]="getUserRequestStatus(community) === 'pending'"
+            [class.approved]="getUserRequestStatus(community) === 'approved'"
+            (click)="handleJoinClick($event, community)"
+          >
+            <span class="btn-label">{{ getJoinLabel(community) }}</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </div>
+      </div>
+
+    </article>
+
+  </div>
+
+</section>

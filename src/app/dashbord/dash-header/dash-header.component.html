@@ -59,6 +59,14 @@
         </div>
       </div>
     </div>
+
+<header
+  class="admin-header flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+  [class.compact]="!showContextBlock"
+>
+  <div *ngIf="showContextBlock">
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Tableau de Bord</h1>
+    <p class="text-on-surface-variant">Espace administrateur pour gerer le compte courant et la session.</p>
   </div>
 
   <div class="admin-menu" (click)="$event.stopPropagation()">

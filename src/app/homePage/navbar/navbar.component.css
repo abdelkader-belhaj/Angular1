@@ -118,20 +118,37 @@
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 240px;
+  min-width: 290px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 14px 34px rgba(10, 22, 41, 0.2);
-  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 20px 44px rgba(10, 22, 41, 0.18);
+  padding: 10px;
   z-index: 200;
+}
+
+.user-dropdown-head {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px 10px;
+}
+
+.dropdown-title {
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.dropdown-subtitle {
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .user-bio-preview {
   margin: 2px 4px 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f8fbff;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3f8fd 100%);
   border: 1px solid var(--border);
 }
 
@@ -145,24 +162,37 @@
 
 .user-dropdown button {
   width: 100%;
-  text-align: left;
   border: 0;
   background: transparent;
   color: var(--text);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  text-align: left;
+
+  justify-content: space-between;
+  gap: 10px;
+
 }
 
 .user-dropdown button:hover {
   background: #f5f8ff;
 }
 
+.user-dropdown button .material-symbols-outlined {
+  font-size: 18px;
+  color: #0f66b5;
+}
+
 .user-dropdown hr {
   border: 0;
   border-top: 1px solid var(--border);
-  margin: 6px 0;
+  margin: 8px 0;
 }
 
 .logout-item {
@@ -247,6 +277,26 @@
   }
 }
 /* ========== FIN STYLES: MES RÉSERVATIONS ========== */
+
+
+
+.logout-item .material-symbols-outlined {
+  color: #b42318 !important;
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+
+}
+
 
 @media (max-width: 720px) {
   .navbar-inner {

@@ -1,0 +1,173 @@
+<div class="dashboard-container wallet-page">
+  <div class="sand-sea-orb orb-left"></div>
+  <div class="sand-sea-orb orb-right"></div>
+
+  <div class="dashboard-shell wallet-shell">
+    <app-chauffeur-sidenav
+      [activeSection]="'wallet'"
+      [showCta]="true"
+      [ctaLabel]="'Prendre une course'"
+      [ctaDisabled]="true"
+    ></app-chauffeur-sidenav>
+
+    <main class="wallet-main">
+      <section class="wallet-content">
+        <header class="wallet-header">
+          <div>
+            <p class="eyebrow">Portefeuille Chauffeur</p>
+            <h1>Historique des transactions</h1>
+            <p class="subtitle">
+              Suivez vos revenus en temps réel, vos débits et votre solde net.
+            </p>
+          </div>
+
+          <div class="header-actions">
+            <button type="button" class="btn-primary" (click)="onExportPdf()">
+              <span class="material-symbols-outlined">download</span>
+              Exporter PDF
+            </button>
+         
+          </div>
+        </header>
+
+        <p class="error-banner" *ngIf="error">{{ error }}</p>
+        <p class="info-banner" *ngIf="actionNotice">{{ actionNotice }}</p>
+
+        <div class="loading-state" *ngIf="isLoading">
+          <div class="spinner"></div>
+          <p>Chargement du portefeuille...</p>
+        </div>
+
+        <section class="stats-grid" *ngIf="!isLoading">
+          <article class="stat-card">
+            <div class="stat-head">
+              <span>Total crédits</span>
+              <span class="material-symbols-outlined icon-credit"
+                >trending_up</span
+              >
+            </div>
+            <strong class="value credit"
+              >+
+              {{ totalCredits | currency: 'TND' : 'symbol' : '1.0-0' }}
+            </strong>
+            <p class="hint">Flux entrants</p>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-head">
+              <span>Total débits</span>
+              <span class="material-symbols-outlined icon-debit"
+                >trending_down</span
+              >
+            </div>
+            <strong class="value debit"
+              >-
+              {{ totalDebits | currency: 'TND' : 'symbol' : '1.0-0' }}
+            </strong>
+            <p class="hint">Retraits / sorties</p>
+          </article>
+
+          <article class="stat-card stat-balance">
+            <div class="stat-head">
+              <span>Solde net</span>
+              <span class="material-symbols-outlined"
+                >account_balance_wallet</span
+              >
+            </div>
+            <strong class="value">{{
+              netBalance | currency: 'TND' : 'symbol' : '1.0-0'
+            }}</strong>
+            <p class="hint">Disponible</p>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-head">
+              <span>Transactions</span>
+              <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <strong class="value">{{ transactions.length }}</strong>
+            <p class="hint">Historique total</p>
+          </article>
+        </section>
+
+        <article
+          class="transactions-panel"
+          *ngIf="filteredTransactions.length; else noTransactions"
+        >
+          <div class="panel-head">
+            <h2>Dernières transactions</h2>
+            <div class="filter-box">
+              <span class="material-symbols-outlined">search</span>
+              <input
+                type="text"
+                placeholder="Filtrer..."
+                [(ngModel)]="searchTerm"
+                name="walletFilter"
+              />
+            </div>
+          </div>
+
+          <div class="table-head row">
+            <span>Date</span>
+            <span>Type</span>
+            <span>Description</span>
+            <span class="amount-col">Montant</span>
+            <span class="status-col">Nature</span>
+          </div>
+
+          <div class="transaction-list">
+            <div
+              class="transaction-row row"
+              *ngFor="let tx of filteredTransactions"
+            >
+              <span class="date-cell">{{
+                tx.dateTransaction | date: 'dd MMM yyyy, HH:mm'
+              }}</span>
+              <span class="type-cell">
+                <span
+                  class="material-symbols-outlined"
+                  [class.credit]="isCredit(tx.type)"
+                  [class.debit]="!isCredit(tx.type)"
+                >
+                  {{ isCredit(tx.type) ? 'north_east' : 'south_west' }}
+                </span>
+                {{ getTypeLabel(tx.type) }}
+              </span>
+              <span class="desc">{{ tx.description || '-' }}</span>
+              <span
+                class="amount-col"
+                [class.credit]="isCredit(tx.type)"
+                [class.debit]="!isCredit(tx.type)"
+              >
+                {{ isCredit(tx.type) ? '+' : '-' }}
+                {{ tx.montant | currency: 'TND' : 'symbol' : '1.0-0' }}
+              </span>
+              <span class="status-col">
+                <span
+                  class="nature-badge"
+                  [class.credit-badge]="isCredit(tx.type)"
+                  [class.debit-badge]="!isCredit(tx.type)"
+                >
+                  {{ isCredit(tx.type) ? 'Crédit' : 'Débit' }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <ng-template #noTransactions>
+          <div class="empty-state" *ngIf="!isLoading">
+            <span class="material-symbols-outlined">inbox</span>
+            <p>
+              {{
+                transactions.length
+                  ? 'Aucun résultat pour ce filtre.'
+                  : 'Aucune transaction trouvée.'
+              }}
+            </p>
+          </div>
+        </ng-template>
+      </section>
+    </main>
+  </div>
+</div>

@@ -1,83 +1,216 @@
-<main class="settings-page">
-  <section class="settings-card">
-    <header>
-      <p class="eyebrow">Mon compte</p>
-      <h1>Mon profil</h1>
-      <p>Mettez a jour vos informations personnelles.</p>
-    </header>
+<main class="profile-shell">
+  <section class="profile-page">
+    <section class="profile-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">TunisiaTour Profile</p>
+        <h1>Un profil plus professionnel, clair et adapte a votre espace utilisateur</h1>
+        <p class="hero-text">
+          Centralisez vos informations personnelles, votre bio et votre Face ID dans une interface plus moderne
+          et plus elegante.
+        </p>
 
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-      <label>
-        <span>Nom utilisateur</span>
-        <input type="text" formControlName="username" placeholder="Votre nom" />
-      </label>
-
-      <label>
-        <span>Email</span>
-        <input type="email" formControlName="email" placeholder="vous@exemple.com" />
-      </label>
-
-      <label>
-        <span>Telephone</span>
-        <input type="text" formControlName="phone" placeholder="Votre numero" />
-      </label>
-
-      <label>
-        <span>Bio</span>
-        <textarea formControlName="bio" rows="4" placeholder="Parlez de vous"></textarea>
-      </label>
-
-      <p class="error" *ngIf="error">{{ error }}</p>
-      <p class="success" *ngIf="message">{{ message }}</p>
-
-      <button type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications' }}
-      </button>
-    </form>
-
-    <section class="face-card">
-      <h2>Face ID</h2>
-      <p>Mettez a jour votre visage pour la connexion Face ID.</p>
-
-      <div class="camera-frame">
-        <video *ngIf="faceCameraOpen" #faceVideo class="camera-preview" autoplay playsinline muted></video>
-        <img *ngIf="!faceCameraOpen && faceImageBase64" [src]="faceImageBase64" class="camera-preview" alt="Capture Face ID" />
-        <div *ngIf="!faceCameraOpen && !faceImageBase64" class="camera-empty">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M9 4 7.59 5.41 9.17 7H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.17l1.58-1.59L15 4H9zm3 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z"/>
-          </svg>
-          <span>Aucune capture Face ID</span>
-          <small>Ouvrez la camera puis capturez votre visage.</small>
+        <div class="hero-chips">
+          <span class="hero-chip">
+            <span class="material-symbols-outlined">badge</span>
+            Profil professionnel
+          </span>
+          <span class="hero-chip">
+            <span class="material-symbols-outlined">photo_camera_front</span>
+            Face ID integre
+          </span>
         </div>
       </div>
 
-      <div class="face-actions">
-        <button type="button" class="action-pill" (click)="openFaceCamera()" [disabled]="isFaceSubmitting" aria-label="Ouvrir la camera" title="Ouvrir la camera">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M9 4 7.59 5.41 9.17 7H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.17l1.58-1.59L15 4H9zm3 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z"/>
-          </svg>
-          <span>Ouvrir</span>
-        </button>
-        <button type="button" class="action-pill primary-action" (click)="captureFace()" [disabled]="!faceCameraOpen || isFaceSubmitting" aria-label="Capturer la photo" title="Capturer">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M9 3 7.17 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9zm3 4.5A4.5 4.5 0 1 1 12 16a4.5 4.5 0 0 1 0-9zm0 2A2.5 2.5 0 1 0 12 14a2.5 2.5 0 0 0 0-5z"/>
-          </svg>
-          <span>Capturer</span>
-        </button>
-        <button type="button" class="action-pill" (click)="clearFaceCapture()" [disabled]="isFaceSubmitting || !faceImageBase64" aria-label="Reinitialiser la capture" title="Reinitialiser">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M12 5a7 7 0 1 1-6.32 4H3l3.5-4L10 9H7.96A5 5 0 1 0 12 7.5V5zm0 4.5 4 3-4 3v-2h-3V11h3V9.5z"/>
-          </svg>
-          <span>Reset</span>
-        </button>
-      </div>
+      <aside class="profile-summary-card">
+        <div class="summary-avatar">
+          {{ (form.controls.username.value || currentUser?.username || '?').charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <p class="summary-label">Compte actif</p>
+          <h2>{{ form.controls.username.value || currentUser?.username || 'Utilisateur' }}</h2>
+          <p class="summary-text">{{ form.controls.email.value || currentUser?.email || 'Email indisponible' }}</p>
+        </div>
 
-      <p class="error" *ngIf="faceError">{{ faceError }}</p>
-      <p class="success" *ngIf="faceMessage">{{ faceMessage }}</p>
+        <div class="summary-grid">
+          <div class="summary-item progress-item">
+            <strong>Profil complete</strong>
+            <span>{{ profileCompletion }}%</span>
+            <div class="progress-bar" aria-hidden="true">
+              <span [style.width.%]="profileCompletion"></span>
+            </div>
+          </div>
+          <div class="summary-item">
+            <strong>Telephone</strong>
+            <span>{{ hasPhone ? form.controls.phone.value : 'Non renseigne' }}</span>
+          </div>
+          <div class="summary-item">
+            <strong>Bio</strong>
+            <span>{{ hasBio ? 'Disponible' : 'A completer' }}</span>
+          </div>
+          <div class="summary-item">
+            <strong>Face ID</strong>
+            <span>{{ faceStatusLabel }}</span>
+          </div>
+        </div>
+      </aside>
+    </section>
 
-      <button type="button" (click)="saveFaceId()" [disabled]="isFaceSubmitting">
-        {{ isFaceSubmitting ? 'Mise a jour Face ID...' : 'Enregistrer Face ID' }}
-      </button>
+    <section class="profile-card">
+      <nav class="profile-subnav" aria-label="Sections du profil">
+        <button
+          type="button"
+          class="subnav-btn"
+          [class.active]="activeSection === 'profile'"
+          (click)="setActiveSection('profile')"
+        >
+          <span class="material-symbols-outlined">person</span>
+          Mise a jour profil
+        </button>
+
+        <button
+          type="button"
+          class="subnav-btn"
+          [class.active]="activeSection === 'bio'"
+          (click)="setActiveSection('bio')"
+        >
+          <span class="material-symbols-outlined">edit_note</span>
+          Bio
+        </button>
+
+        <button
+          type="button"
+          class="subnav-btn"
+          [class.active]="activeSection === 'faceId'"
+          (click)="setActiveSection('faceId')"
+        >
+          <span class="material-symbols-outlined">face</span>
+          Face ID
+        </button>
+      </nav>
+
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <section class="panel-card" *ngIf="activeSection === 'profile'">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Informations principales</p>
+              <h2>Mise a jour du profil</h2>
+              <p class="panel-text">Gardez vos coordonnees a jour pour offrir une experience plus fiable sur TunisiaTour.</p>
+            </div>
+            <span class="status-badge" [class.ready]="!hasUnsavedChanges">
+              {{ hasUnsavedChanges ? 'Modifications en attente' : 'A jour' }}
+            </span>
+          </div>
+
+          <div class="fields-grid">
+            <label>
+              <span>Nom utilisateur</span>
+              <input type="text" formControlName="username" placeholder="Votre nom" />
+            </label>
+
+            <label>
+              <span>Email</span>
+              <input type="email" formControlName="email" placeholder="vous@exemple.com" readonly class="readonly-field" />
+              <small class="field-note">L adresse email est fixe et ne peut pas etre modifiee.</small>
+            </label>
+
+            <label class="field-span-2">
+              <span>Telephone</span>
+              <input type="text" formControlName="phone" placeholder="Votre numero" />
+            </label>
+          </div>
+
+          <p class="error" *ngIf="error">{{ error }}</p>
+          <p class="success" *ngIf="message">{{ message }}</p>
+
+          <button type="submit" [disabled]="isSubmitting || !hasUnsavedChanges">
+            <span class="material-symbols-outlined">{{ isSubmitting ? 'progress_activity' : 'save' }}</span>
+            {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+          </button>
+        </section>
+
+        <section class="panel-card" *ngIf="activeSection === 'bio'">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Presentation</p>
+              <h2>Bio et description</h2>
+              <p class="panel-text">Ajoutez une presentation plus humaine et plus professionnelle pour votre compte.</p>
+            </div>
+            <span class="status-badge" [class.ready]="hasBio">{{ hasBio ? 'Completee' : 'A completer' }}</span>
+          </div>
+
+          <label>
+            <span>Bio</span>
+            <textarea formControlName="bio" rows="8" placeholder="Parlez de vous, de votre activite ou de votre role sur TunisiaTour"></textarea>
+          </label>
+
+          <p class="error" *ngIf="error">{{ error }}</p>
+          <p class="success" *ngIf="message">{{ message }}</p>
+
+          <button type="submit" [disabled]="isSubmitting || !hasUnsavedChanges">
+            <span class="material-symbols-outlined">{{ isSubmitting ? 'progress_activity' : 'draw' }}</span>
+            {{ isSubmitting ? 'Enregistrement...' : 'Mettre a jour la bio' }}
+          </button>
+        </section>
+      </form>
+
+      <section class="panel-card face-panel" *ngIf="activeSection === 'faceId'">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Authentification visuelle</p>
+            <h2>Ajouter ou mettre a jour Face ID</h2>
+            <p class="panel-text">Activez une methode de connexion plus rapide si elle est necessaire pour votre usage.</p>
+          </div>
+          <span class="status-badge optional">Optionnel</span>
+        </div>
+
+        <div class="face-layout">
+          <div class="camera-frame">
+            <video *ngIf="faceCameraOpen" #faceVideo class="camera-preview" autoplay playsinline muted></video>
+            <img *ngIf="!faceCameraOpen && faceImageBase64" [src]="faceImageBase64" class="camera-preview" alt="Capture Face ID" />
+            <div *ngIf="!faceCameraOpen && !faceImageBase64" class="camera-empty">
+              <span class="material-symbols-outlined">photo_camera_front</span>
+              <span>Aucune capture Face ID</span>
+              <small>Ouvrez la camera puis capturez votre visage pour enregistrer votre Face ID.</small>
+            </div>
+          </div>
+
+          <div class="face-side">
+            <div class="tip-card">
+              <p class="tip-title">Conseils pour une bonne capture</p>
+              <ul>
+                <li>Placez votre visage bien au centre</li>
+                <li>Utilisez une lumiere suffisante</li>
+                <li>Evitez les ombres fortes et le flou</li>
+              </ul>
+            </div>
+
+            <div class="face-actions">
+              <button type="button" class="soft-btn" (click)="openFaceCamera()" [disabled]="isFaceSubmitting">
+                <span class="material-symbols-outlined">videocam</span>
+                Ouvrir la camera
+              </button>
+
+              <button type="button" class="primary-btn" (click)="captureFace()" [disabled]="!faceCameraOpen || isFaceSubmitting">
+                <span class="material-symbols-outlined">camera</span>
+                Capturer
+              </button>
+
+              <button type="button" class="soft-btn" (click)="clearFaceCapture()" [disabled]="isFaceSubmitting || !faceImageBase64">
+                <span class="material-symbols-outlined">restart_alt</span>
+                Reinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p class="error" *ngIf="faceError">{{ faceError }}</p>
+        <p class="success" *ngIf="faceMessage">{{ faceMessage }}</p>
+
+        <button type="button" class="save-face-btn" (click)="saveFaceId()" [disabled]="isFaceSubmitting">
+          <span class="material-symbols-outlined">{{ isFaceSubmitting ? 'progress_activity' : 'verified_user' }}</span>
+          {{ isFaceSubmitting ? 'Mise a jour Face ID...' : 'Enregistrer Face ID' }}
+        </button>
+      </section>
     </section>
   </section>
 </main>

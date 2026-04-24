@@ -1,0 +1,148 @@
+<div class="stripe-payment-container">
+  <!-- En-tête -->
+  <div class="payment-header">
+    <h2>💳 Paiement de la Course</h2>
+    <p class="subtitle">Étape finale - Confirmez votre paiement</p>
+  </div>
+
+  <!-- Chargement initial -->
+  <div *ngIf="state.step === 'init'" class="loading-state">
+    <div class="spinner"></div>
+    <p>Préparation du paiement...</p>
+  </div>
+
+  <!-- Formulaire de paiement -->
+  <ng-container *ngIf="state.step === 'form' || state.step === 'processing'">
+    <!-- Résumé du paiement -->
+    <div *ngIf="paymentDetails" class="payment-summary">
+      <div class="summary-item" *ngIf="grossAmount > 0">
+        <span>Montant course:</span>
+        <strong>{{ grossAmount | currency: 'TND' }}</strong>
+      </div>
+
+      <div class="summary-item" *ngIf="preauthorizedAmount > 0">
+        <span>Pré-autorisation déjà prise:</span>
+        <strong class="fee"
+          >- {{ preauthorizedAmount | currency: 'TND' }}</strong
+        >
+      </div>
+
+      <div class="summary-item">
+        <span>Montant restant à payer:</span>
+        <strong class="amount">{{ payableAmount | currency: 'TND' }}</strong>
+      </div>
+
+      <div class="summary-details">
+        <div class="detail-row">
+          <span>Frais plateforme:</span>
+          <span class="fee"
+            >- {{ paymentDetails.montantCommission | currency: 'TND' }}</span
+          >
+        </div>
+        <hr />
+        <div class="detail-row">
+          <span>Montant chauffeur:</span>
+          <span class="driver-amount">{{
+            paymentDetails.montantNet | currency: 'TND'
+          }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Données client (optionnel) -->
+    <div class="customer-info">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="customerEmail"
+          placeholder="votre@email.com"
+          class="form-input"
+        />
+      </div>
+      <div class="form-group">
+        <label for="name">Nom</label>
+        <input
+          type="text"
+          id="name"
+          [(ngModel)]="customerName"
+          placeholder="Votre nom"
+          class="form-input"
+        />
+      </div>
+    </div>
+
+    <!-- Élément carte Stripe -->
+    <div class="card-container">
+      <label>Informations de paiement</label>
+      <div id="card-element" class="card-element"></div>
+      <div id="card-errors" class="error-message"></div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="action-buttons">
+      <button
+        class="btn btn-primary"
+        (click)="onPayClick()"
+        [disabled]="
+          state.loading || state.step !== 'form' || payableAmount <= 0
+        "
+        [attr.aria-busy]="state.loading"
+      >
+        <span *ngIf="!state.loading"
+          >💳 Payer {{ payableAmount | currency: 'TND' }}</span
+        >
+        <span *ngIf="state.loading" class="loading-spinner">Traitement...</span>
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="state.loading"
+      >
+        Annuler
+      </button>
+    </div>
+
+    <!-- Sécurité message -->
+    <div class="security-notice">🔒 Votre paiement est sécurisé par Stripe</div>
+  </ng-container>
+
+  <!-- État de succès -->
+  <div *ngIf="state.step === 'success'" class="success-state">
+    <div class="success-icon">✅</div>
+    <h3>Paiement Réussi!</h3>
+    <p>Votre course a été confirmée et payée avec succès.</p>
+    <div class="success-details" *ngIf="paymentDetails">
+      <p>
+        Montant payé: <strong>{{ payableAmount | currency: 'TND' }}</strong>
+      </p>
+      <p>
+        Numéro de transaction: <strong>#{{ paymentDetails.paiementId }}</strong>
+      </p>
+    </div>
+    <div class="success-details" *ngIf="verificationCode">
+      <p>
+        Code de vérification chauffeur:
+        <strong>{{ verificationCode }}</strong>
+      </p>
+      <p>Communiquez ce code au chauffeur pour valider le paiement.</p>
+    </div>
+    <p class="redirect-message">Redirection en cours...</p>
+  </div>
+
+  <!-- État d'erreur -->
+  <div *ngIf="state.step === 'error'" class="error-state">
+    <div class="error-icon">❌</div>
+    <h3>Erreur de Paiement</h3>
+    <p class="error-message">{{ state.error }}</p>
+
+    <div class="error-actions">
+      <button class="btn btn-primary" (click)="loadPaymentIntent()">
+        Réessayer
+      </button>
+      <button class="btn btn-secondary" (click)="onCancel()">Annuler</button>
+    </div>
+  </div>
+</div>

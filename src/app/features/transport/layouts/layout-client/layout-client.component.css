@@ -1,0 +1,60 @@
+.layout-client {
+  --nav-primary: #0d2c66;
+  --nav-primary-2: #1b4ca2;
+  --nav-link-hover: rgba(255, 255, 255, 0.2);
+  --nav-shadow: 0 6px 20px rgba(11, 44, 103, 0.22);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 64px;
+  background: linear-gradient(
+    135deg,
+    var(--nav-primary) 0%,
+    var(--nav-primary-2) 100%
+  );
+  color: white;
+  box-shadow: var(--nav-shadow);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  margin-left: 48px;
+  flex: 1;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.nav a:hover,
+.nav a.active {
+  background: var(--nav-link-hover);
+}
+
+.main-content {
+  flex: 1;
+  padding: 24px;
+  background: #f5f5f5;
+}

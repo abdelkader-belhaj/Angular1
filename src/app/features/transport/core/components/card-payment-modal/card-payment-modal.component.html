@@ -1,0 +1,100 @@
+<!-- Modal Card Payment -->
+<div class="modal-overlay" *ngIf="isOpen" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>💳 Ajouter une carte</h2>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onCancel()"
+        [disabled]="isLoading"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <!-- Error message -->
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <span>⚠️ {{ errorMessage }}</span>
+      </div>
+
+      <!-- Init Step: Payment Summary -->
+      <div
+        *ngIf="step === 'init' || step === 'processing'"
+        class="payment-summary"
+      >
+        <div class="summary-row">
+          <span>Prix estimé</span>
+          <strong>{{ totalAmount }} TND</strong>
+        </div>
+        <div class="summary-row highlight">
+          <span>{{ holdLabel }}</span>
+          <strong>{{ holdAmount.toFixed(2) }} TND</strong>
+        </div>
+        <p class="summary-note">
+          {{ holdDescription }}
+        </p>
+      </div>
+
+      <!-- Card Form (Static Mode) -->
+      <div *ngIf="step === 'processing'" class="form-section">
+        <h3>Détails de la carte</h3>
+
+        <!-- Simulated Stripe element -->
+        <div id="card-element-modal" class="stripe-element">
+          <div class="card-display">
+            <div class="card-number">
+              <span>{{ cardNumber }}</span>
+            </div>
+            <div class="card-meta">
+              <div class="card-expiry">
+                {{ cardExpiry }}
+              </div>
+              <div class="card-cvc">CVC: {{ cardCvc }}</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="stripe-note">
+          ✨ Mode statique. L'intégration Stripe réelle sera activée en
+          production.
+        </p>
+      </div>
+
+      <!-- Success Step -->
+      <div *ngIf="step === 'success'" class="success-message">
+        <div class="success-icon">✅</div>
+        <p>Carte confirmée avec succès!</p>
+        <p class="submit-note">
+          Hold de {{ holdAmount.toFixed(2) }} TND pré-autorisé.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer / Actions -->
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isLoading || step === 'success'"
+      >
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="onConfirmCard()"
+        [disabled]="isLoading || !paymentDetails"
+        *ngIf="step === 'processing'"
+      >
+        <span *ngIf="!isLoading">💰 Confirmer et pré-autoriser</span>
+        <span *ngIf="isLoading">Traitement...</span>
+      </button>
+    </div>
+  </div>
+</div>

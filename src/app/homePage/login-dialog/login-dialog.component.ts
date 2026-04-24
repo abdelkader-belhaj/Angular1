@@ -1,9 +1,26 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 @Component({
   selector: 'app-login-dialog',
@@ -13,6 +30,9 @@ import { AuthService } from '../../services/auth.service';
 export class LoginDialogComponent implements OnChanges, OnDestroy {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
+  @ViewChild('loginVideo') loginVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('registerVideo') registerVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('googleButton') googleButtonRef?: ElementRef<HTMLDivElement>;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -20,11 +40,22 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
 
   mode: 'login' | 'register' | 'forgot' = 'login';
   roleDialogOpen = false;
+  registerFaceDialogOpen = false;
+  loginFaceDialogOpen = false;
   loginError = '';
+  faceLoginError = '';
   registerError = '';
+  faceRegisterError = '';
   forgotError = '';
   forgotSuccess = '';
   isSubmitting = false;
+  loginFaceImageBase64 = '';
+  registerFaceImageBase64 = '';
+  loginCameraOpen = false;
+  registerCameraOpen = false;
+  private loginCameraStream: MediaStream | null = null;
+  private registerCameraStream: MediaStream | null = null;
+  private googleInitialized = false;
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -52,27 +83,112 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
     { value: 'AIRLINE_PARTNER', label: 'Airline Partner', description: 'Partenaire compagnie aerienne' },
     { value: 'ORGANISATEUR', label: 'Organisateur', description: 'Evenements et experiences' },
     { value: 'VENDEUR_ARTI', label: 'Vendeur Artisan', description: 'Produits artisanaux' },
-    { value: 'SOCIETE', label: 'Societe', description: 'Compte entreprise' },
-    { value: 'ADMIN', label: 'Admin', description: 'Administration globale' }
+    { value: 'SOCIETE', label: 'Societe', description: 'Compte entreprise' }
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen']) {
       document.body.classList.toggle('dialog-open', this.isOpen);
+
+      if (this.isOpen) {
+        setTimeout(() => this.renderGoogleButton(), 0);
+      }
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (this.isOpen) {
+      setTimeout(() => this.renderGoogleButton(), 0);
     }
   }
 
   ngOnDestroy(): void {
+    this.stopCamera('login');
+    this.stopCamera('register');
     document.body.classList.remove('dialog-open');
+  }
+
+  private initGoogleIfNeeded(): void {
+    if (this.googleInitialized) {
+      return;
+    }
+
+    const clientId = this.readGoogleClientIdFromMeta();
+    if (!clientId) {
+      this.loginError = 'Google Client ID manquant dans index.html.';
+      return;
+    }
+
+    if (!window.google?.accounts?.id) {
+      this.loginError = 'SDK Google non charge. Rechargez la page.';
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: ({ credential }) => {
+        if (!credential) {
+          this.loginError = 'Token Google manquant.';
+          return;
+        }
+
+        void this.handleGoogleCredential(credential);
+      }
+    });
+
+    this.googleInitialized = true;
+  }
+
+  private renderGoogleButton(): void {
+    const container = this.googleButtonRef?.nativeElement;
+
+    if (!container) {
+      return;
+    }
+
+    this.initGoogleIfNeeded();
+    if (!this.googleInitialized || !window.google?.accounts?.id) {
+      return;
+    }
+
+    container.innerHTML = '';
+
+    window.google.accounts.id.renderButton(container, {
+      theme: 'outline',
+      size: 'large',
+      width: 360,
+      text: 'signin_with',
+      shape: 'pill',
+      logo_alignment: 'left'
+    });
+  }
+
+  private readGoogleClientIdFromMeta(): string | null {
+    const meta = document.querySelector('meta[name="google-signin-client_id"]');
+    const clientId = meta?.getAttribute('content')?.trim();
+
+    if (!clientId || clientId.startsWith('CHANGE_ME_')) {
+      return null;
+    }
+
+    return clientId;
   }
 
   close(): void {
     this.mode = 'login';
     this.roleDialogOpen = false;
+    this.registerFaceDialogOpen = false;
+    this.loginFaceDialogOpen = false;
     this.loginError = '';
+    this.faceLoginError = '';
     this.registerError = '';
+    this.faceRegisterError = '';
     this.forgotError = '';
     this.forgotSuccess = '';
+    this.loginFaceImageBase64 = '';
+    this.registerFaceImageBase64 = '';
+    this.stopCamera('login');
+    this.stopCamera('register');
     this.loginForm.markAsPristine();
     this.registerForm.markAsPristine();
     this.forgotForm.markAsPristine();
@@ -82,13 +198,32 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
   switchMode(mode: 'login' | 'register' | 'forgot'): void {
     this.mode = mode;
     this.roleDialogOpen = false;
+    if (mode !== 'register') {
+      this.registerFaceDialogOpen = false;
+    }
+    if (mode !== 'login') {
+      this.loginFaceDialogOpen = false;
+    }
     this.loginError = '';
+    this.faceLoginError = '';
     this.registerError = '';
+    this.faceRegisterError = '';
     this.forgotError = '';
     this.forgotSuccess = '';
 
+    if (mode !== 'login') {
+      this.stopCamera('login');
+    }
+    if (mode !== 'register') {
+      this.stopCamera('register');
+    }
+
     if (mode === 'forgot') {
       this.forgotForm.patchValue({ email: this.loginForm.controls.email.value });
+    }
+
+    if (mode === 'register' && !this.registerFaceImageBase64) {
+      void this.openRegisterFaceDialog();
     }
   }
 
@@ -104,6 +239,56 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
     this.registerForm.controls.role.setValue(role);
     this.registerForm.controls.role.markAsDirty();
     this.closeRoleDialog();
+  }
+
+  async openLoginFaceDialog(): Promise<void> {
+    this.loginFaceDialogOpen = true;
+    this.faceLoginError = '';
+
+    if (!this.loginCameraOpen && !this.loginFaceImageBase64) {
+      await this.startCamera('login');
+    }
+  }
+
+  closeLoginFaceDialog(): void {
+    this.loginFaceDialogOpen = false;
+    this.stopCamera('login');
+  }
+
+  clearLoginFaceCapture(): void {
+    this.loginFaceImageBase64 = '';
+    this.faceLoginError = '';
+    void this.startCamera('login');
+  }
+
+  async openRegisterFaceDialog(): Promise<void> {
+    this.registerFaceDialogOpen = true;
+    this.faceRegisterError = '';
+
+    if (!this.registerCameraOpen && !this.registerFaceImageBase64) {
+      await this.startCamera('register');
+    }
+  }
+
+  closeRegisterFaceDialog(): void {
+    this.registerFaceDialogOpen = false;
+    this.stopCamera('register');
+  }
+
+  clearRegisterFaceCapture(): void {
+    this.registerFaceImageBase64 = '';
+    this.faceRegisterError = '';
+    void this.startCamera('register');
+  }
+
+  useCapturedRegisterFace(): void {
+    if (!this.registerFaceImageBase64) {
+      this.faceRegisterError = 'Veuillez prendre une photo avant de valider.';
+      return;
+    }
+
+    this.faceRegisterError = '';
+    this.closeRegisterFaceDialog();
   }
 
   get selectedRoleLabel(): string {
@@ -135,16 +320,73 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
         })
       );
 
-      if (this.authService.isPendingApproval(auth.user)) {
-        await this.router.navigate(['/waiting-approval']);
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            returnTo: targetRoute
+          }
+        });
       } else {
-        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
-        await this.router.navigate([targetRoute]);
+        alert('Connexion Google reussie. Pensez a ajouter un mot de passe dans Securite pour vous connecter aussi avec email + mot de passe.');
+        await this.router.navigateByUrl(targetRoute);
       }
 
       this.close();
-    } catch (err: any) {
-      this.loginError = err?.error?.message || 'Erreur de connexion';
+    } catch (error) {
+      if (this.isPendingApprovalError(error)) {
+        this.authService.clearLocalAuth();
+        this.close();
+        await this.router.navigate(['/waiting-approval'], {
+          queryParams: { email: this.loginForm.controls.email.value }
+        });
+        return;
+      }
+
+      this.loginError = this.extractLoginError(error);
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private async handleGoogleCredential(idToken: string): Promise<void> {
+    this.isSubmitting = true;
+    this.loginError = '';
+
+    try {
+      const auth = await firstValueFrom(this.authService.loginWithGoogle({ idToken }));
+
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      alert('Connexion Google reussie. Pour la prochaine connexion avec email + mot de passe, veuillez ajouter votre mot de passe maintenant.');
+
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            recommendPasswordSetup: '1',
+            returnTo: targetRoute
+          }
+        });
+      } else {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendPasswordSetup: '1',
+            returnTo: targetRoute
+          }
+        });
+      }
+
+      this.close();
+    } catch (error) {
+      if (this.isPendingApprovalError(error)) {
+        this.authService.clearLocalAuth();
+        this.close();
+        await this.router.navigate(['/waiting-approval']);
+        return;
+      }
+
+      this.loginError = this.extractAuthError(error, 'Connexion Google impossible pour le moment.');
     } finally {
       this.isSubmitting = false;
     }
@@ -169,8 +411,143 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
     return fallback;
   }
 
+  async startCamera(target: 'login' | 'register'): Promise<void> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: false
+      });
+
+      if (target === 'login') {
+        this.stopCamera('login');
+        this.loginCameraStream = stream;
+        this.loginCameraOpen = true;
+        this.faceLoginError = '';
+      } else {
+        this.stopCamera('register');
+        this.registerCameraStream = stream;
+        this.registerCameraOpen = true;
+        this.faceRegisterError = '';
+      }
+
+      setTimeout(() => this.attachStream(target), 0);
+    } catch {
+      if (target === 'login') {
+        this.faceLoginError = 'Impossible d acceder a la camera.';
+      } else {
+        this.faceRegisterError = 'Impossible d acceder a la camera.';
+      }
+    }
+  }
+
+  stopCamera(target: 'login' | 'register'): void {
+    const stream = target === 'login' ? this.loginCameraStream : this.registerCameraStream;
+    stream?.getTracks().forEach((track) => track.stop());
+
+    if (target === 'login') {
+      this.loginCameraStream = null;
+      this.loginCameraOpen = false;
+    } else {
+      this.registerCameraStream = null;
+      this.registerCameraOpen = false;
+    }
+  }
+
+  captureFace(target: 'login' | 'register'): void {
+    const video = target === 'login' ? this.loginVideoRef?.nativeElement : this.registerVideoRef?.nativeElement;
+
+    if (!video || video.videoWidth <= 0 || video.videoHeight <= 0) {
+      if (target === 'login') {
+        this.faceLoginError = 'Flux camera non disponible.';
+      } else {
+        this.faceRegisterError = 'Flux camera non disponible.';
+      }
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      if (target === 'login') {
+        this.faceLoginError = 'Capture impossible.';
+      } else {
+        this.faceRegisterError = 'Capture impossible.';
+      }
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const base64 = canvas.toDataURL('image/jpeg', 0.92);
+
+    if (target === 'login') {
+      this.loginFaceImageBase64 = base64;
+      this.faceLoginError = '';
+    } else {
+      this.registerFaceImageBase64 = base64;
+      this.faceRegisterError = '';
+    }
+
+    this.stopCamera(target);
+  }
+
+  async submitLoginWithFace(): Promise<void> {
+    this.faceLoginError = '';
+
+    if (!this.loginForm.controls.email.value) {
+      this.faceLoginError = 'Email obligatoire pour la connexion Face ID.';
+      return;
+    }
+
+    if (!this.loginFaceImageBase64) {
+      this.faceLoginError = 'Veuillez selectionner une image visage.';
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+      const auth = await firstValueFrom(
+        this.authService.loginWithFace({
+          login: this.loginForm.controls.email.value,
+          imageBase64: this.loginFaceImageBase64
+        })
+      );
+
+      const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+      if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+        await this.router.navigate(['/security'], {
+          queryParams: {
+            recommendTwoFactor: '1',
+            returnTo: targetRoute
+          }
+        });
+      } else {
+        await this.router.navigateByUrl(targetRoute);
+      }
+
+      this.close();
+    } catch (error) {
+      if (this.isPendingApprovalError(error)) {
+        this.authService.clearLocalAuth();
+        this.close();
+        await this.router.navigate(['/waiting-approval'], {
+          queryParams: { email: this.loginForm.controls.email.value }
+        });
+        return;
+      }
+
+      this.faceLoginError = this.extractAuthError(error, 'Connexion Face ID impossible pour le moment.');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
   async submitRegister(): Promise<void> {
     this.registerError = '';
+    this.faceRegisterError = '';
 
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
@@ -185,25 +562,110 @@ export class LoginDialogComponent implements OnChanges, OnDestroy {
     this.isSubmitting = true;
 
     try {
-      await firstValueFrom(
-        this.authService.register({
-          username: this.registerForm.controls.username.value,
-          email: this.registerForm.controls.email.value,
-          password: this.registerForm.controls.password.value,
-          role: this.registerForm.controls.role.value
-        })
-      );
+      if (this.registerFaceImageBase64) {
+        const auth = await firstValueFrom(
+          this.authService.registerWithFace({
+            username: this.registerForm.controls.username.value,
+            email: this.registerForm.controls.email.value,
+            password: this.registerForm.controls.password.value,
+            imageBase64: this.registerFaceImageBase64,
+            role: this.registerForm.controls.role.value
+          })
+        );
 
-      this.switchMode('login');
-      this.loginForm.patchValue({
-        email: this.registerForm.controls.email.value,
-        password: ''
-      });
+        if (this.authService.isPendingApproval(auth.user)) {
+          this.authService.clearLocalAuth();
+          this.close();
+          await this.router.navigate(['/waiting-approval'], {
+            queryParams: {
+              role: this.registerForm.controls.role.value,
+              email: this.registerForm.controls.email.value
+            }
+          });
+          return;
+        }
+
+        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+        if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+          await this.router.navigate(['/security'], {
+            queryParams: {
+              recommendTwoFactor: '1',
+              returnTo: targetRoute
+            }
+          });
+        } else {
+          await this.router.navigateByUrl(targetRoute);
+        }
+      } else {
+        const auth = await firstValueFrom(
+          this.authService.register({
+            username: this.registerForm.controls.username.value,
+            email: this.registerForm.controls.email.value,
+            password: this.registerForm.controls.password.value,
+            role: this.registerForm.controls.role.value
+          })
+        );
+
+        if (this.authService.isPendingApproval(auth.user)) {
+          this.authService.clearLocalAuth();
+          this.close();
+          await this.router.navigate(['/waiting-approval'], {
+            queryParams: {
+              role: this.registerForm.controls.role.value,
+              email: this.registerForm.controls.email.value
+            }
+          });
+          return;
+        }
+
+        const targetRoute = this.authService.getRouteForRole(auth.user?.role);
+        if (auth.user?.role !== 'ADMIN' && !auth.user?.twoFactorEnabled) {
+          await this.router.navigate(['/security'], {
+            queryParams: {
+              recommendTwoFactor: '1',
+              returnTo: targetRoute
+            }
+          });
+        } else {
+          await this.router.navigateByUrl(targetRoute);
+        }
+      }
+
+      this.close();
     } catch (error) {
-      this.registerError = this.extractAuthError(error, 'Impossible de creer le compte pour le moment.');
+      if (this.registerFaceImageBase64) {
+        this.faceRegisterError = this.extractAuthError(error, 'Impossible de creer le compte Face ID pour le moment.');
+      } else {
+        this.registerError = this.extractAuthError(error, 'Impossible de creer le compte pour le moment.');
+      }
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  private isPendingApprovalError(error: unknown): boolean {
+    if (!(error instanceof HttpErrorResponse)) {
+      return false;
+    }
+
+    const backendMessage = error.error?.message;
+    if (typeof backendMessage !== 'string') {
+      return false;
+    }
+
+    return backendMessage.toLowerCase().includes('en attente de validation');
+  }
+
+  private attachStream(target: 'login' | 'register'): void {
+    const video = target === 'login' ? this.loginVideoRef?.nativeElement : this.registerVideoRef?.nativeElement;
+    const stream = target === 'login' ? this.loginCameraStream : this.registerCameraStream;
+
+    if (!video || !stream) {
+      return;
+    }
+
+    video.srcObject = stream;
+    void video.play();
   }
 
   async submitForgotPassword(): Promise<void> {

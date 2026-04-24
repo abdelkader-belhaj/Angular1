@@ -14,6 +14,7 @@ export class AdminUsersPageComponent implements OnInit {
 
   users: AdminUserResponse[] = [];
   selectedUser: AdminUserResponse | null = null;
+  processingUserIds = new Set<number>();
   loading = false;
   errorMessage = '';
   searchTerm = '';
@@ -61,12 +62,24 @@ export class AdminUsersPageComponent implements OnInit {
     return this.users.filter((user) => !user.enabled).length;
   }
 
+  get pendingApprovalCount(): number {
+    return this.users.filter((user) => this.isPendingApproval(user)).length;
+  }
+
   isPendingApproval(user: AdminUserResponse): boolean {
     return !user.enabled && user.role !== 'CLIENT_TOURISTE';
   }
 
   get roleCount(): number {
     return new Set(this.users.map((user) => user.role)).size;
+  }
+
+  get approvalRate(): number {
+    if (this.users.length === 0) {
+      return 0;
+    }
+
+    return Math.round((this.activeUsersCount / this.users.length) * 100);
   }
 
   loadUsers(): void {
@@ -101,17 +114,24 @@ export class AdminUsersPageComponent implements OnInit {
   }
 
   toggleStatus(user: AdminUserResponse): void {
-    this.adminUsersService.toggleUser(user.id).subscribe({
-      next: (updatedUser) => {
-        this.users = this.users.map((item) => (item.id === updatedUser.id ? updatedUser : item));
-        if (this.selectedUser?.id === updatedUser.id) {
-          this.selectedUser = updatedUser;
+    if (this.isProcessingUser(user.id)) {
+      return;
+    }
+
+    this.processingUserIds.add(user.id);
+    this.adminUsersService.toggleUser(user.id)
+      .pipe(finalize(() => this.processingUserIds.delete(user.id)))
+      .subscribe({
+        next: (updatedUser) => {
+          this.users = this.users.map((item) => (item.id === updatedUser.id ? updatedUser : item));
+          if (this.selectedUser?.id === updatedUser.id) {
+            this.selectedUser = updatedUser;
+          }
+        },
+        error: () => {
+          this.errorMessage = 'Le statut utilisateur n a pas pu etre modifie.';
         }
-      },
-      error: () => {
-        this.errorMessage = 'Le statut utilisateur n a pas pu etre modifie.';
-      }
-    });
+      });
   }
 
   updateRole(user: AdminUserResponse, role: string): void {
@@ -150,6 +170,10 @@ export class AdminUsersPageComponent implements OnInit {
 
   trackByUserId(_: number, user: AdminUserResponse): number {
     return user.id;
+  }
+
+  isProcessingUser(userId: number): boolean {
+    return this.processingUserIds.has(userId);
   }
 
   formatRole(role: string): string {

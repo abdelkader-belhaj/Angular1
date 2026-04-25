@@ -203,7 +203,15 @@
               </div>
               <div class="form-group" *ngIf="form.promoType === 'CUSTOM'">
                 <label class="form-label">Code promo</label>
-                <input class="form-input" [(ngModel)]="form.promoCode" name="promoCode" placeholder="EX: WEEKEND10" />
+                <input
+                  class="form-input promo-code-input"
+                  [(ngModel)]="form.promoCode"
+                  name="promoCode"
+                  placeholder="Ex: farah10"
+                  autocapitalize="off"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </div>
               <div class="form-group" *ngIf="form.promoType === 'CUSTOM' || form.promoType === 'HOLIDAY'">
                 <label class="form-label">Début promo</label>
@@ -684,7 +692,7 @@
   <section class="org-content single" *ngIf="activeTab === 'qr'">
     <article class="panel panel-scan full">
       <h2>Validation QR</h2>
-      <p>Scannez le QR avec la caméra. La validation se fait instantanément en base de données.</p>
+      <p>Présentez le QR code devant la caméra pour lancer la vérification automatique et afficher le résultat immédiatement.</p>
 
       <div class="ai-qr-tools">
         <button class="btn-ghost" *ngIf="!cameraScanning" [disabled]="!cameraSupported" (click)="startAiQrCamera()">

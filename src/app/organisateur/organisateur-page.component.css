@@ -1713,6 +1713,10 @@ textarea {
 	margin: 0;
 }
 
+.promo-code-input {
+	text-transform: none;
+}
+
 .form-hint {
 	font-size: 0.76rem;
 	color: #64809b;

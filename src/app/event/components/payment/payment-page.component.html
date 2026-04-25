@@ -15,12 +15,16 @@
         <b>{{ reservation.numberOfTickets }}</b>
       </div>
       <div class="recap-row">
+        <span>Prix par place</span>
+        <b>{{ unitPrice | number:'1.2-2' }} TND</b>
+      </div>
+      <div class="recap-row">
         <span>Statut</span>
         <b>{{ reservation.status }}</b>
       </div>
       <div class="recap-row total-row">
         <span>Total</span>
-        <b class="total-amt">{{ payableAmount | number:'1.0-0' }} TND</b>
+        <b class="total-amt">{{ payableAmount | number:'1.2-2' }} TND</b>
       </div>
       <div class="recap-row" *ngIf="promoApplied">
         <span>Promo appliquée</span>
@@ -35,6 +39,17 @@
       <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
 
       <div class="promo-pay-box">
+        <div class="promo-meta" *ngIf="hasPromoCodeAvailable">
+          <small>🎟️ Code promo disponible: <strong class="promo-code-value">{{ eventInfo?.promoCode }}</strong></small>
+        </div>
+        <div class="promo-meta" *ngIf="hasPromoValidity">
+          <small>
+            Date de validité:
+            <span *ngIf="eventInfo?.promoStartDate">du {{ eventInfo?.promoStartDate | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span *ngIf="eventInfo?.promoStartDate && eventInfo?.promoEndDate"> au </span>
+            <span *ngIf="eventInfo?.promoEndDate">{{ eventInfo?.promoEndDate | date:'dd/MM/yyyy HH:mm' }}</span>
+          </small>
+        </div>
         <label>Code promo</label>
         <div class="promo-pay-row">
           <input type="text" [(ngModel)]="promoCodeInput" placeholder="Ex: FARAH10" />
@@ -51,7 +66,7 @@
       <div *ngIf="selectedMethod === 'STRIPE'" class="alt-pay stripe-pay-block">
         <div class="alt-ico">🔒</div>
         <p>Paiement sécurisé via Stripe. Vous serez redirigé vers la page officielle de paiement.</p>
-        <p class="stripe-note">Les codes promo valides sont appliqués avant la redirection.</p>
+        <p class="stripe-note">Stripe facture en EUR avec conversion automatique depuis le TND. Les codes promo valides sont appliqués avant la redirection.</p>
       </div>
 
       <button class="btn-pay-main" (click)="confirmPayment()" [disabled]="processing">

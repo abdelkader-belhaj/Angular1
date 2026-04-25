@@ -31,7 +31,9 @@ export class EventsSectionComponent implements OnInit {
     this.eventService.getPublished().subscribe({
       next: evs => {
         this.featuredEvents = evs.slice(0, 3);
-        this.promoEvents = evs.filter(ev => calculateDiscount(ev.price, ev.startDate, ev.categoryName).hasDiscount).slice(0, 3);
+        this.promoEvents = evs
+          .filter(ev => this.isPromoEvent(ev))
+          .slice(0, 3);
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -66,7 +68,7 @@ export class EventsSectionComponent implements OnInit {
   }
 
   goToReservations(): void {
-    void this.router.navigate(['/mes-reservations']);
+    void this.router.navigate(['/mes-reservations-event']);
   }
 
   goToEvent(eventId: number): void {
@@ -76,6 +78,19 @@ export class EventsSectionComponent implements OnInit {
   getCategoryName(categoryId: number): string {
     const event = this.featuredEvents.find(ev => ev.categoryId === categoryId);
     return event?.categoryName ?? 'Evenement';
+  }
+
+  private isPromoEvent(ev: EventActivity): boolean {
+    const hasConfiguredCode = !!ev.promoCode?.trim();
+    const hasActiveDiscount = calculateDiscount(ev.price, ev.startDate, ev.categoryName, {
+      promoType: ev.promoType,
+      promoPercent: ev.promoPercent,
+      promoCode: ev.promoCode,
+      promoStartDate: ev.promoStartDate,
+      promoEndDate: ev.promoEndDate,
+    }).hasDiscount;
+
+    return hasConfiguredCode || hasActiveDiscount;
   }
 
   private loadFavorites(): void {

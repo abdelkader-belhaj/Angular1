@@ -80,7 +80,7 @@ export class EventListComponent implements OnInit {
   }
 
   loadReservedIds(): void {
-    this.reservationService.getMesReservations().subscribe({
+    this.reservationService.getMesReservationsEvent().subscribe({
       next: (reservations: EventReservation[]) => {
         this.reservedIds = new Set(
           reservations

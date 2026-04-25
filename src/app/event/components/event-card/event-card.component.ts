@@ -21,7 +21,13 @@ export class EventCardComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.discount = calculateDiscount(this.event.price, this.event.startDate, this.event.categoryName);
+    this.discount = calculateDiscount(this.event.price, this.event.startDate, this.event.categoryName, {
+      promoType: this.event.promoType,
+      promoPercent: this.event.promoPercent,
+      promoCode: this.event.promoCode,
+      promoStartDate: this.event.promoStartDate,
+      promoEndDate: this.event.promoEndDate,
+    });
     this.almostFull = isAlmostFull(this.event.availableSeats, this.event.capacity);
   }
 

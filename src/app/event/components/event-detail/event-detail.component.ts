@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DiscountInfo, EventActivity, EventReview, EventReviewRequest, WeatherData } from '../../models/event.model';
 import { EventService } from '../../../services/events/event.service';
 import { ReservationService } from '../../../services/events/reservation.service';
@@ -14,6 +15,9 @@ import { AuthService } from '../../../services/auth.service';
 export class EventDetailComponent implements OnInit {
   event: EventActivity | null = null;
   weather: WeatherData | null = null;
+  hideBackButton = false;
+  showLocationModal = false;
+  locationTab: 'map' | 'street' = 'map';
   discount: DiscountInfo = {
     hasDiscount: false,
     percent: 0,
@@ -76,16 +80,35 @@ export class EventDetailComponent implements OnInit {
     return '';
   }
 
+  get mapEmbedUrl(): SafeResourceUrl | null {
+    if (!this.event || this.event.latitude == null || this.event.longitude == null) {
+      return null;
+    }
+
+    const lat = this.event.latitude;
+    const lng = this.event.longitude;
+    const delta = 0.0035;
+    const bbox = `${(lng - delta).toFixed(6)}%2C${(lat - delta).toFixed(6)}%2C${(lng + delta).toFixed(6)}%2C${(lat + delta).toFixed(6)}`;
+    const url = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  get hasCoordinates(): boolean {
+    return !!(this.event && this.event.latitude != null && this.event.longitude != null);
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private eventService: EventService,
     private resService: ReservationService,
-    private auth: AuthService
+    private auth: AuthService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
     const id = +this.route.snapshot.paramMap.get('id')!;
+    this.hideBackButton = this.route.snapshot.queryParamMap.get('source') === 'organisateur';
     this.eventService.getPublishedById(id).subscribe({
       next: ev => {
         this.event = ev;
@@ -106,7 +129,7 @@ export class EventDetailComponent implements OnInit {
   }
 
   checkReservation(): void {
-    this.resService.getMesReservations().subscribe({
+    this.resService.getMesReservationsEvent().subscribe({
       next: rs => {
         this.isReserved = rs.some(r => r.eventId === this.event?.id && r.status !== 'CANCELLED');
         this.hasConfirmedReservationForEvent = rs.some(
@@ -147,6 +170,71 @@ export class EventDetailComponent implements OnInit {
     if (!this.event) return;
     const q = encodeURIComponent(`${this.event.address}, ${this.event.city}, Tunisia`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+  }
+
+  openLocationModal(): void {
+    if (!this.hasCoordinates) return;
+    this.locationTab = 'map';
+    this.showLocationModal = true;
+  }
+
+  closeLocationModal(): void {
+    this.showLocationModal = false;
+  }
+
+  selectLocationTab(tab: 'map' | 'street'): void {
+    this.locationTab = tab;
+  }
+
+  openStreetViewInNewTab(): void {
+    if (!this.event || this.event.latitude == null || this.event.longitude == null) return;
+
+    const target = this.getStreetViewTarget();
+    const primaryUrl = `https://www.google.com/maps?layer=c&cbll=${target.lat},${target.lng}&cbp=12,0,0,0,5`;
+
+    // Open in the same tab to avoid popup blockers entirely.
+    window.location.assign(primaryUrl);
+  }
+
+  private getStreetViewTarget(): { lat: number; lng: number } {
+    if (!this.event) {
+      return { lat: 0, lng: 0 };
+    }
+
+    const placeKey = `${this.event.title} ${this.event.city} ${this.event.address}`.toLowerCase();
+
+    if (placeKey.includes('sidi bou said') || placeKey.includes('sidi bou saïd')) {
+      return { lat: 36.8713, lng: 10.3476 };
+    }
+
+    if (placeKey.includes('carthage')) {
+      return { lat: 36.8528, lng: 10.3250 };
+    }
+
+    if (placeKey.includes('hammamet')) {
+      return { lat: 36.4000, lng: 10.6167 };
+    }
+
+    if (placeKey.includes('sousse')) {
+      return { lat: 35.8256, lng: 10.6369 };
+    }
+
+    if (placeKey.includes('djerba')) {
+      return { lat: 33.8076, lng: 10.8451 };
+    }
+
+    if (placeKey.includes('tabarka')) {
+      return { lat: 36.9540, lng: 8.7570 };
+    }
+
+    if (placeKey.includes('tunis')) {
+      return { lat: 36.8008, lng: 10.1812 };
+    }
+
+    return {
+      lat: this.event.latitude!,
+      lng: this.event.longitude!,
+    };
   }
 
   goBack(): void { void this.router.navigate(['/events']); }

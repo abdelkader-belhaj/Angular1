@@ -41,7 +41,7 @@ export class PromoEventsComponent implements OnInit {
     this.eventService.getPublished().subscribe({
       next: (events: EventActivity[]) => {
         this.allPromoEvents = events.filter(ev =>
-          calculateDiscount(ev.price, ev.startDate, ev.categoryName).hasDiscount
+          this.isPromoEvent(ev)
         );
         this.applyTypeFilter();
         this.loading = false;
@@ -51,6 +51,19 @@ export class PromoEventsComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  private isPromoEvent(ev: EventActivity): boolean {
+    const hasConfiguredCode = !!ev.promoCode?.trim();
+    const hasActiveDiscount = calculateDiscount(ev.price, ev.startDate, ev.categoryName, {
+      promoType: ev.promoType,
+      promoPercent: ev.promoPercent,
+      promoCode: ev.promoCode,
+      promoStartDate: ev.promoStartDate,
+      promoEndDate: ev.promoEndDate,
+    }).hasDiscount;
+
+    return hasConfiguredCode || hasActiveDiscount;
   }
 
   private applyTypeFilter(): void {

@@ -24,8 +24,8 @@ export class ReservationService {
 
   // ✅ Suppression des headers no-cache — ils peuvent interférer avec l'interceptor JWT
   // Le no-cache était la cause du bug "Impossible de charger vos réservations"
-  getMesReservations(): Observable<EventReservation[]> {
-    return this.http.get<EventReservation[]>(`${this.base}/mes-reservations`);
+  getMesReservationsEvent(): Observable<EventReservation[]> {
+    return this.http.get<EventReservation[]>(`${this.base}/mes-reservations-event`);
   }
 
   getById(id: number): Observable<EventReservation> {
@@ -85,7 +85,7 @@ export class ReservationService {
   }
 
   hasReservedEvent(eventId: number): Observable<boolean> {
-    return this.getMesReservations().pipe(
+    return this.getMesReservationsEvent().pipe(
       map(rs => rs.some(
         r => r.eventId === eventId &&
              (r.status === 'PENDING' || r.status === 'CONFIRMED')

@@ -53,7 +53,10 @@ export class NavbarComponent {
     if (this.isOrganisateurUser) {
       return false;
     }
-    return this.router.url.startsWith('/events') || this.router.url.startsWith('/mes-reservations');
+    return this.router.url.startsWith('/events')
+      || this.router.url.startsWith('/mes-reservations-event')
+      || this.router.url.startsWith('/payment')
+      || this.router.url.startsWith('/ticket');
   }
 
   get showDefaultMenu(): boolean {

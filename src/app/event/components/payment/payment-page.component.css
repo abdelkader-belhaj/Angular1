@@ -116,6 +116,20 @@
   margin-bottom: 6px;
 }
 
+.promo-meta {
+  margin-bottom: 8px;
+}
+
+.promo-meta small {
+  display: block;
+  color: #25529a;
+  font-weight: 700;
+}
+
+.promo-code-value {
+  text-transform: none;
+}
+
 .promo-pay-row {
   display: grid;
   grid-template-columns: 1fr auto;

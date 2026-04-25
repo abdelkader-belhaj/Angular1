@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EventReservation } from '../../models/event.model';
+import { EventActivity, EventReservation } from '../../models/event.model';
 import { PaymentService } from '../../../services/events/Payment.service';
 import { ReservationService } from '../../../services/events/reservation.service';
 import { EventService } from '../../../services/events/event.service';
@@ -14,6 +14,7 @@ import { StripeCheckoutSessionResponse } from '../../../services/events/Payment.
 })
 export class PaymentPageComponent implements OnInit {
   reservation: EventReservation | null = null;
+  eventInfo: EventActivity | null = null;
   loading = true;
   errorMsg = '';
   processing = false;
@@ -52,6 +53,7 @@ export class PaymentPageComponent implements OnInit {
       next: (reservation: EventReservation) => {
         this.reservation = reservation;
         this.paid = reservation.status === 'CONFIRMED';
+        this.loadEventInfo(reservation.eventId);
         this.loading = false;
 
         if (this.paid) {
@@ -121,9 +123,24 @@ export class PaymentPageComponent implements OnInit {
       next: () => {
         this.paid = true;
         this.processing = false;
-        if (this.reservation) {
-          this.reservation = { ...this.reservation, status: 'CONFIRMED' };
+        if (!this.reservation) {
+          return;
         }
+
+        this.resService.getById(this.reservation.id).subscribe({
+          next: (updatedReservation: EventReservation) => {
+            this.reservation = updatedReservation;
+            void this.router.navigate(['/mes-reservations-event'], {
+              queryParams: { payment: 'success' },
+            });
+          },
+          error: () => {
+            this.reservation = { ...this.reservation!, status: 'CONFIRMED' };
+            void this.router.navigate(['/mes-reservations-event'], {
+              queryParams: { payment: 'success' },
+            });
+          },
+        });
       },
       error: (err) => {
         this.processing = false;
@@ -146,6 +163,18 @@ export class PaymentPageComponent implements OnInit {
     return this.discountedTotal ?? this.reservation?.totalPrice ?? 0;
   }
 
+  get unitPrice(): number {
+    return this.eventInfo?.price ?? this.reservation?.eventPrice ?? 0;
+  }
+
+  get hasPromoCodeAvailable(): boolean {
+    return !!(this.eventInfo?.promoCode && this.eventInfo.promoCode.trim().length > 0);
+  }
+
+  get hasPromoValidity(): boolean {
+    return !!(this.eventInfo?.promoStartDate || this.eventInfo?.promoEndDate);
+  }
+
   applyPromoCode(): void {
     if (!this.reservation) return;
 
@@ -157,28 +186,15 @@ export class PaymentPageComponent implements OnInit {
       return;
     }
 
+    if (this.eventInfo) {
+      this.applyPromoFromEvent(this.eventInfo, code);
+      return;
+    }
+
     this.eventService.getPublishedById(this.reservation.eventId).subscribe({
       next: (event) => {
-        const discount = calculateDiscount(event.price, event.startDate, event.categoryName, {
-          promoType: event.promoType,
-          promoPercent: event.promoPercent,
-          promoCode: event.promoCode,
-          promoStartDate: event.promoStartDate,
-          promoEndDate: event.promoEndDate,
-        });
-
-        const expected = (event.promoCode ?? '').trim().toLowerCase();
-        if (!discount.hasDiscount || !expected || expected !== code.toLowerCase()) {
-          this.promoError = 'Code promo invalide ou expiré.';
-          this.promoApplied = false;
-          this.discountedTotal = null;
-          return;
-        }
-
-        this.promoPercent = discount.discountPercent;
-        this.discountedTotal = +(discount.finalPrice * this.reservation!.numberOfTickets).toFixed(2);
-        this.promoApplied = true;
-        this.promoError = '';
+        this.eventInfo = event;
+        this.applyPromoFromEvent(event, code);
       },
       error: () => {
         this.promoError = 'Impossible de vérifier le code promo.';
@@ -186,5 +202,64 @@ export class PaymentPageComponent implements OnInit {
         this.discountedTotal = null;
       },
     });
+  }
+
+  private loadEventInfo(eventId: number): void {
+    this.eventService.getPublishedById(eventId).subscribe({
+      next: (event) => {
+        this.eventInfo = event;
+      },
+      error: () => {
+        this.eventInfo = null;
+      },
+    });
+  }
+
+  private applyPromoFromEvent(event: EventActivity, code: string): void {
+    const expected = (event.promoCode ?? '').trim();
+    if (!expected || expected.toLowerCase() !== code.toLowerCase()) {
+      this.promoError = 'Code promo invalide ou expiré.';
+      this.promoApplied = false;
+      this.discountedTotal = null;
+      return;
+    }
+
+    const now = new Date();
+    const promoStart = event.promoStartDate ? new Date(event.promoStartDate) : null;
+    const promoEnd = event.promoEndDate ? new Date(event.promoEndDate) : null;
+
+    if (promoStart && now < promoStart) {
+      this.promoError = `Code promo valable à partir du ${promoStart.toLocaleString('fr-FR')}.`;
+      this.promoApplied = false;
+      this.discountedTotal = null;
+      return;
+    }
+
+    if (promoEnd && now > promoEnd) {
+      this.promoError = `Code promo expiré depuis le ${promoEnd.toLocaleString('fr-FR')}.`;
+      this.promoApplied = false;
+      this.discountedTotal = null;
+      return;
+    }
+
+    const discount = calculateDiscount(event.price, event.startDate, event.categoryName, {
+      promoType: event.promoType,
+      promoPercent: event.promoPercent,
+      promoCode: event.promoCode,
+      promoStartDate: event.promoStartDate,
+      promoEndDate: event.promoEndDate,
+    });
+
+    if (!discount.hasDiscount) {
+      this.promoError = 'Ce code promo n’est pas actif pour le moment.';
+      this.promoApplied = false;
+      this.discountedTotal = null;
+      return;
+    }
+
+    this.promoPercent = discount.discountPercent;
+    this.discountedTotal = +(discount.finalPrice * this.reservation!.numberOfTickets).toFixed(2);
+    this.promoApplied = true;
+    this.promoError = '';
   }
 }

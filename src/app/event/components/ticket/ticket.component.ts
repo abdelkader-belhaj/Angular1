@@ -216,10 +216,6 @@ export class TicketComponent implements OnInit {
   };
 
   private getPublicOrigin(): string {
-    // If Angular runs on localhost, force LAN URL so phones on same Wi-Fi can open it.
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://192.168.10.166:4200';
-    }
     return window.location.origin;
   }
 

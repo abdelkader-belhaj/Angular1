@@ -1,19 +1,20 @@
-// src/app/event/components/mes-reservations/mes-reservations.component.ts
+// src/app/event/components/mes-reservations-event/mes-reservations-event.component.ts
 // ✅ FIX "already reserved" — après annulation, navigue vers l'event
 // pour forcer le rechargement de checkReservation()
 
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EventReservation } from '../../models/event.model';
 import { ReservationService } from '../../../services/events/reservation.service';
 import { AuthService }        from '../../../services/auth.service';
+import { PaymentService } from '../../../services/events/Payment.service';
 
 @Component({
-  selector:    'app-mes-reservations',
-  templateUrl: './mes-reservations.component.html',
-  styleUrls:   ['./mes-reservations.component.css'],
+  selector:    'app-mes-reservations-event',
+  templateUrl: './mes-reservations-event.component.html',
+  styleUrls:   ['./mes-reservations-event.component.css'],
 })
-export class MesReservationsComponent implements OnInit {
+export class MesReservationsEventComponent implements OnInit {
 
   reservations: EventReservation[] = [];
   loading      = true;
@@ -23,6 +24,8 @@ export class MesReservationsComponent implements OnInit {
   constructor(
     private readonly resService:  ReservationService,
     private readonly authService: AuthService,
+    private readonly paymentService: PaymentService,
+    private readonly route: ActivatedRoute,
     private readonly router:      Router,
   ) {}
 
@@ -31,6 +34,15 @@ export class MesReservationsComponent implements OnInit {
       void this.router.navigate(['/']);
       return;
     }
+
+    const reservationId = Number(this.route.snapshot.queryParamMap.get('reservationId'));
+    const stripeSessionId = this.route.snapshot.queryParamMap.get('stripeSessionId') ?? '';
+
+    if (reservationId > 0 && stripeSessionId.trim().length > 0) {
+      this.confirmStripeReturn(reservationId, stripeSessionId.trim());
+      return;
+    }
+
     this.load();
   }
 
@@ -38,7 +50,7 @@ export class MesReservationsComponent implements OnInit {
     this.loading  = true;
     this.errorMsg = '';
 
-    this.resService.getMesReservations().subscribe({
+    this.resService.getMesReservationsEvent().subscribe({
       next: (r: EventReservation[]) => {
         this.reservations = r.sort((a, b) =>
           new Date(b.reservationDate).getTime() - new Date(a.reservationDate).getTime()
@@ -48,6 +60,23 @@ export class MesReservationsComponent implements OnInit {
       error: () => {
         this.errorMsg = 'Impossible de charger vos réservations.';
         this.loading  = false;
+      },
+    });
+  }
+
+  private confirmStripeReturn(reservationId: number, sessionId: string): void {
+    this.loading = true;
+    this.errorMsg = '';
+
+    this.paymentService.confirmStripeSession({ reservationId, sessionId }).subscribe({
+      next: () => {
+        const cleanedUrl = this.router.createUrlTree(['/mes-reservations-event']).toString();
+        void this.router.navigateByUrl(cleanedUrl, { replaceUrl: true });
+        this.load();
+      },
+      error: (err: any) => {
+        this.errorMsg = err?.error?.message ?? 'Paiement Stripe non confirmé.';
+        this.load();
       },
     });
   }

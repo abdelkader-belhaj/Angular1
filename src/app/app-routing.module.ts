@@ -67,9 +67,9 @@ const routes: Routes = [
     loadChildren: () => import('./event/event.module').then(m => m.EventModule),
   },
   {
-    path: 'mes-reservations',
-    loadChildren: () => import('./event/components/mes-reservations/mes-reservations.module')
-      .then(m => m.MesReservationsModule),
+    path: 'mes-reservations-event',
+    loadChildren: () => import('./event/components/mes-reservations-event/mes-reservations-event.module')
+      .then(m => m.MesReservationsEventModule),
   },
   {
     path: 'payment/:reservationId',

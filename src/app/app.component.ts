@@ -14,7 +14,7 @@ export class AppComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   ngOnInit(): void {
-    const currentUrl = this.router.url;
+    const currentUrl = window.location.pathname;
     const currentRole = this.authService.getCurrentUser()?.role;
 
     if ((currentUrl === '/' || currentUrl === '') && currentRole) {

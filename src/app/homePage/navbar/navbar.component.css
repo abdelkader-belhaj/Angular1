@@ -55,6 +55,15 @@
   color: var(--primary);
 }
 
+/* Ajouté: style menu organisateur */
+.menu-organisateur a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #b7cde4;
+  color: #0b4f8a;
+  background: #f3f9ff;
+}
+
 .btn {
   border: none;
   background: var(--primary);

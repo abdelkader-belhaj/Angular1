@@ -88,4 +88,3 @@ export class NouvelleReclamationComponent implements OnInit {
     setTimeout(() => (this.message = ''), 6000);
   }
 }
-

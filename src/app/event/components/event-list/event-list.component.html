@@ -1,0 +1,128 @@
+<div class="el-page">
+
+  <div class="el-hero">
+    <div class="hero-badge">Selection locale</div>
+    <h1>Événements &amp; Activités en <span>Tunisie</span></h1>
+    <p>Concerts, randonnées, plongée, festivals: explorez des expériences triées pour vous.</p>
+    <div class="search-wrap">
+      <span>🔍</span>
+      <input placeholder="Rechercher un événement, ville, catégorie…"
+        [(ngModel)]="searchQuery" (input)="applyFilters()" class="search-inp"/>
+    </div>
+    <div class="hero-stats">
+      <span><b>{{ allEvents.length }}</b> expériences disponibles</span>
+      <span><b>{{ cities.length }}</b> villes couvertes</span>
+      <span><b>{{ categories.length }}</b> catégories</span>
+    </div>
+  </div>
+
+  <div class="el-body">
+
+    <aside class="el-filters">
+      <div class="filters-head">
+        <h3>Filtres</h3>
+        <small>Affinez vos résultats</small>
+      </div>
+
+      <div class="fgroup">
+        <h4>Type</h4>
+        <label *ngFor="let t of typeOptions" class="fradio">
+          <input type="radio" name="type" [value]="t.value"
+            [(ngModel)]="selectedType" (change)="applyFilters()"/>
+          {{ t.label }}
+        </label>
+      </div>
+
+      <div class="fgroup">
+        <h4>Catégorie</h4>
+        <label *ngFor="let cat of categories" class="fcheck">
+          <input type="checkbox"
+            (change)="toggleCategory(cat.id)"
+            [checked]="selectedCategories.has(cat.id)"/>
+          {{ cat.name }}
+        </label>
+      </div>
+
+      <div class="fgroup">
+        <h4>Ville</h4>
+        <select class="fselect" [(ngModel)]="selectedCity" (change)="applyFilters()">
+          <option value="">Toutes</option>
+          <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+
+      <div class="fgroup">
+        <h4>Date</h4>
+        <input type="date" class="fselect" [(ngModel)]="selectedDate" (change)="applyFilters()" />
+      </div>
+
+      <div class="fgroup">
+        <h4>Prix max : <b>{{ maxPrice }} TND</b></h4>
+        <input type="range" min="0" [max]="maxPriceCeiling" step="10"
+          [(ngModel)]="maxPrice" (input)="applyFilters()" class="frange"/>
+      </div>
+
+      <button class="btn-reset" (click)="resetFilters()">↺ Réinitialiser</button>
+    </aside>
+
+    <main class="el-main">
+      <div class="results-bar">
+        <span>
+          <b>{{ filteredEvents.length }}</b>
+          événement{{ filteredEvents.length !== 1 ? 's' : '' }} trouvé{{ filteredEvents.length !== 1 ? 's' : '' }}
+        </span>
+        <div class="results-actions">
+          <button class="fav-toggle" [class.active]="showFavoritesOnly" (click)="toggleFavoritesOnly()">
+            {{ showFavoritesOnly ? '★ Favoris' : '☆ Voir favoris' }}
+          </button>
+          <select [(ngModel)]="sortBy" (change)="applyFilters()" class="sort-sel">
+            <option value="date">Date (proche)</option>
+            <option value="price_asc">Prix ↑</option>
+            <option value="price_desc">Prix ↓</option>
+            <option value="seats">Places dispo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="active-filters" *ngIf="selectedType !== 'ALL' || selectedCity || selectedDate || selectedCategories.size > 0 || searchQuery">
+        <span class="chip" *ngIf="selectedType !== 'ALL'">{{ selectedType === 'EVENT' ? 'Événement' : 'Activité' }}</span>
+        <span class="chip" *ngIf="selectedCity">{{ selectedCity }}</span>
+        <span class="chip" *ngIf="selectedDate">{{ selectedDate | date:'dd/MM/yyyy' }}</span>
+        <span class="chip" *ngIf="searchQuery">"{{ searchQuery }}"</span>
+        <span class="chip" *ngIf="selectedCategories.size > 0">{{ selectedCategories.size }} catégorie(s)</span>
+      </div>
+
+      <div *ngIf="loading" class="grid">
+        <div class="skel" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <div *ngIf="!loading && filteredEvents.length > 0" class="grid">
+        <app-event-card
+          *ngFor="let ev of filteredEvents"
+          [event]="ev"
+          [isReserved]="reservedIds.has(ev.id)"
+          [isFavorite]="isFavorite(ev.id)"
+          (favoriteToggled)="toggleFavorite($event)"
+          (reserveClicked)="onReserveClick($event)">
+        </app-event-card>
+      </div>
+
+      <div *ngIf="!loading && filteredEvents.length === 0" class="empty">
+        <div class="empty-ico">🔍</div>
+        <h3>Aucun résultat</h3>
+        <p>Modifiez vos filtres ou votre recherche.</p>
+        <button class="btn-reset" (click)="resetFilters()">Réinitialiser</button>
+      </div>
+    </main>
+  </div>
+
+  <button class="fab" (click)="toggleAssistant()" title="Assistant IA">
+    {{ assistantOpen ? '✕' : '🤖' }}
+  </button>
+  <app-event-assistant
+    [isOpen]="assistantOpen"
+    [allEvents]="allEvents"
+    (closed)="assistantOpen=false"
+    (eventSelected)="goToEvent($event)">
+  </app-event-assistant>
+</div>

@@ -1,0 +1,37 @@
+<div class="promo-page">
+  <header class="promo-head">
+    <div>
+      <p class="promo-kicker">NOS PROMOS</p>
+    </div>
+    <button class="btn-back" type="button" (click)="goToAllEvents()">Voir tous les evenements</button>
+  </header>
+
+  <section class="promo-filters" *ngIf="!loading && !errorMsg && allPromoEvents.length > 0">
+    <button type="button" class="chip" [class.active]="selectedType === 'ALL'" (click)="setType('ALL')">
+      Tout ({{ allPromoEvents.length }})
+    </button>
+    <button type="button" class="chip" [class.active]="selectedType === 'EVENT'" (click)="setType('EVENT')">
+      Evenements
+    </button>
+    <button type="button" class="chip" [class.active]="selectedType === 'ACTIVITY'" (click)="setType('ACTIVITY')">
+      Activites
+    </button>
+  </section>
+
+  <div class="loading" *ngIf="loading">Chargement des promotions...</div>
+  <div class="error" *ngIf="!loading && errorMsg">{{ errorMsg }}</div>
+
+  <div class="empty" *ngIf="!loading && !errorMsg && filteredPromoEvents.length === 0">
+    <h3>Aucune promotion active</h3>
+    <p>Essayez un autre type ou revenez plus tard.</p>
+  </div>
+
+  <section class="grid" *ngIf="!loading && !errorMsg && filteredPromoEvents.length > 0">
+    <app-event-card
+      *ngFor="let ev of filteredPromoEvents"
+      [event]="ev"
+      [isReserved]="false"
+      [isFavorite]="false">
+    </app-event-card>
+  </section>
+</div>

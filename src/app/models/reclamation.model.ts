@@ -24,4 +24,3 @@ export interface ReclamationResponse {
 export interface UnreadCountResponse {
   unread: number;
 }
-

@@ -2,12 +2,12 @@
   <div class="navbar-inner">
     <a routerLink="/" fragment="top" class="brand">TunisiaTour</a>
 
-    <ul class="menu">
-      <li><a routerLink="/" fragment="accueil">Accueil</a></li>
+<ul class="menu" *ngIf="showDefaultMenu">      <li><a routerLink="/" fragment="accueil">Accueil</a></li>
       <li><a routerLink="/" fragment="voyages">Voyages</a></li>
       <li><a routerLink="/" fragment="hotels">Hotels</a></li>
       <li><a routerLink="/" fragment="bons-plans">Bons Plans</a></li>
-    
+          <li><a routerLink="/events">Événements</a></li>
+
 
     <li>
   <a routerLink="/" fragment="community">Community</a>
@@ -17,6 +17,27 @@
 
 
     </ul>
+
+     <!-- NAVBAR ÉVÉNEMENTS (hors organisateur) -->
+    <div class="menu events-menu" *ngIf="showEventsMenu">
+      <a routerLink="/events" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Tous les événements
+      </a>
+      <a routerLink="/events/promos" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Nos promos
+      </a>
+      <a routerLink="/mes-reservations-event" *ngIf="isClientTouriste" routerLinkActive="active">
+        Mes réservations
+      </a>
+    </div>
+
+    <!-- NAVBAR ORGANISATEUR -->
+    <div class="menu events-menu" *ngIf="showOrganisateurMenu">
+      <a routerLink="/organisateur" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Espace organisateur
+      </a>
+    </div>
+
 
     <div class="auth-section">
       <ng-container *ngIf="!isAuthenticated">

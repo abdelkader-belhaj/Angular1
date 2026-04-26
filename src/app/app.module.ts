@@ -1,68 +1,30 @@
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CommonModule } from '@angular/common';
+import { CommonModule, registerLocaleData } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+
+// ✅ FIX dates — enregistre la locale française
+import localeFr from '@angular/common/locales/fr';
+registerLocaleData(localeFr);
+
 import {
   LucideAngularModule,
-  Search,
-  SlidersHorizontal,
-  MapPin,
-  Calendar,
-  Users,
-  Star,
-  Heart,
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  X,
-  Check,
-  Clock,
-  User,
-  LogOut,
-  Settings,
-  Mail,
-  Eye,
-  EyeOff,
-  FileText,
-  Lock,
-  MessageSquare,
-  Phone,
-  DoorOpen,
-  Maximize2,
-  PlayCircle,
-  Loader2,
-  CalendarDays,
-  Wallet,
-  CalendarX,
-  Bell,
-  Hourglass,
-  XCircle,
-  Edit2,
-  Settings2,
-  AlertCircle,
-  Bot,
-  Fingerprint,
-  Unlock,
-  Wifi,
-  Key,
-  ShieldCheck,
-  Send,
-  ShoppingBag,
-  CheckCircle,
-  Layers,
-  Trash2,
-  Pencil,
-  CreditCard,
-  Plane,
+  Search, SlidersHorizontal, MapPin, Calendar, Users, Star, Heart,
+  ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, X, Check, Clock,
+  User, LogOut, Settings, Mail, Eye, EyeOff, FileText, Lock, MessageSquare,
+  Phone, DoorOpen, Maximize2, PlayCircle, Loader2, CalendarDays, Wallet,
+  CalendarX, Bell, Hourglass, XCircle, Edit2, Settings2, AlertCircle,
+  Bot, Fingerprint, Unlock, Wifi, Key, ShieldCheck, Send, ShoppingBag,
+  CheckCircle, Layers, Trash2, Pencil, CreditCard, Plane,
 } from 'lucide-angular';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeSharedModule } from './homePage/home-shared.module';
+import { AuthInterceptor } from './services/auth.interceptor';
 
 import { FooterComponent } from './homePage/footer/footer.component';
 import { HomePageComponent } from './homePage/home-page.component';
@@ -84,6 +46,9 @@ import { DashFooterComponent } from './dashbord/dash-footer/dash-footer.componen
 import { AdminUsersPageComponent } from './dashbord/admin-users/admin-users-page.component';
 import { TransportStatsComponent } from './dashbord/transport-stats/transport-stats.component';
 import { CommunityAdminComponent } from './dashbord/community-admin/community-admin.component';
+import { AdminEventsPageComponent } from './dashbord/organisateurs/pages/admin-events-page.component';
+import { AdminEventsListComponent } from './dashbord/organisateurs/pages/admin-events-list.component';
+import { AdminEventStatCardComponent } from './dashbord/organisateurs/pages/admin-event-stat-card.component';
 
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
 import { VolsSectionComponent } from './homePage/vols-section.component';
@@ -135,12 +100,8 @@ import { SocietePageComponent } from './societe/societe-page.component';
 import { HebergeurPageComponent } from './hebergeur/hebergeur-page.component';
 import { ReclamationsSocieteComponent } from './societe/reclamations/reclamations-societe.component';
 
-import {
-  BaseChartDirective,
-  provideCharts,
-  withDefaultRegisterables,
-} from 'ng2-charts';
-import { AuthInterceptor } from './services/auth.interceptor';
+import { SharedEventModule } from './event/shared-event.module';
+import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 @NgModule({
   declarations: [
@@ -162,6 +123,11 @@ import { AuthInterceptor } from './services/auth.interceptor';
     InquiriesPanelComponent,
     DashFooterComponent,
     AdminUsersPageComponent,
+    AdminEventsPageComponent,
+    AdminEventsListComponent,
+    AdminEventStatCardComponent,
+    TransportStatsComponent,
+    CommunityAdminComponent,
     ResetPasswordComponent,
     WaitingResponsePageComponent,
     CategorieComponent,
@@ -189,7 +155,6 @@ import { AuthInterceptor } from './services/auth.interceptor';
     ForumCardComponent,
     CommentSectionComponent,
     ReviewSectionComponent,
-    CommunityAdminComponent,
     ForumConditionsModalComponent,
     VolsSectionComponent,
     VolsListComponent,
@@ -198,7 +163,6 @@ import { AuthInterceptor } from './services/auth.interceptor';
     NouvelleReclamationComponent,
     MesReclamationsComponent,
     ReclamationsSocieteComponent,
-    TransportStatsComponent,
   ],
   imports: [
     BrowserModule,
@@ -210,6 +174,7 @@ import { AuthInterceptor } from './services/auth.interceptor';
     ReactiveFormsModule,
     FormsModule,
     HttpClientModule,
+    SharedEventModule,
     ProfilePageComponent,
     SecurityPageComponent,
     TransporteurPageComponent,
@@ -220,65 +185,19 @@ import { AuthInterceptor } from './services/auth.interceptor';
     HebergeurPageComponent,
     BaseChartDirective,
     LucideAngularModule.pick({
-      Search,
-      SlidersHorizontal,
-      MapPin,
-      Calendar,
-      Users,
-      Star,
-      Heart,
-      ArrowLeft,
-      ChevronLeft,
-      ChevronRight,
-      ChevronDown,
-      X,
-      Check,
-      Clock,
-      User,
-      LogOut,
-      Settings,
-      Mail,
-      Eye,
-      EyeOff,
-      FileText,
-      Lock,
-      MessageSquare,
-      Phone,
-      DoorOpen,
-      Maximize2,
-      PlayCircle,
-      Loader2,
-      CalendarDays,
-      Wallet,
-      CalendarX,
-      Bell,
-      Hourglass,
-      XCircle,
-      Edit2,
-      Settings2,
-      AlertCircle,
-      Bot,
-      Fingerprint,
-      Unlock,
-      Wifi,
-      Key,
-      ShieldCheck,
-      Send,
-      ShoppingBag,
-      CheckCircle,
-      Layers,
-      Trash2,
-      Pencil,
-      CreditCard,
+      Search, SlidersHorizontal, MapPin, Calendar, Users, Star, Heart,
+      ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, X, Check, Clock,
+      User, LogOut, Settings, Mail, Eye, EyeOff, FileText, Lock, MessageSquare,
+      Phone, DoorOpen, Maximize2, PlayCircle, Loader2, CalendarDays, Wallet,
+      CalendarX, Bell, Hourglass, XCircle, Edit2, Settings2, AlertCircle,
+      Bot, Fingerprint, Unlock, Wifi, Key, ShieldCheck, Send, ShoppingBag,
+      CheckCircle, Layers, Trash2, Pencil, CreditCard, Plane,
     }),
   ],
   providers: [
+    { provide: LOCALE_ID, useValue: 'fr' },
     provideCharts(withDefaultRegisterables()),
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true,
-    },
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

@@ -78,6 +78,10 @@ export class ArtisanService {
     return this.http.put<ArtisanProduct>(`${this.apiUrl}/products/${productId}`, product);
   }
 
+  toggleProductStatus(productId: number): Observable<ArtisanProduct> {
+    return this.http.patch<ArtisanProduct>(`${this.apiUrl}/products/${productId}/toggle-status`, {});
+  }
+
   deleteProduct(productId: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/products/${productId}`);
   }

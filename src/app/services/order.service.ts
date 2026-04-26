@@ -65,10 +65,15 @@ export class OrderService {
    * Get all orders of authenticated user
    */
   getMyOrders(): Observable<Order[]> {
-    return this.http
-      .get<ApiResponse<Order[]>>(`${this.apiUrl}/my-orders`)
-      .pipe(map((response) => response.data));
-  }
+  return this.http
+    .get<any>(`${this.apiUrl}/my-orders`)
+    .pipe(
+      map((response) => {
+        console.log('Raw response:', response);  // temporary debug
+        return response.data ?? response;
+      })
+    );
+}
 
   /**
    * Get order by ID
@@ -120,10 +125,10 @@ export class OrderService {
   /**
    * Create new order from cart
    */
-  createOrder(request: CreateOrderRequest): Observable<Order> {
-    return this.http
-      .post<ApiResponse<Order>>(`${this.apiUrl}`, request)
-      .pipe(map((response) => response.data));
+  createOrder(orderRequest: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, orderRequest).pipe(
+      map((response: any) => response.data ?? response)  // ✅ unwrap envelope once
+    );
   }
 
   /**
@@ -176,11 +181,17 @@ export class OrderService {
   /**
    * Validate promo code and get discount
    */
-  validatePromoCode(code: string): Observable<number> {
-    return this.http
-      .get<ApiResponse<number>>(`${this.apiUrl}/promo-code/validate`, {
-        params: { code }
-      })
-      .pipe(map((response) => response.data));
+  validatePromoCode(code: string): Observable<any> {
+  return this.http.get<any>(`http://localhost:8080/api/promo-codes/validate/${code}`);
+}
+
+  /**
+   * Download invoice PDF
+   */
+  downloadInvoicePDF(orderId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/${orderId}/invoice/pdf`,
+      { responseType: 'blob' }
+    );
   }
 }

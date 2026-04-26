@@ -22,7 +22,9 @@ export class AppComponent implements OnInit {
     }
   }
 
-  isAdminRoute(): boolean {
-    return this.router.url.startsWith('/dashbord') || this.router.url.startsWith('/dashboard');
+  isDashboardRoute(): boolean {
+    return this.router.url.startsWith('/dashbord') || 
+           this.router.url.startsWith('/dashboard') || 
+           this.router.url.startsWith('/artisan');
   }
 }

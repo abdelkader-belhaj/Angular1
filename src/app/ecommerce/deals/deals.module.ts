@@ -7,12 +7,14 @@ import { RouterModule } from '@angular/router';
 import { DealsPageComponent } from './pages/deals-page.component';
 import { DealDetailPageComponent } from './pages/deal-detail-page.component';
 import { MyFavoritesPageComponent } from './pages/my-favorites-page.component';
+import { CustomSelectComponent } from './pages/custom-select.component';
 
 @NgModule({
   declarations: [
     DealsPageComponent,
     DealDetailPageComponent,
-    MyFavoritesPageComponent
+    MyFavoritesPageComponent,
+    CustomSelectComponent
   ],
   imports: [
     CommonModule,
@@ -24,7 +26,8 @@ import { MyFavoritesPageComponent } from './pages/my-favorites-page.component';
   exports: [
     DealsPageComponent,
     DealDetailPageComponent,
-    MyFavoritesPageComponent
+    MyFavoritesPageComponent,
+    CustomSelectComponent
   ]
 })
 export class DealsModule { }

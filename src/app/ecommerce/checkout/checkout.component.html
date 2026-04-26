@@ -1,341 +1,506 @@
-<div class="checkout-container">
-  <button class="back-btn" (click)="backToCart()">← Back to Cart</button>
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <button class="text-[#003974] font-semibold mb-4 hover:underline" (click)="backToCart()">← Retour au panier</button>
+      <h1 class="text-4xl font-bold text-[#003974] mb-2">Paiement</h1>
+      <p class="text-[#5f6874]">Complétez votre commande en toute sécurité</p>
+    </div>
 
-  <h1>Checkout</h1>
-
-  <div class="checkout-content">
-    <!-- Left: Checkout Form -->
-    <div class="checkout-form-section">
-      <!-- Step Indicator -->
-      <div class="step-indicator">
-        <button
-          [class.active]="currentStep === 'shipping'"
-          (click)="goToStep('shipping')"
-          class="step"
-        >
-          <span class="step-number">1</span>
-          <span class="step-label">Shipping</span>
-        </button>
-        <div class="step-line"></div>
-        <button
-          [class.active]="currentStep === 'payment'"
-          (click)="goToStep('payment')"
-          class="step"
-          [disabled]="!isShippingStepValid()"
-        >
-          <span class="step-number">2</span>
-          <span class="step-label">Payment</span>
-        </button>
-        <div class="step-line"></div>
-        <button
-          [class.active]="currentStep === 'review'"
-          (click)="goToStep('review')"
-          class="step"
-          [disabled]="!checkoutForm.valid"
-        >
-          <span class="step-number">3</span>
-          <span class="step-label">Review</span>
-        </button>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left: Checkout Form -->
+      <div class="lg:col-span-2">
+        <!-- Step Indicator -->
+        <div class="bg-white rounded-lg border border-[#dbe1ea] p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <button
+            [class.active]="currentStep === 'shipping'"
+            (click)="goToStep('shipping')"
+            class="flex flex-col items-center"
+          >
+            <div [ngClass]="{'bg-[#003974] text-white border-[#003974]': currentStep === 'shipping', 'bg-gray-100 text-gray-600 border-gray-300': currentStep !== 'shipping'}" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold mb-2 transition-all">1</div>
+            <span [ngClass]="{'text-[#003974] font-600': currentStep === 'shipping', 'text-gray-600': currentStep !== 'shipping'}" class="text-sm font-medium">Livraison</span>
+          </button>
+          <div class="flex-1 h-0.5 bg-[#dbe1ea] mx-2 mt-6"></div>
+          <button
+            [class.active]="currentStep === 'payment'"
+            (click)="goToStep('payment')"
+            [disabled]="!isShippingStepValid()"
+            class="flex flex-col items-center"
+          >
+            <div [ngClass]="{'bg-[#003974] text-white border-[#003974]': currentStep === 'payment', 'bg-gray-100 text-gray-600 border-gray-300': currentStep !== 'payment'}" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold mb-2 transition-all disabled:opacity-50">2</div>
+            <span [ngClass]="{'text-[#003974] font-600': currentStep === 'payment', 'text-gray-600': currentStep !== 'payment'}" class="text-sm font-medium">Paiement</span>
+          </button>
+          <div class="flex-1 h-0.5 bg-[#dbe1ea] mx-2 mt-6"></div>
+          <button
+            [class.active]="currentStep === 'review'"
+            (click)="goToStep('review')"
+            [disabled]="!checkoutForm.valid"
+            class="flex flex-col items-center"
+          >
+            <div [ngClass]="{'bg-[#003974] text-white border-[#003974]': currentStep === 'review', 'bg-gray-100 text-gray-600 border-gray-300': currentStep !== 'review'}" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold mb-2 transition-all disabled:opacity-50">3</div>
+            <span [ngClass]="{'text-[#003974] font-600': currentStep === 'review', 'text-gray-600': currentStep !== 'review'}" class="text-sm font-medium">Résumé</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Error Message -->
-      <div *ngIf="error" class="alert alert-error">
-        {{ error }}
-      </div>
+        <!-- Error Message -->
+        <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700">{{ error }}</div>
 
-      <!-- Success Message -->
-      <div *ngIf="success" class="alert alert-success">
-        {{ success }}
-      </div>
+        <!-- Success Message -->
+        <div *ngIf="success" class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-green-700">{{ success }}</div>
 
-      <form [formGroup]="checkoutForm">
-        <!-- Shipping Information -->
-        <div *ngIf="currentStep === 'shipping'" class="form-section">
-          <h2>Shipping Address</h2>
+        <form [formGroup]="checkoutForm">
+          <!-- Shipping Information -->
+          <div *ngIf="currentStep === 'shipping'" class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+          <h2 class="text-2xl font-bold text-[#003974] mb-6">Adresse de Livraison</h2>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="firstName">First Name *</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="firstName" class="block text-sm font-semibold text-[#003974] mb-2">Prénom *</label>
               <input
                 id="firstName"
                 type="text"
                 formControlName="firstName"
-                placeholder="John"
+                placeholder="Jean"
+                class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
               />
               <span
                 *ngIf="
                   checkoutForm.get('firstName')?.invalid &&
                   checkoutForm.get('firstName')?.touched
                 "
-                class="error-text"
+                class="text-red-600 text-sm mt-1 block"
               >
-                First name is required
+                Le prénom est requis
               </span>
             </div>
 
-            <div class="form-group">
-              <label for="lastName">Last Name *</label>
+            <div>
+              <label for="lastName" class="block text-sm font-semibold text-[#003974] mb-2">Nom *</label>
               <input
                 id="lastName"
                 type="text"
                 formControlName="lastName"
-                placeholder="Doe"
+                placeholder="Dupont"
+                class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
               />
               <span
                 *ngIf="
                   checkoutForm.get('lastName')?.invalid &&
                   checkoutForm.get('lastName')?.touched
                 "
-                class="error-text"
+                class="text-red-600 text-sm mt-1 block"
               >
-                Last name is required
+                Le nom est requis
               </span>
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="email">Email *</label>
+          <div class="mb-4">
+            <label for="email" class="block text-sm font-semibold text-[#003974] mb-2">Email *</label>
             <input
               id="email"
               type="email"
               formControlName="email"
-              placeholder="john@example.com"
+              placeholder="jean@example.com"
+              class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
             />
             <span
               *ngIf="
                 checkoutForm.get('email')?.invalid &&
                 checkoutForm.get('email')?.touched
               "
-              class="error-text"
+              class="text-red-600 text-sm mt-1 block"
             >
-              Valid email is required
+              Un email valide est requis
             </span>
           </div>
 
-          <div class="form-group">
-            <label for="phone">Phone *</label>
+          <div class="mb-4">
+            <label for="phone" class="block text-sm font-semibold text-[#003974] mb-2">Téléphone *</label>
             <input
               id="phone"
               type="tel"
               formControlName="phone"
-              placeholder="+1234567890"
+              placeholder="+216 12345678"
+              class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
             />
             <span
               *ngIf="
                 checkoutForm.get('phone')?.invalid &&
                 checkoutForm.get('phone')?.touched
               "
-              class="error-text"
+              class="text-red-600 text-sm mt-1 block"
             >
-              Valid phone number is required
+              Un numéro de téléphone valide est requis
             </span>
           </div>
 
-          <div class="form-group">
-            <label for="address">Address *</label>
+          <div class="mb-4">
+            <label for="address" class="block text-sm font-semibold text-[#003974] mb-2">Adresse *</label>
             <input
               id="address"
               type="text"
               formControlName="address"
-              placeholder="123 Main Street"
+              placeholder="123 Rue Principale"
+              class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
             />
             <span
               *ngIf="
                 checkoutForm.get('address')?.invalid &&
                 checkoutForm.get('address')?.touched
               "
-              class="error-text"
+              class="text-red-600 text-sm mt-1 block"
             >
-              Address is required
+              L'adresse est requise
             </span>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="city">City *</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="city" class="block text-sm font-semibold text-[#003974] mb-2">Ville *</label>
               <input
                 id="city"
                 type="text"
                 formControlName="city"
                 placeholder="Tunis"
+                class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
               />
               <span
                 *ngIf="
                   checkoutForm.get('city')?.invalid &&
                   checkoutForm.get('city')?.touched
                 "
-                class="error-text"
+                class="text-red-600 text-sm mt-1 block"
               >
-                City is required
+                La ville est requise
               </span>
             </div>
 
-            <div class="form-group">
-              <label for="postalCode">Postal Code *</label>
+            <div>
+              <label for="postalCode" class="block text-sm font-semibold text-[#003974] mb-2">Code Postal *</label>
               <input
                 id="postalCode"
                 type="text"
                 formControlName="postalCode"
                 placeholder="1000"
+                class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
               />
               <span
                 *ngIf="
                   checkoutForm.get('postalCode')?.invalid &&
                   checkoutForm.get('postalCode')?.touched
                 "
-                class="error-text"
+                class="text-red-600 text-sm mt-1 block"
               >
-                Valid postal code is required
+                Un code postal valide est requis
               </span>
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="country">Country *</label>
+          <div class="mb-6">
+            <label for="country" class="block text-sm font-semibold text-[#003974] mb-2">Pays *</label>
+            <div class="relative">
               <input
                 id="country"
                 type="text"
                 formControlName="country"
-                placeholder="Tunisia"
+                (focus)="showCountryDropdown = true"
+                (input)="filterCountries($event)"
+                placeholder="Sélectionnez ou tapez un pays"
+                class="w-full px-4 py-3 pr-10 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white cursor-pointer"
               />
+              <svg class="absolute right-3 top-3.5 w-5 h-5 text-[#5f6874] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+              </svg>
+
+              <!-- Custom Dropdown List -->
+              <div *ngIf="showCountryDropdown" class="absolute z-50 w-full mt-2 bg-white border-2 border-[#dbe1ea] rounded-lg shadow-lg">
+                <div class="max-h-64 overflow-y-auto">
+                  <div
+                    *ngFor="let country of filteredCountries"
+                    (click)="selectCountry(country)"
+                    class="px-4 py-3 hover:bg-[#f0f5ff] cursor-pointer transition-colors duration-150 border-b border-[#f0f0f0] last:border-b-0 text-[#003974] font-medium"
+                  >
+                    {{ country }}
+                  </div>
+                  <div *ngIf="filteredCountries.length === 0" class="px-4 py-6 text-center text-[#5f6874]">
+                    Aucun pays trouvé
+                  </div>
+                </div>
+              </div>
+
+              <!-- Backdrop to close dropdown -->
+              <div *ngIf="showCountryDropdown" (click)="showCountryDropdown = false" class="fixed inset-0 z-40"></div>
             </div>
           </div>
 
           <button
             (click)="goToStep('payment')"
             [disabled]="!isShippingStepValid()"
-            class="btn btn-primary"
+            class="w-full px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] disabled:opacity-50 mt-6"
           >
-            Continue to Payment
+            Continuer vers le paiement
           </button>
-        </div>
+            </div>
 
         <!-- Payment Information -->
-        <div *ngIf="currentStep === 'payment'" class="form-section">
-          <h2>Payment Method</h2>
+        <div *ngIf="currentStep === 'payment'" class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+          <h2 class="text-2xl font-bold text-[#003974] mb-6">Méthode de Paiement</h2>
 
-          <div class="form-group">
-            <label for="paymentMethod">Select Payment Method *</label>
-            <select id="paymentMethod" formControlName="paymentMethod">
+          <div class="mb-6">
+            <label for="paymentMethod" class="block text-sm font-semibold text-[#003974] mb-2">Sélectionner une méthode de paiement *</label>
+            <select id="paymentMethod" formControlName="paymentMethod" class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white cursor-pointer">
               <option *ngFor="let method of paymentMethods" [value]="method">
                 {{ method }}
               </option>
             </select>
           </div>
 
-          <div class="payment-info">
-            <h3>Payment Details</h3>
-            <p>This is a demo checkout. In a real implementation, payment processing would occur here.</p>
-            <p><strong>Selected Method:</strong> {{ checkoutForm.get('paymentMethod')?.value }}</p>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 class="font-semibold text-[#003974] mb-2">Détails du Paiement</h3>
+            <p class="text-sm text-[#5f6874] mb-2">Ceci est un paiement de démonstration. Dans une implémentation réelle, le traitement des paiements se ferait ici.</p>
+            <p class="text-sm"><strong class="text-[#003974]">Méthode sélectionnée:</strong> <span class="text-[#5f6874]">{{ checkoutForm.get('paymentMethod')?.value }}</span></p>
           </div>
 
-          <div class="form-group">
-            <label>
-              <input type="checkbox" formControlName="termsAgreed" />
-              I agree to the terms and conditions *
+          <div class="mb-6">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" formControlName="termsAgreed" class="w-4 h-4 accent-[#003974]" />
+              <span class="text-sm text-[#5f6874]">J'accepte les conditions générales *</span>
             </label>
             <span
               *ngIf="
                 checkoutForm.get('termsAgreed')?.invalid &&
                 checkoutForm.get('termsAgreed')?.touched
               "
-              class="error-text"
+              class="text-red-600 text-sm mt-2 block"
             >
-              You must agree to the terms
+              Vous devez accepter les conditions
             </span>
           </div>
 
-          <div class="button-group">
-            <button (click)="goToStep('shipping')" class="btn btn-secondary">
-              Back to Shipping
+          <div class="flex gap-3">
+            <button (click)="goToStep('shipping')" class="flex-1 px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff]">
+              Retour à la Livraison
             </button>
             <button
               (click)="goToStep('review')"
               [disabled]="!checkoutForm.valid"
-              class="btn btn-primary"
+              class="flex-1 px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] disabled:opacity-50"
             >
-              Review Order
+              Vérifier la Commande
             </button>
           </div>
         </div>
 
         <!-- Review Order -->
-        <div *ngIf="currentStep === 'review'" class="form-section">
-          <h2>Review Your Order</h2>
+        <div *ngIf="currentStep === 'review'" class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+          <h2 class="text-2xl font-bold text-[#003974] mb-6">Vérifier Votre Commande</h2>
 
-          <div class="review-section">
-            <h3>Shipping Address</h3>
-            <p>
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <h3 class="font-bold text-[#003974] mb-3">Adresse de Livraison</h3>
+            <p class="text-sm text-[#5f6874]">
               {{ checkoutForm.get('firstName')?.value }}
               {{ checkoutForm.get('lastName')?.value }}
             </p>
-            <p>{{ getShippingAddress() }}</p>
-            <p>{{ checkoutForm.get('email')?.value }}</p>
-            <p>{{ checkoutForm.get('phone')?.value }}</p>
+            <p class="text-sm text-[#5f6874]">{{ getShippingAddress() }}</p>
+            <p class="text-sm text-[#5f6874]">{{ checkoutForm.get('email')?.value }}</p>
+            <p class="text-sm text-[#5f6874]">{{ checkoutForm.get('phone')?.value }}</p>
           </div>
 
-          <div class="review-section">
-            <h3>Payment Method</h3>
-            <p>{{ checkoutForm.get('paymentMethod')?.value }}</p>
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <h3 class="font-bold text-[#003974] mb-3">Méthode de Paiement</h3>
+            <p class="text-sm text-[#5f6874]">{{ checkoutForm.get('paymentMethod')?.value }}</p>
           </div>
 
-          <div class="button-group">
-            <button (click)="goToStep('payment')" class="btn btn-secondary">
-              Back to Payment
+          <div class="flex gap-3">
+            <button (click)="goToStep('payment')" class="flex-1 px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff]">
+              Retour au Paiement
             </button>
             <button
-              (click)="placeOrder()"
+              (click)="initializePayment()"
               [disabled]="isProcessing"
-              class="btn btn-primary"
+              class="flex-1 px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] disabled:opacity-50"
             >
-              <span *ngIf="!isProcessing">Place Order</span>
-              <span *ngIf="isProcessing">Processing...</span>
+              <span *ngIf="!isProcessing">Valider la Commande</span>
+              <span *ngIf="isProcessing">Traitement...</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Payment Form Modal -->
+        <div *ngIf="showPaymentForm" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+            <h2 class="text-2xl font-bold text-[#003974] mb-6">Informations de Paiement</h2>
+
+            <!-- Error message -->
+            <div *ngIf="paymentError" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700 text-sm">
+              {{ paymentError }}
+            </div>
+
+            <!-- Success message -->
+            <div *ngIf="paymentSuccess" class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-green-700 text-sm">
+              {{ paymentSuccess }}
+            </div>
+
+            <form (ngSubmit)="processPayment()" class="space-y-4" *ngIf="!paymentSuccess">
+              <!-- Cardholder Name -->
+              <div>
+                <label class="block text-sm font-semibold text-[#003974] mb-2">Titulaire de la Carte *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="cardholderName"
+                  name="cardholderName"
+                  placeholder="Jean Dupont"
+                  class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white"
+                  required
+                />
+              </div>
+
+              <!-- Card Number -->
+              <div>
+                <label class="block text-sm font-semibold text-[#003974] mb-2">Numéro de Carte *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="cardNumber"
+                  name="cardNumber"
+                  placeholder="4242 4242 4242 4242"
+                  maxlength="19"
+                  (input)="formatCardNumber($event)"
+                  class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white font-mono"
+                  required
+                />
+                <p class="text-xs text-[#5f6874] mt-1">Test: 4242 4242 4242 4242</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Expiry Date -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#003974] mb-2">Expiration *</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="cardExpiry"
+                    name="cardExpiry"
+                    placeholder="MM/YY"
+                    maxlength="5"
+                    (input)="formatExpiry($event)"
+                    class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white font-mono"
+                    required
+                  />
+                </div>
+
+                <!-- CVC -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#003974] mb-2">CVC *</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="cardCvc"
+                    name="cardCvc"
+                    placeholder="123"
+                    maxlength="4"
+                    class="w-full px-4 py-3 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Buttons -->
+              <div class="flex gap-3 mt-6 pt-4 border-t border-[#dbe1ea]">
+                <button
+                  type="button"
+                  (click)="cancelPayment()"
+                  class="flex-1 px-4 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] transition-all"
+                  [disabled]="isProcessing"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 px-4 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] transition-all disabled:opacity-50"
+                  [disabled]="isProcessing"
+                >
+                  <span *ngIf="!isProcessing">Payer Maintenant</span>
+                  <span *ngIf="isProcessing">Traitement...</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Success action button -->
+            <div *ngIf="paymentSuccess" class="flex gap-3 mt-6 pt-4 border-t border-[#dbe1ea]">
+              <button
+                (click)="completeOrder()"
+                class="flex-1 px-4 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] transition-all"
+              >
+                Continuer
+              </button>
+            </div>
           </div>
         </div>
       </form>
     </div>
 
     <!-- Right: Order Summary -->
-    <aside class="order-summary">
-      <h2>Order Summary</h2>
+    <aside class="lg:col-span-1">
+      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6 sticky top-24">
+        <h2 class="text-2xl font-bold text-[#003974] mb-6">Résumé de la Commande</h2>
 
-      <div class="summary-items">
-        <div class="summary-item" *ngFor="let item of cartItems">
-          <img
-            [src]="item.product.image || 'assets/placeholder.png'"
-            [alt]="item.product.name"
-          />
-          <div class="item-details">
-            <p class="item-name">{{ item.product.name }}</p>
-            <p class="item-qty">Qty: {{ item.quantity }}</p>
-            <p class="item-price">
-              ₽{{ (item.product.discountPrice ?? item.product.price) * item.quantity }}
-            </p>
+        <div class="max-h-80 overflow-y-auto mb-6">
+          <div class="space-y-4">
+            <div class="pb-4 border-b border-[#dbe1ea] last:border-b-0" *ngFor="let item of cartItems">
+              <div class="flex gap-3">
+                <img
+                  [src]="getImageUrl(item.product.image)"
+                  [alt]="item.product.name"
+                  class="w-16 h-16 object-cover rounded bg-gray-200"
+                />
+                <div class="flex-grow">
+                  <p class="font-semibold text-[#003974] text-sm">{{ item.product.name }}</p>
+                  <p class="text-sm text-[#5f6874]">Qté: {{ item.quantity }}</p>
+                  <p class="text-sm font-bold text-[#003974]">{{ ((item.product.discountPrice ?? item.product.price) * item.quantity) | number:'1.2-2' }} TND</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="summary-totals">
-        <div class="total-row">
-          <span>Subtotal:</span>
-          <span>₽{{ getCartSubtotal() }}</span>
+        <!-- Promo Code Section -->
+        <div class="mb-6 p-4 bg-[#f0f5ff] rounded-lg border border-[#d6e3ff]">
+          <label for="promoCode" class="block text-sm font-semibold text-[#003974] mb-2">Code Promo</label>
+          <div class="flex gap-2">
+            <input
+              id="promoCode"
+              type="text"
+              [(ngModel)]="promoCode"
+              placeholder="Entrez un code promo"
+              class="flex-1 px-3 py-2 border-2 border-[#dbe1ea] rounded-lg focus:outline-none focus:border-[#003974] focus:ring-2 focus:ring-[#003974] focus:ring-opacity-20 transition-all duration-200 bg-white text-sm"
+            />
+            <button
+              (click)="applyPromoCode()"
+              class="px-4 py-2 bg-[#003974] text-white rounded-lg font-semibold hover:bg-[#002a54] transition-all duration-200 text-sm"
+            >
+              Appliquer
+            </button>
+          </div>
+          <div *ngIf="promoCodeMessage" class="text-sm mt-2" [ngClass]="{'text-green-600': promoCodeApplied, 'text-red-600': !promoCodeApplied}">
+            {{ promoCodeMessage }}
+          </div>
         </div>
 
-        <div *ngIf="getTotalDiscount() > 0" class="total-row discount">
-          <span>Discount:</span>
-          <span>-₽{{ getTotalDiscount() }}</span>
-        </div>
+        <div class="space-y-3 pt-6 border-t border-[#dbe1ea]">
+          <div *ngIf="promoCodeApplied && getTotalDiscount() > 0" class="flex justify-between text-red-600">
+            <span>Réduction Promo:</span>
+            <span>-{{ (getTotalDiscount() | number:'1.2-2') }} TND</span>
+          </div>
 
-        <div class="total-row shipping">
-          <span>Shipping:</span>
-          <span>TBD</span>
-        </div>
+          <div class="flex justify-between text-[#5f6874]">
+            <span>Livraison:</span>
+            <span>À déterminer</span>
+          </div>
 
-        <div class="total-row grand-total">
-          <span>Total:</span>
-          <span>₽{{ cartTotal }}</span>
+          <div class="flex justify-between text-xl font-bold text-[#003974] pt-3 border-t border-[#dbe1ea]">
+            <span>Total:</span>
+            <span>{{ (cartTotal | number:'1.2-2') }} TND</span>
+          </div>
         </div>
       </div>
     </aside>

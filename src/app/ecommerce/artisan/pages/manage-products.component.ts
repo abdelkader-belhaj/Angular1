@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { ArtisanService, ArtisanProduct } from '../../../services/artisan.service';
 import { ProductService, ProductCategory } from '../../../services/product.service';
 import { AuthService } from '../../../services/auth.service';
@@ -8,17 +9,26 @@ import { AuthService } from '../../../services/auth.service';
 @Component({
   selector: 'app-manage-products',
   templateUrl: './manage-products.component.html',
-  styleUrls: ['./manage-products.component.css']
+  styleUrls: ['./manage-products.component.css'],
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule]
 })
 export class ManageProductsComponent implements OnInit {
   @ViewChild('formSection') formSection!: ElementRef;
 
   products: ArtisanProduct[] = [];
+  paginatedProducts: ArtisanProduct[] = [];
   isLoading = true;
   showForm = false;
   isEditing = false;
   editingProductId: number | null = null;
   sidebarOpen = true;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 9;
+  totalPages = 1;
+  Math = Math;
 
   productForm!: FormGroup;
   selectedProductImage: File | null = null;
@@ -119,6 +129,7 @@ export class ManageProductsComponent implements OnInit {
     this.artisanService.getArtisanProducts().subscribe(
       (products) => {
         this.products = products;
+        this.updatePagination();
         this.isLoading = false;
       },
       (error) => {
@@ -126,6 +137,34 @@ export class ManageProductsComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.products.length / this.pageSize);
+    if (this.totalPages === 0) this.totalPages = 1;
+    if (this.currentPage > this.totalPages) this.currentPage = 1;
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.paginatedProducts = this.products.slice(start, start + this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  nextPage(): void { this.goToPage(this.currentPage + 1); }
+  previousPage(): void { this.goToPage(this.currentPage - 1); }
+
+  get pages(): number[] {
+    const range: number[] = [];
+    const delta = 2;
+    const left = Math.max(1, this.currentPage - delta);
+    const right = Math.min(this.totalPages, this.currentPage + delta);
+    for (let i = left; i <= right; i++) range.push(i);
+    return range;
   }
 
   checkIfAddMode(): void {
@@ -310,6 +349,7 @@ export class ManageProductsComponent implements OnInit {
     this.authService.logout();
     this.router.navigate(['/']);
   }
+
 
   deleteProduct(productId: number): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit?')) {

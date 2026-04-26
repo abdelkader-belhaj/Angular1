@@ -1,225 +1,290 @@
 <div class="min-h-screen bg-[#f8fafc]">
   <!-- Sidebar Navigation -->
-  <div 
+  <aside 
     [class.translate-x-0]="sidebarOpen"
     [class.-translate-x-full]="!sidebarOpen"
-    class="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-[#003974] to-[#002a54] shadow-xl transition-transform duration-300 z-50"
+    class="fixed left-0 top-0 h-screen w-72 bg-white border-r border-slate-200 shadow-sm transition-all duration-500 ease-in-out z-50 overflow-y-auto"
   >
-    <!-- Logo/Brand -->
-    <div class="p-6 border-b border-[#0047a3]">
-      <h2 class="text-2xl font-bold text-white cursor-pointer hover:opacity-80" (click)="toggleSidebar()">
-        🏪 Mon Artisanat
-      </h2>
+    <!-- Logo/Brand Section -->
+    <div class="p-8 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-[#003974] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span class="material-symbols-outlined text-white text-2xl">storefront</span>
+          </div>
+          <h2 class="text-xl font-bold text-[#003974] tracking-tight">Mon Artisanat</h2>
+        </div>
+        <button 
+          (click)="toggleSidebar()" 
+          class="p-2 text-slate-400 hover:text-[#003974] transition-colors"
+          title="Fermer le menu"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-blue-50 border border-blue-100">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Espace Vendeur</span>
+      </div>
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="pt-8 space-y-2 px-4">
-      <!-- Dashboard Section (Active) -->
-      <div>
-        <a
-          routerLink="/artisan"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200 bg-[#0047a3]"
-        >
-          <span class="text-xl">📊</span>
-          <span class="font-semibold">Dashboard</span>
-        </a>
+    <nav class="px-4 space-y-1.5">
+      <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Menu Principal</p>
+      
+      <!-- Dashboard -->
+      <a
+        routerLink="/artisan"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">dashboard</span>
+        <span class="font-semibold text-sm">Tableau de Bord</span>
+      </a>
+
+      <!-- Mes Produits -->
+      <a
+        routerLink="/artisan/products"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">inventory_2</span>
+        <span class="font-semibold text-sm">Gestion Catalogue</span>
+      </a>
+
+      <!-- Statistiques -->
+      <a
+        routerLink="/artisan/sales"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">analytics</span>
+        <span class="font-semibold text-sm">Rapports & Ventes</span>
+      </a>
+
+      <div class="my-8 px-4 border-t border-slate-100"></div>
+      
+      <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Services</p>
+
+      <!-- Avis (Disabled for now) -->
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 cursor-not-allowed opacity-60">
+        <span class="material-symbols-outlined text-[22px]">reviews</span>
+        <span class="font-semibold text-sm">Avis Clients</span>
       </div>
 
-      <!-- Products Section -->
-      <div>
-        <a
-          routerLink="/artisan/products"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
-        >
-          <span class="text-xl">📦</span>
-          <span class="font-semibold">Mes Produits</span>
-        </a>
-      </div>
-
-      <!-- Divider -->
-      <div class="my-4 border-t border-[#0047a3]"></div>
-
-      <!-- Other Sections -->
-      <div class="text-[#8fa3c0] text-xs font-semibold px-4 py-2">SECTIONS</div>
-      <div class="space-y-2">
-        <!-- Statistiques now links to /artisan/sales -->
-        <a
-          routerLink="/artisan/sales"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
-        >
-          <span class="text-xl">📈</span>
-          <span class="font-semibold text-sm">Statistiques</span>
-        </a>
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
-          <span class="text-xl">⭐</span>
-          <span class="font-semibold text-sm">Avis & Évaluations</span>
-        </div>
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
-          <span class="text-xl">💰</span>
-          <span class="font-semibold text-sm">Mes Revenus</span>
-        </div>
+      <!-- Mes Revenus (Disabled for now) -->
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 cursor-not-allowed opacity-60">
+        <span class="material-symbols-outlined text-[22px]">payments</span>
+        <span class="font-semibold text-sm">Paiements</span>
       </div>
     </nav>
 
-    <!-- Log Out at bottom -->
-    <div class="absolute bottom-6 left-4 right-4">
+    <!-- Bottom Action -->
+    <div class="absolute bottom-8 left-0 w-full px-6">
       <button
         (click)="logout()"
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 transition font-semibold"
+        class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white transition-all duration-300 font-bold text-sm"
       >
-        <span>🚪</span>
-        Quitter
+        <span class="material-symbols-outlined text-lg">logout</span>
+        Déconnexion
       </button>
     </div>
-  </div>
+  </aside>
 
   <!-- Hamburger Menu (visible when sidebar is closed) -->
   <button
     *ngIf="!sidebarOpen"
     (click)="toggleSidebar()"
-    class="fixed top-6 left-6 z-40 bg-[#003974] text-white p-3 rounded-lg hover:bg-[#002a54] transition shadow-lg"
+    class="fixed top-6 left-6 z-[60] bg-white text-[#003974] p-3 rounded-xl shadow-xl border border-slate-200 hover:bg-slate-50 transition-all duration-300 group"
     title="Ouvrir le menu"
   >
-    ☰
+    <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">menu</span>
   </button>
 
   <!-- Main Content Area -->
-  <div [class.ml-64]="sidebarOpen" [class.pt-24]="!sidebarOpen" class="p-8 transition-all duration-300">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-4xl font-bold text-[#003974]">Tableau de Bord Artisan</h1>
-        <p class="text-[#5f6874] mt-2">Gérez vos produits et suivez vos ventes</p>
+  <main [class.ml-72]="sidebarOpen" [class.pt-28]="!sidebarOpen" class="p-10 transition-all duration-500 ease-in-out">
+    <!-- Header with Gradient Background -->
+    <div class="mb-12 pb-8 border-b-2 border-[#e8eff7] animate-slideInFromTop">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#003974] to-[#002a54] rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-2xl">dashboard</span>
+            </div>
+            <h1 class="text-4xl font-bold text-[#003974]">Tableau de Bord</h1>
+          </div>
+          <p class="text-[#5f6874] mt-2 ml-15">Gérez vos produits et suivez vos ventes</p>
+        </div>
+        <button
+          routerLink="/artisan/products"
+          class="px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-lg font-bold hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">add</span>
+          Ajouter un produit
+        </button>
       </div>
-      <button
-        routerLink="/artisan/products"
-        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] transition"
-      >
-        + Ajouter un produit
-      </button>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="text-center py-12">
-      <p class="text-[#5f6874]">Chargement du tableau de bord...</p>
+    <!-- Loading State with Spinner -->
+    <div *ngIf="isLoading" class="text-center py-16">
+      <div class="flex justify-center mb-6">
+        <div class="w-12 h-12 border-4 border-[#e8eff7] border-t-[#003974] rounded-full animate-spin"></div>
+      </div>
+      <p class="text-[#5f6874] text-lg">Chargement de votre tableau de bord...</p>
     </div>
 
     <!-- Stats Cards -->
-    <div *ngIf="!isLoading && artisan && stats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <!-- Total Revenue -->
-      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+    <div *ngIf="!isLoading && artisan && stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12 animate-fadeIn">
+      <!-- Chiffre d'Affaires -->
+      <div class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-6 shadow-sm hover:shadow-lg transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-[#5f6874] text-sm font-semibold mb-1">Revenu Total</p>
-            <p class="text-3xl font-bold text-[#003974]">{{ stats.totalRevenue | number: '1.2-2' }} TND</p>
+            <p class="text-[#5f6874] text-sm font-semibold mb-2">Chiffre d'Affaires</p>
+            <p class="text-3xl font-bold text-[#003974]">{{ stats.totalRevenue | number: '1.2-2' }} <span class="text-lg">TND</span></p>
           </div>
-          <div class="text-4xl">💰</div>
+          <div class="w-14 h-14 bg-gradient-to-br from-[#003974] to-[#002a54] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-white text-2xl">payments</span>
+          </div>
         </div>
       </div>
 
       <!-- Products Sold -->
-      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+      <div class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-6 shadow-sm hover:shadow-lg transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-[#5f6874] text-sm font-semibold mb-1">Produits Vendus</p>
-            <p class="text-3xl font-bold text-[#003974]">{{ stats.productsSold }}</p>
+            <p class="text-[#5f6874] text-sm font-semibold mb-2">Produits Vendus</p>
+            <p class="text-3xl font-bold text-amber-600">{{ stats.productsSold }}</p>
           </div>
-          <div class="text-4xl">📦</div>
+          <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-white text-2xl">package_2</span>
+          </div>
         </div>
       </div>
 
       <!-- This Month Revenue -->
-      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+      <div class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-6 shadow-sm hover:shadow-lg transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-[#5f6874] text-sm font-semibold mb-1">Revenue ce mois</p>
-            <p class="text-3xl font-bold text-green-600">{{ stats.thisMonthRevenue | number: '1.2-2' }} TND</p>
+            <p class="text-[#5f6874] text-sm font-semibold mb-2">Revenue ce Mois</p>
+            <p class="text-3xl font-bold text-green-600">{{ stats.thisMonthRevenue | number: '1.2-2' }} <span class="text-lg">TND</span></p>
           </div>
-          <div class="text-4xl">📈</div>
+          <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-white text-2xl">trending_up</span>
+          </div>
         </div>
       </div>
 
-      <!-- Commission Earned -->
-      <div class="bg-white rounded-lg border border-[#dbe1ea] p-6">
+      <!-- Commission TunisiaTour -->
+      <div class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-6 shadow-sm hover:shadow-lg transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-[#5f6874] text-sm font-semibold mb-1">Commission Gagnée</p>
-            <p class="text-3xl font-bold text-purple-600">{{ stats.commissionEarned | number: '1.2-2' }} TND</p>
+            <p class="text-[#5f6874] text-sm font-semibold mb-2">Commission (10%)</p>
+            <p class="text-3xl font-bold text-red-600">{{ stats.commissionEarned | number: '1.2-2' }} <span class="text-lg">TND</span></p>
           </div>
-          <div class="text-4xl">✓</div>
+          <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-white text-2xl">account_balance_wallet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Net Revenue -->
+      <div class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-6 shadow-sm hover:shadow-lg transition-all duration-300 group">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[#5f6874] text-sm font-semibold mb-2">Mon Revenu Net</p>
+            <p class="text-3xl font-bold text-blue-600">{{ stats.netRevenue | number: '1.2-2' }} <span class="text-lg">TND</span></p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-white text-2xl">savings</span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Quick Links -->
-    <div *ngIf="!isLoading && artisan" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div *ngIf="!isLoading && artisan" class="grid grid-cols-1 md:grid-cols-3 gap-7 mb-12 animate-fadeIn">
       <!-- Manage Products -->
       <div
         (click)="navigateTo('products')"
-        class="bg-white rounded-lg border border-[#dbe1ea] p-8 hover:shadow-lg transition-shadow cursor-pointer"
+        class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-8 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:border-[#003974]"
       >
-        <div class="text-4xl mb-4">📦</div>
-        <h3 class="text-xl font-bold text-[#003974] mb-2">Gérer les produits</h3>
-        <p class="text-[#5f6874] mb-4">Vendez {{ artisan.productsCount || 0 }} produits</p>
-        <div class="flex items-center text-[#003974] font-bold">
-          Voir plus <span class="ml-2">→</span>
+        <div class="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-amber-600 text-4xl">inventory_2</span>
+        </div>
+        <h3 class="text-xl font-bold text-[#003974] mb-2">Gérer les Produits</h3>
+        <p class="text-[#5f6874] mb-6">{{ productsCount }} produit<span *ngIf="productsCount !== 1">s</span> publiés</p>
+        <div class="flex items-center text-[#003974] font-bold group-hover:gap-3 gap-2 transition-all">
+          Voir plus <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
         </div>
       </div>
 
       <!-- View Sales -->
       <div
         (click)="navigateTo('sales')"
-        class="bg-white rounded-lg border border-[#dbe1ea] p-8 hover:shadow-lg transition-shadow cursor-pointer"
+        class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-8 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:border-[#003974]"
       >
-        <div class="text-4xl mb-4">📊</div>
-        <h3 class="text-xl font-bold text-[#003974] mb-2">Historique des ventes</h3>
-        <p class="text-[#5f6874] mb-4">{{ stats?.totalSales || 0 }} ventes totales</p>
-        <div class="flex items-center text-[#003974] font-bold">
-          Consulter <span class="ml-2">→</span>
+        <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-green-600 text-4xl">show_chart</span>
+        </div>
+        <h3 class="text-xl font-bold text-[#003974] mb-2">Historique des Ventes</h3>
+        <p class="text-[#5f6874] mb-6">{{ stats?.totalSales || 0 }} vente<span *ngIf="(stats?.totalSales || 0) !== 1">s</span> totale<span *ngIf="(stats?.totalSales || 0) !== 1">s</span></p>
+        <div class="flex items-center text-[#003974] font-bold group-hover:gap-3 gap-2 transition-all">
+          Consulter <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
         </div>
       </div>
 
       <!-- Profile Settings -->
-      <div class="bg-white rounded-lg border border-[#dbe1ea] p-8 hover:shadow-lg transition-shadow cursor-pointer">
-        <div class="text-4xl mb-4">⚙️</div>
-        <h3 class="text-xl font-bold text-[#003974] mb-2">Paramètres du profil</h3>
-        <p class="text-[#5f6874] mb-4">{{ artisan.businessName }}</p>
-        <div class="flex items-center text-[#003974] font-bold">
-          Modifier <span class="ml-2">→</span>
+      <div
+        class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-8 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:border-[#003974]"
+      >
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-blue-600 text-4xl">settings</span>
+        </div>
+        <h3 class="text-xl font-bold text-[#003974] mb-2">Paramètres du Profil</h3>
+        <p class="text-[#5f6874] mb-6 truncate">{{ artisan.businessName }}</p>
+        <div class="flex items-center text-[#003974] font-bold group-hover:gap-3 gap-2 transition-all">
+          Modifier <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
         </div>
       </div>
     </div>
 
     <!-- Business Info -->
-    <div *ngIf="!isLoading && artisan" class="mt-8 bg-white rounded-lg border border-[#dbe1ea] p-8">
-      <h2 class="text-2xl font-bold text-[#003974] mb-6">Informations Commerciales</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <p class="text-sm text-[#5f6874] font-semibold mb-2">Nom de l'entreprise</p>
+    <div *ngIf="!isLoading && artisan" class="mt-8 bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-8 shadow-sm animate-fadeIn">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-gradient-to-br from-[#003974] to-[#002a54] rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-white">business</span>
+        </div>
+        <h2 class="text-2xl font-bold text-[#003974]">Informations Commerciales</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="pb-6 border-b border-[#e8eff7] md:border-b-0 md:border-r">
+          <p class="text-sm text-[#5f6874] font-semibold mb-2">Nom de l'Entreprise</p>
           <p class="text-lg font-bold text-[#003974]">{{ artisan.businessName }}</p>
         </div>
-        <div>
+        <div class="pb-6 border-b border-[#e8eff7] md:border-b-0">
           <p class="text-sm text-[#5f6874] font-semibold mb-2">Email</p>
           <p class="text-lg font-bold text-[#003974]">{{ artisan.email }}</p>
         </div>
-        <div>
-          <p class="text-sm text-[#5f6874] font-semibold mb-2">Membre depuis</p>
+        <div class="pb-6 border-b border-[#e8eff7] md:border-b-0 md:border-r">
+          <p class="text-sm text-[#5f6874] font-semibold mb-2">Membre Depuis</p>
           <p class="text-lg font-bold text-[#003974]">{{ artisan.joinDate | date: 'dd MMMM yyyy' }}</p>
         </div>
         <div>
           <p class="text-sm text-[#5f6874] font-semibold mb-2">Statut</p>
-          <p [class]="'text-lg font-bold ' + (artisan.status === 'active' ? 'text-green-600' : 'text-red-600')">
-            {{ artisan.status === 'active' ? '✓ Actif' : 'Suspendu' }}
-          </p>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full" [class]="artisan.status === 'active' ? 'bg-green-100' : 'bg-red-100'">
+            <span [class]="'text-lg font-bold ' + (artisan.status === 'active' ? 'text-green-600' : 'text-red-600')">
+              <span class="material-symbols-outlined text-base">{{ artisan.status === 'active' ? 'check_circle' : 'cancel' }}</span>
+            </span>
+            <span [class]="'font-bold ' + (artisan.status === 'active' ? 'text-green-600' : 'text-red-600')">
+              {{ artisan.status === 'active' ? 'Actif' : 'Suspendu' }}
+            </span>
+          </div>
         </div>
       </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer mt-12">
@@ -250,4 +315,5 @@
 
       <div class="footer-bottom">© 2026 TunisiaTour. Tous droits reserves.</div>
     </footer>
-  </div>
+  </main>
+</div>

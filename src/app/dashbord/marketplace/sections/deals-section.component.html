@@ -1,0 +1,412 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-slate-900">Gérer les Bons Plans</h2>
+    <div class="flex gap-3">
+      <button (click)="loadDeals()" 
+              class="px-4 py-2 bg-slate-200 text-slate-900 rounded-lg font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+        <span class="material-symbols-outlined">refresh</span>
+        Rafraîchir
+      </button>
+      <button (click)="toggleCreateForm()" 
+              class="px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition">
+        <span class="material-symbols-outlined inline mr-2">add</span>
+        {{ showCreateForm ? 'Annuler' : 'Créer un Bon Plan' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-950"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Create Form -->
+<div *ngIf="showCreateForm" class="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
+  <h3 class="text-xl font-bold text-slate-900 mb-6">Créer un Nouveau Bon Plan</h3>
+
+  <!-- ✨ AI GENERATION PANEL -->
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 space-y-3">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-blue-950 font-bold text-sm">✨ Remplissage automatique par IA</span>
+      <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Nouveau</span>
+    </div>
+    <p class="text-xs text-slate-500">
+      Décrivez votre bon plan en français ou en anglais. L'IA remplira tous les champs et générera une image automatiquement.
+    </p>
+
+    <textarea
+      [(ngModel)]="aiDescription"
+      [disabled]="isGenerating"
+      rows="3"
+      placeholder="Ex: Une balade en chameau au coucher du soleil près de Douz dans le Sahara, 2 heures, idéale pour les familles et les couples..."
+      class="w-full px-4 py-2 border border-blue-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-950 bg-white resize-none"
+    ></textarea>
+
+    <!-- AI Error -->
+    <p *ngIf="aiError" class="text-red-600 text-xs">{{ aiError }}</p>
+
+    <div class="flex gap-3">
+      <!-- Generate button -->
+      <button
+        type="button"
+        (click)="generateWithAI()"
+        [disabled]="isGenerating || !aiDescription.trim()"
+        class="flex items-center gap-2 px-5 py-2 bg-blue-950 text-white rounded-lg text-sm font-semibold hover:bg-blue-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="!isGenerating">✨ Générer avec l'IA</span>
+        <span *ngIf="isGenerating" class="flex items-center gap-2">
+          <span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+          Génération en cours...
+        </span>
+      </button>
+
+      <!-- Clear button -->
+      <button
+        *ngIf="aiDescription"
+        type="button"
+        (click)="clearAiDescription()"
+        [disabled]="isGenerating"
+        class="px-4 py-2 text-slate-500 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 transition"
+      >
+        Effacer
+      </button>
+    </div>
+
+    <!-- Success hint -->
+    <p *ngIf="aiImageUrl && !isGenerating"
+       class="text-xs text-green-700 font-semibold flex items-center gap-1">
+      <span>✓</span> Formulaire rempli et image générée — vérifiez et ajustez si nécessaire
+    </p>
+  </div>
+  <!-- END AI PANEL -->
+
+  <form [formGroup]="dealForm" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Title -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Titre *</label>
+        <input formControlName="title" type="text" placeholder="Ex: Excursion au désert"
+               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+        <p *ngIf="dealForm.get('title')?.hasError('required') && dealForm.get('title')?.touched"
+           class="text-red-600 text-xs mt-1">Le titre est requis</p>
+      </div>
+
+      <!-- Location -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Localisation *</label>
+        <input formControlName="location" type="text" placeholder="Ex: Djerba"
+               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+      <textarea formControlName="description" placeholder="Décrivez le bon plan en détail..."
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950" rows="3"></textarea>
+      <p *ngIf="dealForm.get('description')?.hasError('required') && dealForm.get('description')?.touched"
+         class="text-red-600 text-xs mt-1">La description est requise</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Region -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Région *</label>
+        <select formControlName="region" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez une région</option>
+          <option *ngFor="let region of regions" [value]="region">{{ formatEnumValue(region) }}</option>
+        </select>
+      </div>
+
+      <!-- Budget -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Budget *</label>
+        <select formControlName="budget" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez un budget</option>
+          <option *ngFor="let budget of budgets" [value]="budget">{{ formatEnumValue(budget) }}</option>
+        </select>
+      </div>
+
+      <!-- Activity Type -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Type d'Activité *</label>
+        <select formControlName="activityType" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez un type</option>
+          <option *ngFor="let type of activityTypes" [value]="type">{{ formatEnumValue(type) }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Environment -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Environnement *</label>
+        <select formControlName="environment" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez un environnement</option>
+          <option *ngFor="let env of environments" [value]="env">{{ formatEnumValue(env) }}</option>
+        </select>
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Catégorie *</label>
+        <select formControlName="category" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez une catégorie</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ formatEnumValue(cat) }}</option>
+        </select>
+      </div>
+
+      <!-- Duration -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Durée *</label>
+        <select formControlName="duration" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          <option value="">Sélectionnez une durée</option>
+          <option *ngFor="let dur of durations" [value]="dur">{{ formatEnumValue(dur) }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Image Upload -->
+    <div>
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        Photo du bon plan
+        <span *ngIf="aiImageUrl" class="ml-2 text-xs font-normal text-green-600">
+          ✓ image IA générée
+        </span>
+      </label>
+
+      <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-950 transition cursor-pointer">
+        <input type="file" id="deal-image" (change)="onImageSelected($event)"
+               accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" />
+        <label for="deal-image" class="cursor-pointer block">
+          <p class="text-slate-600 mb-2">
+            {{ aiImageUrl ? '📸 Remplacer l\'image générée par l\'IA' : '📸 Cliquez pour sélectionner une image' }}
+          </p>
+          <p class="text-xs text-slate-500">Formats: JPG, PNG, GIF, WEBP | Max: 5MB</p>
+        </label>
+      </div>
+
+      <!-- Image Preview (works for both AI-generated and manually selected) -->
+      <div *ngIf="imagePreviewUrl" class="flex items-start gap-4 mt-4">
+        <img [src]="imagePreviewUrl" alt="Preview"
+             class="w-24 h-24 object-cover rounded-lg border border-slate-300" />
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-slate-900">
+            {{ aiImageUrl && !selectedFile ? 'Image générée par l\'IA' : 'Aperçu de l\'image' }}
+          </p>
+          <p *ngIf="aiImageUrl && !selectedFile" class="text-xs text-slate-500 mt-1">
+            Vous pouvez la remplacer en sélectionnant un fichier ci-dessus
+          </p>
+          <button type="button" (click)="clearImageSelection()"
+                  class="text-sm text-red-600 hover:text-red-800 mt-2">
+            ✕ Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-4 pt-4 border-t border-slate-300">
+      <button type="button" (click)="createDeal()"
+              [disabled]="isSubmitting || dealForm.invalid"
+              class="flex-1 px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition disabled:opacity-50">
+        {{ isSubmitting ? 'Création...' : 'Créer le Bon Plan' }}
+      </button>
+      <button type="button" (click)="toggleCreateForm()"
+              class="flex-1 px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition">
+        Annuler
+      </button>
+    </div>
+  </form>
+</div>
+<!-- Empty State -->
+<div *ngIf="!isLoading && deals.length === 0 && !error" class="bg-slate-50 border border-slate-200 rounded-lg p-12 text-center">
+  <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">local_offer</span>
+  <p class="text-slate-600">Aucun bon plan créé pour le moment</p>
+</div>
+
+<!-- Deals Grid -->
+<div *ngIf="!isLoading && deals.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div *ngFor="let deal of deals" class="rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition bg-white">
+    <!-- Deal Image -->
+    <div class="h-48 bg-slate-100 overflow-hidden">
+      <img *ngIf="deal.image" [src]="getImageUrl(deal.image)" [alt]="deal.title"
+           class="w-full h-full object-cover">
+      <div *ngIf="!deal.image" class="w-full h-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-4xl text-slate-300">image</span>
+      </div>
+    </div>
+
+    <!-- Deal Info -->
+    <div class="p-4">
+      <h3 class="font-semibold text-slate-900 mb-2">{{ deal.title }}</h3>
+      <p class="text-sm text-slate-600 mb-3 line-clamp-2">{{ deal.description }}</p>
+
+      <!-- Favorites Count Badge -->
+      <div class="mb-4 inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold">
+        <span class="material-symbols-outlined text-sm">favorite</span>
+        {{ deal.favoritesCount }} Favoris
+      </div>
+
+      <!-- Details -->
+      <div class="space-y-2 text-xs text-slate-600 mb-4">
+        <p><span class="font-semibold">Région:</span> {{ formatEnumValue(deal.region) }}</p>
+        <p><span class="font-semibold">Budget:</span> {{ formatEnumValue(deal.budget) }}</p>
+        <p><span class="font-semibold">Catégorie:</span> {{ formatEnumValue(deal.category) }}</p>
+        <p><span class="font-semibold">Durée:</span> {{ formatEnumValue(deal.duration) }}</p>
+        <p><span class="font-semibold">Localisation:</span> {{ deal.location }}</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <button (click)="editDeal(deal)" 
+                class="flex-1 bg-blue-50 text-blue-950 py-2 rounded-lg font-semibold hover:bg-blue-100 transition text-sm">
+          <span class="material-symbols-outlined inline text-sm mr-1">edit</span>
+          Modifier
+        </button>
+        <button (click)="deleteDeal(deal.id)"
+                class="flex-1 bg-red-50 text-red-950 py-2 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+          <span class="material-symbols-outlined inline text-sm mr-1">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Edit Modal -->
+  <div *ngIf="showEditModal && selectedDeal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <h3 class="text-xl font-bold mb-6">Modifier le Bon Plan</h3>
+
+      <form [formGroup]="dealForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Title -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Titre *</label>
+            <input formControlName="title" type="text"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          </div>
+
+          <!-- Location -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Localisation *</label>
+            <input formControlName="location" type="text"
+                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+          <textarea formControlName="description"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950" rows="3"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Region -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Région *</label>
+            <select formControlName="region" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let region of regions" [value]="region">{{ formatEnumValue(region) }}</option>
+            </select>
+          </div>
+
+          <!-- Budget -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Budget *</label>
+            <select formControlName="budget" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let budget of budgets" [value]="budget">{{ formatEnumValue(budget) }}</option>
+            </select>
+          </div>
+
+          <!-- Activity Type -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Type d'Activité *</label>
+            <select formControlName="activityType" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let type of activityTypes" [value]="type">{{ formatEnumValue(type) }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Environment -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Environnement *</label>
+            <select formControlName="environment" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let env of environments" [value]="env">{{ formatEnumValue(env) }}</option>
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Catégorie *</label>
+            <select formControlName="category" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let cat of categories" [value]="cat">{{ formatEnumValue(cat) }}</option>
+            </select>
+          </div>
+
+          <!-- Duration -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Durée *</label>
+            <select formControlName="duration" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-950">
+              <option *ngFor="let dur of durations" [value]="dur">{{ formatEnumValue(dur) }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Photo du bon plan</label>
+          <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-950 transition cursor-pointer">
+            <input
+              type="file"
+              id="deal-image-edit"
+              (change)="onImageSelected($event)"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              class="hidden"
+            />
+            <label for="deal-image-edit" class="cursor-pointer block">
+              <p class="text-slate-600 mb-2">📸 Cliquez pour sélectionner une image</p>
+              <p class="text-xs text-slate-500">Formats: JPG, PNG, GIF, WEBP | Max: 5MB</p>
+            </label>
+          </div>
+
+          <!-- Image Preview -->
+          <div *ngIf="imagePreviewUrl" class="flex items-start gap-4 mt-4">
+            <div class="relative">
+              <img
+                [src]="imagePreviewUrl"
+                alt="Preview"
+                class="w-24 h-24 object-cover rounded-lg border border-slate-300"
+              />
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-slate-900">Aperçu de l'image</p>
+              <button
+                type="button"
+                (click)="clearImageSelection()"
+                class="text-sm text-red-600 hover:text-red-800 mt-2"
+              >
+                ✕ Supprimer le fichier
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="mt-8 flex gap-4 justify-end border-t border-slate-300 pt-4">
+        <button (click)="closeModal()" class="px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition">
+          Annuler
+        </button>
+        <button (click)="updateDeal()" [disabled]="isSubmitting || dealForm.invalid"
+                class="px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition disabled:opacity-50">
+          Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

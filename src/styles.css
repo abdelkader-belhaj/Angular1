@@ -37,3 +37,38 @@ body.dialog-open {
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+
+/* Premium Artisan Nav */
+.active-nav {
+  position: relative;
+  overflow: hidden;
+}
+
+.active-nav::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 4px;
+  background: white;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 15px rgba(255,255,255,0.8);
+}
+
+.active-nav-light {
+  position: relative;
+  overflow: hidden;
+}
+
+.active-nav-light::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 4px;
+  background: #003974;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px rgba(0, 57, 116, 0.3);
+}

@@ -1,0 +1,73 @@
+<div class="bg-surface text-on-surface min-h-screen">
+  <app-dash-side-nav></app-dash-side-nav>
+
+  <main class="md:ml-64 p-6 lg:p-10">
+    <app-dash-header></app-dash-header>
+
+    <!-- Tab Navigation -->
+    <div class="mb-8 border-b border-slate-200">
+      <div class="flex gap-8 overflow-x-auto">
+        <button
+          (click)="setActiveTab('artisans')"
+          [class.active]="activeTab === 'artisans'"
+          class="px-4 py-3 font-semibold text-slate-600 transition hover:text-blue-950"
+          [ngClass]="{'border-b-2 border-blue-950 text-blue-950': activeTab === 'artisans'}"
+        >
+          <span class="material-symbols-outlined inline mr-2">person_2</span>
+          Artisans
+        </button>
+
+        <button
+          (click)="setActiveTab('products')"
+          [class.active]="activeTab === 'products'"
+          class="px-4 py-3 font-semibold text-slate-600 transition hover:text-blue-950"
+          [ngClass]="{'border-b-2 border-blue-950 text-blue-950': activeTab === 'products'}"
+        >
+          <span class="material-symbols-outlined inline mr-2">shopping_bag</span>
+          Produits
+        </button>
+
+        <button
+          (click)="setActiveTab('orders')"
+          [class.active]="activeTab === 'orders'"
+          class="px-4 py-3 font-semibold text-slate-600 transition hover:text-blue-950"
+          [ngClass]="{'border-b-2 border-blue-950 text-blue-950': activeTab === 'orders'}"
+        >
+          <span class="material-symbols-outlined inline mr-2">receipt</span>
+          Commandes
+        </button>
+
+        <button
+          (click)="setActiveTab('promo')"
+          [class.active]="activeTab === 'promo'"
+          class="px-4 py-3 font-semibold text-slate-600 transition hover:text-blue-950"
+          [ngClass]="{'border-b-2 border-blue-950 text-blue-950': activeTab === 'promo'}"
+        >
+          <span class="material-symbols-outlined inline mr-2">local_offer</span>
+          Codes Promo
+        </button>
+
+        <button
+          (click)="setActiveTab('deals')"
+          [class.active]="activeTab === 'deals'"
+          class="px-4 py-3 font-semibold text-slate-600 transition hover:text-blue-950"
+          [ngClass]="{'border-b-2 border-blue-950 text-blue-950': activeTab === 'deals'}"
+        >
+          <span class="material-symbols-outlined inline mr-2">card_giftcard</span>
+          Bons Plans
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="space-y-8">
+      <app-artisans-section *ngIf="activeTab === 'artisans'"></app-artisans-section>
+      <app-products-section *ngIf="activeTab === 'products'"></app-products-section>
+      <app-orders-section *ngIf="activeTab === 'orders'"></app-orders-section>
+      <app-promo-section *ngIf="activeTab === 'promo'"></app-promo-section>
+      <app-deals-section *ngIf="activeTab === 'deals'"></app-deals-section>
+    </div>
+  </main>
+
+  <app-dash-footer></app-dash-footer>
+</div>

@@ -1,118 +1,128 @@
-<div class="cart-container">
-  <h1>Shopping Cart</h1>
-
-  <div *ngIf="cartItems.length === 0" class="empty-cart">
-    <p>Your cart is empty</p>
-    <button (click)="continueShopping()" class="btn btn-secondary">
-      Continue Shopping
-    </button>
-  </div>
-
-  <div *ngIf="cartItems.length > 0" class="cart-content">
-    <!-- Cart Items -->
-    <div class="cart-items">
-      <div class="cart-header">
-        <span class="header-col-1">Product</span>
-        <span class="header-col-2">Price</span>
-        <span class="header-col-3">Quantity</span>
-        <span class="header-col-4">Total</span>
-        <span class="header-col-5">Action</span>
-      </div>
-
-      <div class="cart-item" *ngFor="let item of cartItems">
-        <div class="item-product">
-          <img [src]="item.product.image || 'assets/placeholder.png'" [alt]="item.product.name" />
-          <div class="product-info">
-            <h3>{{ item.product.name }}</h3>
-            <p *ngIf="getItemDiscount(item)" class="discount">
-              Save ₽{{ getItemDiscount(item) }}
-            </p>
-          </div>
-        </div>
-
-        <div class="item-price">
-          <div *ngIf="item.product.discountPrice">
-            <span class="original">₽{{ item.product.price }}</span>
-            <span class="current">₽{{ getDisplayPrice(item) }}</span>
-          </div>
-          <div *ngIf="!item.product.discountPrice">
-            <span class="current">₽{{ getDisplayPrice(item) }}</span>
-          </div>
-        </div>
-
-        <div class="item-quantity">
-          <button
-            (click)="updateQuantity(item.product.id, item.quantity - 1)"
-            [disabled]="item.quantity <= 1"
-            class="qty-btn"
-          >
-            -
-          </button>
-          <input
-            type="number"
-            [value]="item.quantity"
-            (change)="updateQuantity(item.product.id, $any($event.target).value)"
-            min="1"
-          />
-          <button
-            (click)="updateQuantity(item.product.id, item.quantity + 1)"
-            [disabled]="item.quantity >= item.product.stockQuantity"
-            class="qty-btn"
-          >
-            +
-          </button>
-        </div>
-
-        <div class="item-total">
-          ₽{{ getItemTotal(item) }}
-        </div>
-
-        <div class="item-action">
-          <button (click)="removeFromCart(item.product.id)" class="btn-remove">
-            🗑 Remove
-          </button>
-        </div>
-      </div>
+<div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white">
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-[#003974] mb-2">Mon Panier</h1>
+      <p class="text-[#5f6874]">Revoyez vos articles et procédez au paiement</p>
     </div>
 
-    <!-- Cart Summary -->
-    <div class="cart-summary">
-      <div class="summary-section">
-        <h2>Order Summary</h2>
-
-        <div class="summary-row">
-          <span>Subtotal:</span>
-          <span>₽{{ getCartSubtotal() }}</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Discount:</span>
-          <span class="discount-amount">-₽{{ getTotalDiscount() }}</span>
-        </div>
-
-        <div class="summary-row total">
-          <span>Total:</span>
-          <span>₽{{ getCartTotal() }}</span>
-        </div>
-      </div>
-
-      <div class="promo-code">
-        <input type="text" placeholder="Enter promo code" />
-        <button class="btn btn-secondary">Apply</button>
-      </div>
-
-      <div class="cart-actions">
-        <button (click)="proceedToCheckout()" class="btn btn-primary">
-          Proceed to Checkout
-        </button>
-        <button (click)="continueShopping()" class="btn btn-secondary">
-          Continue Shopping
-        </button>
-      </div>
-
-      <button (click)="clearCart()" class="btn btn-danger btn-clear">
-        Clear Cart
+    <!-- Empty Cart -->
+    <div *ngIf="cartItems.length === 0" class="bg-blue-50 border border-blue-200 rounded-lg p-12 text-center">
+      <p class="text-2xl text-[#5f6874] mb-6">Votre panier est vide</p>
+      <button 
+        (click)="continueShopping()" 
+        class="px-8 py-3 bg-[#003974] text-white rounded-lg font-semibold hover:bg-[#002a54]"
+      >
+        Continuer vos achats
       </button>
+    </div>
+
+    <!-- Cart Content -->
+    <div *ngIf="cartItems.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Cart Items -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden">
+          <div class="space-y-1">
+            <div *ngFor="let item of cartItems; let last = last" class="border-b border-[#dbe1ea] last:border-b-0">
+              <div class="p-6 flex gap-4">
+                <!-- Product Image -->
+                <div class="w-24 h-24 flex-shrink-0">
+                  <img 
+                    [src]="getImageUrl(item.product.image)" 
+                    [alt]="item.product.name"
+                    class="w-full h-full object-cover rounded-lg bg-gray-200"
+                  />
+                </div>
+
+                <!-- Product Details -->
+                <div class="flex-grow">
+                  <h3 class="font-bold text-[#003974] text-lg">{{ item.product.name }}</h3>
+                  <p class="text-[#5f6874] text-sm mb-3">{{ item.product.description }}</p>
+                  
+                  <!-- Price -->
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl font-bold text-[#003974]">{{ (getDisplayPrice(item) | number:'1.2-2') }} TND</span>
+                    <span *ngIf="item.product.discountPrice" class="text-sm line-through text-[#5f6874]">{{ (item.product.price | number:'1.2-2') }} TND</span>
+                  </div>
+
+                  <!-- Quantity Selector -->
+                  <div class="flex items-center gap-2">
+                    <div class="flex items-center border border-[#dbe1ea] rounded-lg">
+                      <button
+                        (click)="updateQuantity(item.product.id, item.quantity - 1)"
+                        [disabled]="item.quantity <= 1"
+                        class="px-3 py-1 text-[#003974] font-bold hover:bg-[#f7f9fc] disabled:opacity-50"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        [value]="item.quantity"
+                        (change)="updateQuantity(item.product.id, $any($event.target).value)"
+                        min="1"
+                        class="w-12 text-center border-none focus:outline-none"
+                      />
+                      <button
+                        (click)="updateQuantity(item.product.id, item.quantity + 1)"
+                        [disabled]="item.quantity >= (item.product.stockQuantity || 999)"
+                        class="px-3 py-1 text-[#003974] font-bold hover:bg-[#f7f9fc] disabled:opacity-50"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button 
+                      (click)="removeFromCart(item.product.id)"
+                      class="ml-auto px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold"
+                    >
+                      🗑 Supprimer
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subtotal -->
+                <div class="text-right flex flex-col items-end justify-between">
+                  <div class="text-lg font-bold text-[#003974]">{{ (getItemTotal(item) | number:'1.2-2') }} TND</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg border border-[#dbe1ea] p-6 sticky top-24">
+          <h2 class="text-2xl font-bold text-[#003974] mb-6">Résumé</h2>
+
+          <div class="space-y-4 mb-6">
+            <div class="flex justify-between text-[#5f6874]">
+              <span>Total:</span>
+              <span class="text-xl font-bold text-[#003974]">{{ (getCartTotal() | number:'1.2-2') }} TND</span>
+            </div>
+          </div>
+
+          <button 
+            (click)="proceedToCheckout()"
+            class="w-full px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] mb-3"
+          >
+            Procéder au paiement
+          </button>
+
+          <button 
+            (click)="continueShopping()"
+            class="w-full px-6 py-3 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] mb-3"
+          >
+            Continuer vos achats
+          </button>
+
+          <button 
+            (click)="clearCart()"
+            class="w-full px-6 py-3 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200"
+          >
+            Vider le panier
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

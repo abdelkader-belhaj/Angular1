@@ -11,6 +11,14 @@ import { CartService } from '../../../services/cart.service';
 export class ProductsPageComponent implements OnInit {
   products: Product[] = [];
   filteredProducts: Product[] = [];
+  paginatedProducts: Product[] = [];
+  cartItemCount: number = 0;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 9;
+  totalPages = 1;
+  Math = Math;
 
   // Filters
   searchQuery: string = '';
@@ -45,6 +53,13 @@ export class ProductsPageComponent implements OnInit {
     this.filteredProducts = [];
     this.loadProducts();
     this.loadCategories();
+    this.subscribeToCartChanges();
+  }
+
+  subscribeToCartChanges(): void {
+    this.cartService.getCartItems().subscribe((items) => {
+      this.cartItemCount = items.length;
+    });
   }
 
   loadProducts(): void {
@@ -124,6 +139,36 @@ export class ProductsPageComponent implements OnInit {
     filtered = this.sortProducts(filtered);
 
     this.filteredProducts = filtered;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize);
+    if (this.totalPages === 0) this.totalPages = 1;
+    if (this.currentPage > this.totalPages) this.currentPage = 1;
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.paginatedProducts = this.filteredProducts.slice(start, start + this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  nextPage(): void { this.goToPage(this.currentPage + 1); }
+  previousPage(): void { this.goToPage(this.currentPage - 1); }
+
+  get pages(): number[] {
+    const range: number[] = [];
+    const delta = 2;
+    const left = Math.max(1, this.currentPage - delta);
+    const right = Math.min(this.totalPages, this.currentPage + delta);
+    for (let i = left; i <= right; i++) range.push(i);
+    return range;
   }
 
   sortProducts(products: Product[]): Product[] {
@@ -164,10 +209,17 @@ export class ProductsPageComponent implements OnInit {
   }
 
   viewProduct(product: Product): void {
-    this.selectedProduct = product;
-    this.showModal = true;
-    document.body.style.overflow = 'hidden';
+  this.selectedProduct = { ...product };
+  
+  // ✅ Resolve category name from already-loaded categories
+  const category = this.categories.find(c => c.id === product.categoryId);
+  if (category && this.selectedProduct) {
+    this.selectedProduct.category = category.name;
   }
+  
+  this.showModal = true;
+  document.body.style.overflow = 'hidden';
+}
 
   closeModal(): void {
     this.showModal = false;
@@ -182,6 +234,18 @@ export class ProductsPageComponent implements OnInit {
     }
   }
 
+  getRemainingStock(product: Product): number {
+    const cartItems = this.cartService.getCurrentCartItems();
+    const cartItem = cartItems.find(item => item.product.id === product.id);
+    const totalStock = product.stock || product.stockQuantity || 0;
+    const inCartQuantity = cartItem ? cartItem.quantity : 0;
+    return totalStock - inCartQuantity;
+  }
+
+  canAddToCart(product: Product): boolean {
+    return this.getRemainingStock(product) > 0;
+  }
+
   getImageUrl(image: string): string {
     if (!image) {
       return '';
@@ -192,5 +256,20 @@ export class ProductsPageComponent implements OnInit {
     // Image path already contains 'uploads/', so just prepend the base URL
     const url = `http://localhost:8080/${image}`;
     return url;
+  }
+
+  calculateDiscountPercentage(originalPrice: number | null | undefined, discountPrice: number | null | undefined): number {
+    if (!discountPrice || !originalPrice || discountPrice >= originalPrice) {
+      return 0;
+    }
+    return Math.round(((originalPrice - discountPrice) / originalPrice) * 100);
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
+  }
+
+  goToOrders(): void {
+    this.router.navigate(['/my-orders']);
   }
 }

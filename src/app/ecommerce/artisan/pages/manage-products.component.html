@@ -1,170 +1,223 @@
 <div class="min-h-screen bg-[#f8fafc]">
   <!-- Sidebar Navigation -->
-  <div 
+  <aside 
     [class.translate-x-0]="sidebarOpen"
     [class.-translate-x-full]="!sidebarOpen"
-    class="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-[#003974] to-[#002a54] shadow-xl transition-transform duration-300 z-50"
+    class="fixed left-0 top-0 h-screen w-72 bg-white border-r border-slate-200 shadow-sm transition-all duration-500 ease-in-out z-50 overflow-y-auto"
   >
-    <!-- Logo/Brand -->
-    <div class="p-6 border-b border-[#0047a3]">
-      <h2 class="text-2xl font-bold text-white cursor-pointer hover:opacity-80" (click)="toggleSidebar()">
-        🏪 Mon Artisanat
-      </h2>
+    <!-- Logo/Brand Section -->
+    <div class="p-8 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-[#003974] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span class="material-symbols-outlined text-white text-2xl">storefront</span>
+          </div>
+          <h2 class="text-xl font-bold text-[#003974] tracking-tight">Mon Artisanat</h2>
+        </div>
+        <button 
+          (click)="toggleSidebar()" 
+          class="p-2 text-slate-400 hover:text-[#003974] transition-colors"
+          title="Fermer le menu"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-blue-50 border border-blue-100">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Espace Vendeur</span>
+      </div>
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="pt-8 space-y-2 px-4">
-      <!-- Dashboard Section -->
-      <div>
-        <a
-          routerLink="/artisan"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
-        >
-          <span class="text-xl">📊</span>
-          <span class="font-semibold">Dashboard</span>
-        </a>
+    <nav class="px-4 space-y-1.5">
+      <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Menu Principal</p>
+      
+      <!-- Dashboard -->
+      <a
+        routerLink="/artisan"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">dashboard</span>
+        <span class="font-semibold text-sm">Tableau de Bord</span>
+      </a>
+
+      <!-- Mes Produits -->
+      <a
+        routerLink="/artisan/products"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">inventory_2</span>
+        <span class="font-semibold text-sm">Gestion Catalogue</span>
+      </a>
+
+      <!-- Statistiques -->
+      <a
+        routerLink="/artisan/sales"
+        [routerLinkActive]="'bg-indigo-50 text-indigo-700 active-nav-light'"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:text-[#003974] hover:bg-slate-50 transition-all duration-300 group"
+      >
+        <span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">analytics</span>
+        <span class="font-semibold text-sm">Rapports & Ventes</span>
+      </a>
+
+      <div class="my-8 px-4 border-t border-slate-100"></div>
+      
+      <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Services</p>
+
+      <!-- Avis (Disabled for now) -->
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 cursor-not-allowed opacity-60">
+        <span class="material-symbols-outlined text-[22px]">reviews</span>
+        <span class="font-semibold text-sm">Avis Clients</span>
       </div>
 
-      <!-- Products Section (Active) -->
-      <div>
-        <a
-          routerLink="/artisan/products"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200 bg-[#0047a3]"
-        >
-          <span class="text-xl">📦</span>
-          <span class="font-semibold">Mes Produits</span>
-        </a>
-      </div>
-
-      <!-- Divider -->
-      <div class="my-4 border-t border-[#0047a3]"></div>
-
-      <!-- Other Sections -->
-      <div class="text-[#8fa3c0] text-xs font-semibold px-4 py-2">SECTIONS</div>
-      <div class="space-y-2">
-        <!-- Statistiques now links to /artisan/sales -->
-        <a
-          routerLink="/artisan/sales"
-          [routerLinkActive]="'bg-[#0047a3]'"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#0047a3] transition duration-200"
-        >
-          <span class="text-xl">📈</span>
-          <span class="font-semibold text-sm">Statistiques</span>
-        </a>
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
-          <span class="text-xl">⭐</span>
-          <span class="font-semibold text-sm">Avis & Évaluations</span>
-        </div>
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8fa3c0] cursor-not-allowed opacity-50">
-          <span class="text-xl">💰</span>
-          <span class="font-semibold text-sm">Mes Revenus</span>
-        </div>
+      <!-- Mes Revenus (Disabled for now) -->
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 cursor-not-allowed opacity-60">
+        <span class="material-symbols-outlined text-[22px]">payments</span>
+        <span class="font-semibold text-sm">Paiements</span>
       </div>
     </nav>
 
-    <!-- Log Out at bottom -->
-    <div class="absolute bottom-6 left-4 right-4">
+    <!-- Bottom Action -->
+    <div class="absolute bottom-8 left-0 w-full px-6">
       <button
         (click)="logout()"
-        type="button"
-        class="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 transition font-semibold"
+        class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white transition-all duration-300 font-bold text-sm"
       >
-        <span>🚪</span>
-        Quitter
+        <span class="material-symbols-outlined text-lg">logout</span>
+        Déconnexion
       </button>
     </div>
-  </div>
+  </aside>
 
   <!-- Hamburger Menu (visible when sidebar is closed) -->
   <button
     *ngIf="!sidebarOpen"
     (click)="toggleSidebar()"
-    class="fixed top-6 left-6 z-40 bg-[#003974] text-white p-3 rounded-lg hover:bg-[#002a54] transition shadow-lg"
+    class="fixed top-6 left-6 z-[60] bg-white text-[#003974] p-3 rounded-xl shadow-xl border border-slate-200 hover:bg-slate-50 transition-all duration-300 group"
     title="Ouvrir le menu"
   >
-    ☰
+    <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">menu</span>
   </button>
 
   <!-- Main Content Area -->
-  <div [class.ml-64]="sidebarOpen" [class.pt-24]="!sidebarOpen" class="p-8 transition-all duration-300">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-4xl font-bold text-[#003974]">Gérer Mes Produits</h1>
-        <p class="text-[#5f6874] mt-2">{{ products.length }} produits publiés</p>
+  <main [class.ml-72]="sidebarOpen" [class.pt-28]="!sidebarOpen" class="p-10 transition-all duration-500 ease-in-out">
+    <!-- Header with Gradient -->
+    <div class="mb-12 pb-8 border-b-2 border-[#e8eff7] animate-slideInFromTop">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#003974] to-[#002a54] rounded-lg flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-2xl">inventory_2</span>
+            </div>
+            <h1 class="text-4xl font-bold text-[#003974]">Gérer Mes Produits</h1>
+          </div>
+          <p class="text-[#5f6874] mt-2 ml-15">{{ products.length }} produit<span *ngIf="products.length !== 1">s</span> publiés</p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            (click)="loadProducts()"
+            class="px-4 py-3 bg-slate-100 text-slate-900 rounded-lg font-bold hover:bg-slate-200 transition flex items-center gap-2"
+            title="Recharger les données de vente et stock"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+            Rafraîchir
+          </button>
+          <button
+            (click)="toggleForm()"
+            [class.bg-red-600]="showForm"
+            [class.hover:bg-red-700]="showForm"
+            class="px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-lg font-bold transition-all duration-200 flex items-center gap-2 hover:shadow-lg"
+            [class.!bg-red-600]="showForm"
+          >
+            <span class="material-symbols-outlined">{{ showForm ? 'close' : 'add' }}</span>
+            {{ showForm ? 'Fermer' : 'Ajouter un produit' }}
+          </button>
+        </div>
       </div>
-      <button
-        (click)="toggleForm()"
-        [class.bg-red-600]="showForm"
-        [class.hover:bg-red-700]="showForm"
-        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] transition"
-      >
-        {{ showForm ? '✕ Fermer' : '+ Ajouter un produit' }}
-      </button>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="text-center py-12">
-      <p class="text-[#5f6874]">Chargement de vos produits...</p>
+    <!-- Loading State with Spinner -->
+    <div *ngIf="isLoading" class="text-center py-16">
+      <div class="flex justify-center mb-6">
+        <div class="w-12 h-12 border-4 border-[#e8eff7] border-t-[#003974] rounded-full animate-spin"></div>
+      </div>
+      <p class="text-[#5f6874] text-lg">Chargement de vos produits...</p>
     </div>
 
     <!-- Add/Edit Form -->
-    <div #formSection *ngIf="showForm" class="bg-white rounded-lg border border-[#dbe1ea] p-8 mb-8">
-      <h2 class="text-2xl font-bold text-[#003974] mb-6">
-        {{ isEditing ? 'Modifier le produit' : 'Ajouter un nouveau produit' }}
-      </h2>
+    <div #formSection *ngIf="showForm" class="bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] p-8 mb-12 shadow-sm animate-slideInFromTop">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 bg-gradient-to-br from-[#003974] to-[#002a54] rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-white">{{ isEditing ? 'edit' : 'add_circle' }}</span>
+        </div>
+        <h2 class="text-2xl font-bold text-[#003974]">
+          {{ isEditing ? 'Modifier le Produit' : 'Ajouter un Nouveau Produit' }}
+        </h2>
+      </div>
 
       <form [formGroup]="productForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Product Name -->
           <div>
-            <label class="block text-sm font-semibold text-[#003974] mb-2">Nom du produit</label>
+            <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">label</span>
+              Nom du Produit
+            </label>
             <input
               type="text"
               formControlName="name"
               placeholder="Ex: Céramique artisanale"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white"
             />
           </div>
 
           <!-- Price -->
           <div>
-            <label class="block text-sm font-semibold text-[#003974] mb-2">Prix (TND)</label>
+            <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">paid</span>
+              Prix (TND)
+            </label>
             <input
               type="number"
               formControlName="price"
               placeholder="0.00"
               step="0.01"
               min="0"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white"
             />
           </div>
 
           <!-- Stock -->
           <div>
-            <label class="block text-sm font-semibold text-[#003974] mb-2">Quantité en stock</label>
+            <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">inventory</span>
+              Quantité en Stock
+            </label>
             <input
               type="number"
               formControlName="stockQuantity"
               placeholder="0"
               min="0"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white"
             />
           </div>
 
           <!-- Category -->
           <div>
-            <label class="block text-sm font-semibold text-[#003974] mb-2">Catégorie</label>
+            <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">category</span>
+              Catégorie
+            </label>
             <select
               formControlName="categoryId"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white text-[#003974] font-semibold"
             >
-              <option value="">Sélectionnez une catégorie</option>
+              <option value="">-- Sélectionnez une catégorie --</option>
               <option *ngFor="let cat of allCategories" [value]="cat.id">{{ cat.name }}</option>
             </select>
           </div>
@@ -174,7 +227,7 @@
             <label class="block text-sm font-semibold text-[#003974] mb-2">Sous-catégorie</label>
             <select
               formControlName="subcategoryId"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white text-[#003974] font-semibold"
             >
               <option value="">-- Optionnel --</option>
               <option *ngFor="let subcat of subcategories" [value]="subcat.id">{{ subcat.name }}</option>
@@ -183,25 +236,32 @@
 
           <!-- Discount Price -->
           <div>
-            <label class="block text-sm font-semibold text-[#003974] mb-2">Prix réduit (TND) - Optionnel</label>
+            <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">discount</span>
+              Prix Réduit (TND) - Optionnel
+            </label>
             <input
               type="number"
               formControlName="discountPrice"
               placeholder="0.00"
               step="0.01"
               min="0"
-              class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+              class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white"
             />
-            <p *ngIf="productForm.get('discountPrice')?.hasError('invalidDiscount')" class="text-red-600 text-sm mt-1">
-              ⚠️ Le prix réduit doit être inférieur au prix normal
+            <p *ngIf="productForm.get('discountPrice')?.hasError('invalidDiscount')" class="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-base">warning</span>
+              Le prix réduit doit être inférieur au prix normal
             </p>
           </div>
         </div>
 
         <!-- Image Upload Section -->
         <div class="space-y-4">
-          <label class="block text-sm font-semibold text-[#003974] mb-2">Photo du produit</label>
-          <div class="border-2 border-dashed border-[#dbe1ea] rounded-lg p-6 text-center hover:border-[#003974] transition">
+          <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">image</span>
+            Photo du Produit
+          </label>
+          <div class="border-2 border-dashed border-[#e8eff7] rounded-lg p-8 text-center hover:border-[#003974] hover:bg-[#f7f9fc] transition-all">
             <input
               type="file"
               id="product-image"
@@ -210,63 +270,71 @@
               class="hidden"
             />
             <label for="product-image" class="cursor-pointer block">
-              <p class="text-[#5f6874] mb-2">📸 Cliquez pour sélectionner une image</p>
-              <p class="text-xs text-[#5f6874]">Formats: JPG, PNG, GIF, WEBP | Max: 5MB</p>
+              <span class="material-symbols-outlined text-5xl text-[#003974] mb-2">photo_camera</span>
+              <p class="text-[#003974] font-semibold mb-1">Cliquez pour sélectionner une image</p>
+              <p class="text-xs text-[#5f6874]">JPG, PNG, GIF, WEBP | Max: 5MB</p>
             </label>
           </div>
 
           <!-- Image Preview -->
-          <div *ngIf="imagePreviewUrl" class="flex items-start gap-4">
+          <div *ngIf="imagePreviewUrl" class="flex items-start gap-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div class="relative">
               <img
                 [src]="imagePreviewUrl.startsWith('data:') ? imagePreviewUrl : getImageUrl(imagePreviewUrl)"
                 alt="Preview"
-                class="w-24 h-24 object-cover rounded-lg border border-[#dbe1ea]"
+                class="w-24 h-24 object-cover rounded-lg border-2 border-blue-300"
               />
             </div>
             <div class="flex-1">
-              <p class="text-sm font-semibold text-[#003974]">Aperçu de l'image</p>
+              <p class="text-sm font-semibold text-blue-900">✓ Aperçu de l'image</p>
               <button
                 type="button"
                 (click)="clearImageSelection()"
-                class="text-sm text-red-600 hover:text-red-800 mt-2"
+                class="text-sm text-red-600 hover:text-red-800 mt-2 flex items-center gap-1"
               >
-                ✕ Supprimer le fichier
+                <span class="material-symbols-outlined text-base">close</span>
+                Supprimer le fichier
               </button>
             </div>
           </div>
 
           <!-- Upload Status -->
-          <div *ngIf="isUploadingImage" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p class="text-sm text-blue-700">⏳ Upload de l'image en cours...</p>
+          <div *ngIf="isUploadingImage" class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-2">
+            <div class="w-4 h-4 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin"></div>
+            <p class="text-sm text-amber-700">Upload de l'image en cours...</p>
           </div>
         </div>
 
         <!-- Description -->
         <div>
-          <label class="block text-sm font-semibold text-[#003974] mb-2">Description</label>
+          <label class="block text-sm font-semibold text-[#003974] mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">description</span>
+            Description
+          </label>
           <textarea
             formControlName="description"
             rows="4"
             placeholder="Décrivez votre produit en détail..."
-            class="w-full px-4 py-2 border border-[#dbe1ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974]"
+            class="w-full px-4 py-3 border border-[#e8eff7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003974] transition-all bg-white"
           ></textarea>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-4 pt-6 border-t border-[#dbe1ea]">
+        <div class="flex gap-4 pt-6 border-t border-[#e8eff7]">
           <button
             type="button"
             (click)="saveProduct()"
-            class="flex-1 px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+            class="flex-1 px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-lg font-bold hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
           >
-            {{ isEditing ? '✓ Mettre à jour' : '✓ Créer le produit' }}
+            <span class="material-symbols-outlined">{{ isEditing ? 'check' : 'add' }}</span>
+            {{ isEditing ? 'Mettre à Jour' : 'Créer le Produit' }}
           </button>
           <button
             type="button"
             (click)="toggleForm()"
-            class="flex-1 px-6 py-3 bg-[#f0f0f0] text-[#003974] rounded-lg font-bold hover:bg-[#dbe1ea]"
+            class="flex-1 px-6 py-3 bg-gray-100 text-[#003974] rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 flex items-center justify-center gap-2"
           >
+            <span class="material-symbols-outlined">close</span>
             Annuler
           </button>
         </div>
@@ -274,25 +342,35 @@
     </div>
 
     <!-- Products List -->
-    <div *ngIf="!isLoading && products.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngIf="!isLoading && paginatedProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 animate-fadeIn">
       <div
-        *ngFor="let product of products"
-        class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow"
+        *ngFor="let product of paginatedProducts"
+        [class]="'bg-white rounded-2xl border overflow-hidden hover:shadow-xl transition-all duration-300 group ' + (product.status === 'inactive' ? 'border-gray-300 opacity-60' : 'border-[#e8eff7]')"
       >
         <!-- Product Image -->
-        <div class="relative h-40 bg-[#f7f9fc] overflow-hidden">
+        <div [class]="'relative h-48 overflow-hidden ' + (product.status === 'inactive' ? 'bg-gray-200' : 'bg-gradient-to-br from-[#f7f9fc] to-[#e8eff7]')">
           <img
             [src]="getImageUrl(product.image)"
             [alt]="product.name"
-            class="w-full h-full object-cover"
+            [class]="'w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer ' + (product.status === 'inactive' ? 'opacity-50 grayscale' : '')"
           />
-          <div [class]="'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ' + getStatusColor(product.status)">
-            {{ product.status }}
+          <div *ngIf="product.status === 'inactive'" class="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
+            <div class="text-center">
+              <span class="material-symbols-outlined text-white text-5xl mb-2">unpublished</span>
+              <p class="text-white font-bold text-sm">Inactif</p>
+            </div>
           </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"></div>
+          
+          <!-- Status Badge -->
+          <div [class]="'absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ' + getStatusColor(product.status)">
+            {{ product.status === 'active' ? '✓ Actif' : (product.status === 'inactive' ? '✕ Inactif' : '⏳ En attente') }}
+          </div>
+          
           <!-- Discount Badge -->
           <div
             *ngIf="hasDiscount(product)"
-            [class]="'absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold text-white ' + getDiscountPercentageClass(calculateDiscountPercentage(product.price, product.discountPrice))"
+            [class]="'absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold text-white bg-red-600'"
           >
             -{{ calculateDiscountPercentage(product.price, product.discountPrice) }}%
           </div>
@@ -305,7 +383,7 @@
           <p class="text-[#5f6874] text-sm line-clamp-2">{{ product.description }}</p>
 
           <!-- Price Display -->
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
             <!-- Discount Price (if exists) -->
             <div *ngIf="hasDiscount(product)">
               <p class="text-2xl font-bold text-red-600">{{ product.discountPrice }} TND</p>
@@ -317,55 +395,116 @@
             </div>
           </div>
 
-          <div class="flex justify-between items-center pt-4 border-t border-[#dbe1ea]">
+          <!-- Stats -->
+          <div class="flex justify-between items-center pt-4 border-t border-[#e8eff7]">
             <div class="flex gap-6">
-              <span class="text-sm text-[#5f6874]">
-                <span class="font-semibold text-[#003974]">Stock:</span> {{ product.stockQuantity }}
+              <span class="text-sm text-[#5f6874] flex items-center gap-1">
+                <span class="material-symbols-outlined text-lg">inventory</span>
+                <span class="font-semibold">{{ product.stockQuantity }}</span>
               </span>
-              <span class="text-sm text-[#5f6874]">
-                <span class="font-semibold text-[#003974]">Vendus:</span> {{ product.salesCount }}
+              <span class="text-sm text-[#5f6874] flex items-center gap-1">
+                <span class="material-symbols-outlined text-lg">shopping_cart</span>
+                <span class="font-semibold">{{ product.salesCount }}</span>
               </span>
             </div>
-            <span class="text-sm text-[#5f6874]">{{ product.category }}</span>
+            <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">{{ product.category }}</span>
           </div>
 
           <!-- Actions -->
-          <div class="flex flex-col gap-2 pt-4 border-t border-[#dbe1ea]">
+          <div class="flex flex-col gap-2 pt-4 border-t border-[#e8eff7]">
             <div class="flex gap-2">
               <button
                 (click)="editProduct(product)"
-                class="flex-1 px-3 py-2 bg-[#d6e3ff] text-[#003974] rounded-lg font-bold hover:bg-[#c5d5ff] text-sm"
+                class="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-bold hover:bg-blue-200 text-sm transition-all flex items-center justify-center gap-1"
               >
-                ✏️ Modifier
-              </button>
-              <button
-                (click)="deleteProduct(product.id)"
-                class="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200 text-sm"
-              >
-                🗑️ Supprimer
+                <span class="material-symbols-outlined text-lg">edit</span>
+                Modifier
               </button>
             </div>
+            <!-- Info: status is managed by admin only -->
+            <p *ngIf="product.status === 'inactive'" class="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">info</span>
+              Ce produit a été désactivé par l'admin. Modifiez-le pour qu'il soit réactivé.
+            </p>
             <button
               *ngIf="product.image"
               (click)="deleteProductImage(product.id)"
-              class="w-full px-3 py-2 bg-orange-100 text-orange-700 rounded-lg font-bold hover:bg-orange-200 text-sm"
+              class="w-full px-3 py-2 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200 text-sm transition-all flex items-center justify-center gap-1"
             >
-              ❌ Supprimer l'image
+              <span class="material-symbols-outlined text-lg">delete_outline</span>
+              Supprimer l'Image
             </button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && products.length > 0 && totalPages > 1"
+         class="flex items-center justify-center gap-2 mt-10 pt-8 border-t border-[#e8eff7] flex-wrap">
+
+      <!-- Previous -->
+      <button
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        class="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+      >
+        <span class="material-symbols-outlined text-base">navigate_before</span>
+        Préc.
+      </button>
+
+      <!-- First page shortcut -->
+      <button
+        *ngIf="pages[0] > 1"
+        (click)="goToPage(1)"
+        class="w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] transition-all"
+      >1</button>
+      <span *ngIf="pages[0] > 2" class="text-[#5f6874] px-1">…</span>
+
+      <!-- Page numbers window -->
+      <button
+        *ngFor="let page of pages"
+        (click)="goToPage(page)"
+        [class]="page === currentPage
+          ? 'w-9 h-9 flex items-center justify-center border-2 border-[#003974] rounded-xl text-sm font-bold bg-[#003974] text-white shadow-md'
+          : 'w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] hover:text-[#003974] transition-all'"
+      >{{ page }}</button>
+
+      <!-- Last page shortcut -->
+      <span *ngIf="pages[pages.length - 1] < totalPages - 1" class="text-[#5f6874] px-1">…</span>
+      <button
+        *ngIf="pages[pages.length - 1] < totalPages"
+        (click)="goToPage(totalPages)"
+        class="w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] transition-all"
+      >{{ totalPages }}</button>
+
+      <!-- Next -->
+      <button
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+        class="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+      >
+        Suiv.
+        <span class="material-symbols-outlined text-base">navigate_next</span>
+      </button>
+    </div>
+
+    <!-- Results count -->
+    <p *ngIf="!isLoading && products.length > 0" class="text-center text-xs text-[#5f6874] mt-4">
+      Affichage {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, products.length) }} sur {{ products.length }} produit(s)
+    </p>
+
     <!-- Empty State -->
-    <div *ngIf="!isLoading && products.length === 0" class="text-center py-16">
-      <p class="text-6xl mb-4">📦</p>
-      <p class="text-[#5f6874] text-lg mb-6">Vous n'avez pas encore de produits</p>
+    <div *ngIf="!isLoading && products.length === 0" class="text-center py-20 bg-gradient-to-br from-white to-[#f7f9fc] rounded-2xl border border-[#e8eff7] animate-fadeIn">
+      <span class="text-7xl mb-4 block">📦</span>
+      <p class="text-[#5f6874] text-lg font-semibold mb-2">Vous n'avez pas encore de produits</p>
+      <p class="text-[#5f6874] text-sm mb-8">Créez votre premier produit pour commencer à vendre</p>
       <button
         (click)="toggleForm()"
-        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54]"
+        class="px-8 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-lg font-bold hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mx-auto"
       >
-        Créer votre premier produit
+        <span class="material-symbols-outlined">add</span>
+        Créer Votre Premier Produit
       </button>
     </div>
 
@@ -398,5 +537,5 @@
 
       <div class="footer-bottom">© 2026 TunisiaTour. Tous droits reserves.</div>
     </footer>
-  </div>
+  </main>
 </div>

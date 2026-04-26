@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService, Product } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-product-catalog',
+  standalone: true,
+  imports: [CommonModule, FormsModule],  // ✅ add FormsModule here
   templateUrl: './product-catalog.component.html',
-  styleUrls: ['./product-catalog.component.css']
 })
 export class ProductCatalogComponent implements OnInit {
   products: Product[] = [];

@@ -1,0 +1,251 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-slate-900">Gérer les Codes Promo</h2>
+    <button (click)="generatePromoCode()" [disabled]="isGenerating"
+            class="px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition disabled:opacity-50">
+      <span class="material-symbols-outlined inline mr-2">add</span>
+      Générer un Code
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-950"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && promoCodes.length === 0 && !error" class="bg-slate-50 border border-slate-200 rounded-lg p-12 text-center">
+    <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">local_offer</span>
+    <p class="text-slate-600">Pas encore de codes promo. Générez-en un pour commencer!</p>
+  </div>
+
+  <!-- Promo Codes Grid -->
+  <div *ngIf="!isLoading && promoCodes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let code of promoCodes"
+         [ngClass]="{'opacity-60': !code.isActive}"
+         class="rounded-xl bg-white border border-slate-200 p-6 hover:shadow-lg transition relative">
+
+      <!-- Status Badge - Top Right -->
+      <div class="absolute top-4 right-4">
+        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+              [ngClass]="code.isActive ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-slate-200 text-slate-700 border border-slate-300'">
+          <span class="h-2 w-2 rounded-full" [ngClass]="code.isActive ? 'bg-green-600' : 'bg-slate-500'"></span>
+          {{ code.isActive ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+
+      <!-- Code Header -->
+      <div class="mb-5">
+        <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Code Promo</p>
+        <div class="flex items-center gap-3">
+          <code class="text-2xl font-mono font-bold text-white bg-blue-950 tracking-widest px-4 py-2 rounded-lg">{{ code.code }}</code>
+          <button (click)="copyToClipboard(code.code)"
+                  class="p-2 hover:bg-slate-100 rounded-lg transition text-blue-950"
+                  title="Copy to clipboard">
+            <span class="material-symbols-outlined text-sm">content_copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Code Details -->
+      <div class="space-y-3 mb-5 pb-5 border-b border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">Réduction</span>
+          <span class="text-xl font-bold text-blue-950">{{ code.discountPercentage }}%</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">Utilisé</span>
+          <span class="text-lg font-semibold text-slate-700">{{ code.timeUsed || 0 }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-600 font-medium">Créé</span>
+          <span class="text-sm text-slate-600">{{ code.createdAt | date: 'short' }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <button (click)="editCode(code)"
+                class="flex-1 bg-blue-950 text-white py-2 rounded-lg font-semibold hover:bg-blue-900 transition text-sm">
+          <span class="material-symbols-outlined inline text-sm mr-1">edit</span>
+          Modifier
+        </button>
+        <button (click)="toggleCodeStatus(code)"
+                [ngClass]="code.isActive ? 'bg-slate-700 text-white hover:bg-slate-800' : 'bg-green-600 text-white hover:bg-green-700'"
+                class="flex-1 py-2 rounded-lg font-semibold transition text-sm">
+          <span class="material-symbols-outlined inline text-sm mr-1">{{ code.isActive ? 'block' : 'check_circle' }}</span>
+          {{ code.isActive ? 'Désactiver' : 'Activer' }}
+        </button>
+
+        <!-- Send button -->
+        <button (click)="openSendModal(code)"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition text-sm"
+                title="Envoyer par email">
+          <span class="material-symbols-outlined text-sm">send</span>
+        </button>
+
+        <button (click)="deleteCode(code.id)"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition text-sm">
+          <span class="material-symbols-outlined text-sm">delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div *ngIf="showEditModal && selectedCode" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
+      <h3 class="text-xl font-bold mb-6">Modifier le Code Promo</h3>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Code</label>
+          <input [(ngModel)]="selectedCode.code" type="text" disabled class="w-full px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 cursor-not-allowed">
+          <p class="text-xs text-slate-500 mt-1">Le code ne peut pas être modifié</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Pourcentage de Réduction (%)</label>
+          <input [(ngModel)]="selectedCode.discountPercentage" type="number" min="1" max="100" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Utilisations Max (Laisser vide pour illimité)</label>
+          <input [(ngModel)]="selectedCode.maxUses" type="number" min="1" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-semibold text-slate-900">Statut</span>
+            <span class="text-sm font-bold px-3 py-1 rounded-full"
+                  [ngClass]="selectedCode.isActive ? 'bg-green-100 text-green-800' : 'bg-slate-300 text-slate-700'">
+              {{ selectedCode.isActive ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+          <button type="button" (click)="selectedCode.isActive = !selectedCode.isActive"
+                  [ngClass]="selectedCode.isActive ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'"
+                  class="w-full py-2 rounded-lg font-semibold transition text-sm">
+            {{ selectedCode.isActive ? 'Cliquer pour Désactiver' : 'Cliquer pour Activer' }}
+          </button>
+          <p class="text-xs text-slate-600 mt-3">Lorsque désactivé, les clients ne peuvent pas utiliser ce code</p>
+        </div>
+      </div>
+
+      <div class="mt-8 flex gap-4 justify-end">
+        <button (click)="closeModal()" class="px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition">
+          Annuler
+        </button>
+        <button (click)="saveCode()" class="px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition">
+          Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Promo Code Modal -->
+  <div *ngIf="showSendModal && selectedCodeToSend"
+       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl p-8 max-w-lg w-full shadow-2xl">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900">Envoyer le Code Promo</h3>
+          <p class="text-sm text-slate-500 mt-1">
+            Code: <code class="bg-blue-950 text-white px-2 py-0.5 rounded font-mono font-bold">
+              {{ selectedCodeToSend.code }}
+            </code>
+            <span class="ml-2 text-blue-950 font-semibold">{{ selectedCodeToSend.discountPercentage }}% de réduction</span>
+          </p>
+        </div>
+        <button (click)="closeSendModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Success State -->
+      <div *ngIf="sendSuccess" class="text-center py-8">
+        <span class="material-symbols-outlined text-6xl text-green-500 block mb-4">check_circle</span>
+        <p class="text-lg font-bold text-slate-900">Email envoyé avec succès!</p>
+        <p class="text-sm text-slate-500 mt-2">Le code a été envoyé à <strong>{{ recipientEmail }}</strong></p>
+        <p *ngIf="!selectedCodeToSend.isActive" class="text-xs text-green-600 mt-2 font-semibold">
+          ✓ Le code a été activé automatiquement
+        </p>
+        <button (click)="closeSendModal()"
+                class="mt-6 px-6 py-2 bg-blue-950 text-white rounded-lg font-semibold hover:bg-blue-900 transition">
+          Fermer
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div *ngIf="!sendSuccess" class="space-y-5">
+
+        <!-- User list -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Sélectionner un utilisateur
+          </label>
+          <div class="max-h-40 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
+            <div *ngIf="users.length === 0" class="p-3 text-center text-slate-400 text-sm">
+              Chargement des utilisateurs...
+            </div>
+            <button *ngFor="let user of users"
+                    type="button"
+                    (click)="selectUser(user)"
+                    [ngClass]="recipientEmail === user.email ? 'bg-blue-50 border-l-4 border-blue-950' : 'hover:bg-slate-50'"
+                    class="w-full text-left px-4 py-2.5 transition flex items-center justify-between">
+              <div>
+                <p class="text-sm font-semibold text-slate-800">{{ user.username }}</p>
+                <p class="text-xs text-slate-500">{{ user.email }}</p>
+              </div>
+              <span *ngIf="recipientEmail === user.email"
+                    class="material-symbols-outlined text-blue-950 text-sm">check</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Or type manually -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Ou saisir une adresse email manuellement
+          </label>
+          <input
+            [(ngModel)]="recipientEmail"
+            type="email"
+            placeholder="exemple@email.com"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-950"
+          />
+        </div>
+
+        <!-- Info note -->
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+          <span class="material-symbols-outlined text-sm inline align-middle mr-1">info</span>
+          Si le code est inactif, il sera <strong>activé automatiquement</strong> lors de l'envoi.
+        </div>
+
+        <!-- Error -->
+        <p *ngIf="sendError" class="text-red-600 text-sm">{{ sendError }}</p>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-2">
+          <button (click)="closeSendModal()"
+                  class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition">
+            Annuler
+          </button>
+          <button (click)="sendPromoCode()"
+                  [disabled]="isSending || !recipientEmail.trim()"
+                  class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
+            <span *ngIf="!isSending" class="material-symbols-outlined text-sm">send</span>
+            <span *ngIf="isSending" class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+            {{ isSending ? 'Envoi...' : 'Envoyer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -9,17 +9,15 @@ import { ManageProductsComponent } from './pages/manage-products.component';
 import { ArtisanSalesComponent } from './pages/artisan-sales.component';
 
 @NgModule({
-  declarations: [
-    ArtisanDashboardComponent,
-    ManageProductsComponent,
-    ArtisanSalesComponent
-  ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule
+    RouterModule,
+    ArtisanDashboardComponent,
+    ManageProductsComponent,
+    ArtisanSalesComponent
   ],
   exports: [
     ArtisanDashboardComponent,

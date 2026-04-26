@@ -1,18 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { ArtisanService, Artisan } from '../../../services/artisan.service';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ArtisanService, Artisan, ArtisanProduct } from '../../../services/artisan.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-artisan-dashboard',
   templateUrl: './artisan-dashboard.component.html',
-  styleUrls: ['./artisan-dashboard.component.css']
+  styleUrls: ['./artisan-dashboard.component.css'],
+  standalone: true,
+  imports: [CommonModule, RouterModule]
 })
 export class ArtisanDashboardComponent implements OnInit {
   artisan: Artisan | null = null;
   stats: any = null;
   isLoading = true;
   sidebarOpen = true;
+  productsCount = 0;
 
   constructor(
     private artisanService: ArtisanService,
@@ -46,6 +50,21 @@ export class ArtisanDashboardComponent implements OnInit {
           },
           (error) => {
             console.error('Error loading stats:', error);
+            resolve(null);
+          }
+        );
+      }),
+      new Promise(resolve => {
+        this.artisanService.getArtisanProducts().subscribe(
+          (products: ArtisanProduct[]) => {
+            this.productsCount = products.length;
+            if (this.artisan) {
+              this.artisan.productsCount = this.productsCount;
+            }
+            resolve(null);
+          },
+          (error) => {
+            console.error('Error loading products:', error);
             resolve(null);
           }
         );

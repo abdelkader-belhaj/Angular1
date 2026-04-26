@@ -1,4 +1,168 @@
 :host {
   --primary: #003974;
-  --border: #dbe1ea;
+  --primary-dark: #002a54;
+  --border: #e8eff7;
+  --bg-light: #f7f9fc;
+  --text-muted: #5f6874;
+}
+
+/* Smooth animations */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-in {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.slide-in-from-top-2 {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease;
+}
+
+/* Select styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23003974' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  background-color: #f7f9fc;
+}
+
+select:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 57, 116, 0.05);
+}
+
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 57, 116, 0.1);
+}
+
+/* Better button styles */
+button {
+  cursor: pointer;
+  user-select: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Cards hover effect */
+.bg-white.rounded-2xl {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-white.rounded-2xl:hover {
+  box-shadow: 0 10px 25px rgba(0, 57, 116, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Material icons customization */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+/* Loading animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Status badge animations */
+.rounded-full {
+  transition: all 0.2s ease;
+}
+
+/* Better focus states */
+input:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 57, 116, 0.1);
+}
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Better table styling */
+table tbody tr {
+  transition: all 0.2s ease;
+}
+
+table tbody tr:hover {
+  background-color: #f0f5fb !important;
+}
+
+/* Link hover effects */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-to-b,
+.bg-gradient-to-r,
+.bg-gradient-to-br {
+  background-attachment: fixed;
+}
+
+/* Enhanced visibility for action buttons */
+button[class*="px-5"][class*="py-3"] {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
+  
+  select {
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+  }
 }

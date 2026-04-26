@@ -1,0 +1,23 @@
+/* Orders section styles */
+
+/* Allow dropdown to overflow the table container */
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Allow status cell to show dropdown above */
+.status-cell {
+  overflow: visible;
+  position: relative;
+}
+
+/* Ensure table rows and body don't clip dropdown */
+table tbody tr {
+  overflow: visible;
+}
+
+/* Ensure dropdown div is not clipped */
+.status-cell > div {
+  overflow: visible;
+}

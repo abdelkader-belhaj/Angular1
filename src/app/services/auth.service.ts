@@ -295,7 +295,7 @@ export class AuthService {
       case 'ORGANISATEUR':
         return '/organisateur';
       case 'VENDEUR_ARTI':
-        return '/vendeur-arti';
+        return '/artisan';
       case 'SOCIETE':
         return '/societe';
       default:

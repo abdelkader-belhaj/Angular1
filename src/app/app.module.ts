@@ -13,7 +13,6 @@ import { HeroSectionComponent } from './homePage/hero-section/hero-section.compo
 import { StaysSectionComponent } from './homePage/stays-section/stays-section.component';
 import { MobilitySectionComponent } from './homePage/mobility-section/mobility-section.component';
 import { EventsSectionComponent } from './homePage/events-section/events-section.component';
-import { MarketplaceSectionComponent } from './homePage/marketplace-section/marketplace-section.component';
 import { ChroniclesSectionComponent } from './homePage/chronicles-section/chronicles-section.component';
 import { DashbordPageComponent } from './dashbord/dashbord-page.component';
 import { SideNavComponent } from './dashbord/side-nav/side-nav.component';
@@ -28,6 +27,19 @@ import { LoginDialogComponent } from './homePage/login-dialog/login-dialog.compo
 import { ResetPasswordComponent } from './homePage/reset-password/reset-password.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 import { WaitingResponsePageComponent } from './waiting-response/waiting-response-page.component';
+import { MarketplaceSectionComponent } from './homePage/marketplace-section/marketplace-section.component';
+import { ProductsModule } from './ecommerce/products/products.module';
+import { CartComponent } from './ecommerce/cart/cart.component';
+import { CheckoutComponent } from './ecommerce/checkout/checkout.component';
+import { OrdersModule } from './ecommerce/orders/orders.module';
+import { DealsModule } from './ecommerce/deals/deals.module';
+import { MarketplacePageComponent } from './dashbord/marketplace/marketplace-page.component';
+import { ArtisansSectionComponent } from './dashbord/marketplace/sections/artisans-section.component';
+import { ProductsSectionComponent } from './dashbord/marketplace/sections/products-section.component';
+import { OrdersSectionComponent } from './dashbord/marketplace/sections/orders-section.component';
+import { PromoSectionComponent } from './dashbord/marketplace/sections/promo-section.component';
+import { DealsSectionComponent } from './dashbord/marketplace/sections/deals-section.component';
+
 
 @NgModule({
   declarations: [
@@ -39,7 +51,6 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     StaysSectionComponent,
     MobilitySectionComponent,
     EventsSectionComponent,
-    MarketplaceSectionComponent,
     ChroniclesSectionComponent,
     DashbordPageComponent,
     SideNavComponent,
@@ -52,14 +63,26 @@ import { WaitingResponsePageComponent } from './waiting-response/waiting-respons
     AdminUsersPageComponent,
     LoginDialogComponent,
     ResetPasswordComponent,
-    WaitingResponsePageComponent
+    WaitingResponsePageComponent,
+    CartComponent,
+    CheckoutComponent,
+    MarketplacePageComponent,
+    ArtisansSectionComponent,
+    ProductsSectionComponent,
+    OrdersSectionComponent,
+    PromoSectionComponent,
+    DealsSectionComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    MarketplaceSectionComponent,
+    ProductsModule,
+    OrdersModule,
+    DealsModule
   ],
   providers: [
     {

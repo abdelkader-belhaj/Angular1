@@ -1,11 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { DatePipe, CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 
 @Component({
   selector: 'app-my-orders',
   templateUrl: './my-orders.component.html',
-  styleUrls: ['./my-orders.component.css']
+  styleUrls: ['./my-orders.component.css'],
+  standalone: true,
+  imports: [CommonModule, DatePipe],
+  providers: [DatePipe]
 })
 export class MyOrdersComponent implements OnInit {
   orders: Order[] = [];

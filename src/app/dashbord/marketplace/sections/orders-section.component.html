@@ -1,0 +1,257 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-slate-900">Gérer les Commandes</h2>
+    <div class="text-sm text-slate-600">Total: {{ orders.length }} commandes</div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-slate-900">Filtres</h3>
+      <button (click)="resetFilters()" class="text-sm text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+        <span class="material-symbols-outlined text-sm">restart_alt</span>
+        Réinitialiser
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Recherche par nom -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Rechercher par nom</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-sm">search</span>
+          <input
+            type="text"
+            [(ngModel)]="searchText"
+            (input)="onSearchChange()"
+            placeholder="Nom du client..."
+            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-950 transition"
+          />
+        </div>
+      </div>
+
+      <!-- Filtre par statut -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Filtre par Statut</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="onStatusChange()"
+          class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-950 transition"
+        >
+          <option value="">Tous les statuts</option>
+          <option value="pending">En attente</option>
+          <option value="paid">Payée</option>
+          <option value="shipped">Expédiée</option>
+          <option value="delivered">Livrée</option>
+          <option value="cancelled">Annulée</option>
+        </select>
+      </div>
+
+      <!-- Tri par date -->
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Tri par Date</label>
+        <select
+          [(ngModel)]="sortOrder"
+          (change)="onSortChange()"
+          class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-950 transition"
+        >
+          <option value="descending">Plus récentes en premier</option>
+          <option value="ascending">Plus anciennes en premier</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Résultats filtrés -->
+    <div class="text-sm text-slate-600 pt-2">
+      Affichage: {{ displayedOrdersCount }} commandes
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-950"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredOrders.length === 0 && !error" class="bg-slate-50 border border-slate-200 rounded-lg p-12 text-center">
+    <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">receipt</span>
+    <p class="text-slate-600">Aucune commande trouvée</p>
+  </div>
+
+  <!-- Orders Table -->
+  <div *ngIf="!isLoading && filteredOrders.length > 0" class="table-container">
+    <table class="w-full bg-white rounded-lg border border-slate-200">
+      <thead class="bg-slate-50 border-b border-slate-200">
+        <tr>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Commande #</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Client</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Email</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Montant</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Statut</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-slate-600">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200">
+        <tr *ngFor="let order of filteredOrders" class="hover:bg-slate-50 transition">
+          <td class="px-6 py-4 text-sm font-semibold text-blue-950">{{ order.orderNumber }}</td>
+          <td class="px-6 py-4 text-sm text-slate-900">{{ order.clientName }}</td>
+          <td class="px-6 py-4 text-sm text-slate-600">{{ order.clientEmail }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-900">{{ order.totalAmount | currency:'TND':'symbol':'1.2-2' }}</td>
+          <td class="px-6 py-4 text-sm status-cell">
+            <div class="relative">
+              <button (click)="toggleDropdown(order.id)" [ngClass]="getStatusColor(order.status)" class="px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-2 hover:opacity-80 transition">
+                {{ getStatusLabel(order.status) }}
+                <span class="material-symbols-outlined text-xs">expand_more</span>
+              </button>
+              <div *ngIf="openDropdown === order.id" class="absolute right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-max">
+                <button *ngFor="let status of statusOptions"
+                        (click)="selectStatus(order.id, status)"
+                        [ngClass]="getStatusColor(status)"
+                        class="w-full px-4 py-2 text-left text-xs font-semibold hover:opacity-80 transition first:rounded-t-lg last:rounded-b-lg">
+                  {{ getStatusLabel(status) }}
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm flex items-center gap-3">
+            <button (click)="selectStatus(order.id, 'shipped')"
+                    class="text-green-600 hover:text-green-700 font-semibold inline-flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">local_shipping</span>
+              Livrer
+            </button>
+            <button (click)="viewOrderDetails(order)"
+                    class="text-blue-950 hover:text-blue-700 font-semibold inline-flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">visibility</span>
+              Voir
+            </button>
+            <button (click)="cancelOrder(order.id)"
+                    class="text-orange-600 hover:text-orange-700 font-semibold inline-flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">cancel</span>
+              Annuler
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between mt-6 px-6 py-4 bg-slate-50 rounded-lg">
+      <div class="text-sm text-slate-600">
+        Page {{ currentPage }} sur {{ totalPages }}
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button
+          (click)="previousPage()"
+          [disabled]="currentPage === 1"
+          [ngClass]="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
+          class="px-3 py-1 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+        >
+          <span class="material-symbols-outlined text-sm">chevron_left</span>
+        </button>
+
+        <!-- Page numbers -->
+        <div class="flex gap-1">
+          <button
+            *ngFor="let page of getPageNumbers()"
+            (click)="goToPage(page)"
+            [ngClass]="{
+              'bg-blue-950 text-white': page === currentPage,
+              'bg-white text-slate-700 border border-slate-300': page !== currentPage
+            }"
+            class="px-3 py-1 rounded-lg text-sm font-semibold hover:opacity-80 transition"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+          [ngClass]="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
+          class="px-3 py-1 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+        >
+          <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </div>
+
+      <div class="text-sm text-slate-600">
+        {{ pageSize }} par page
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div *ngIf="showDetailsModal && selectedOrder" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold">Commande #{{ selectedOrder.orderNumber }}</h3>
+        <button (click)="closeModal()" class="text-slate-500 hover:text-slate-700">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <p class="text-sm text-slate-600 mb-1">Nom du Client</p>
+          <p class="font-semibold">{{ selectedOrder.clientName }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-slate-600 mb-1">Email du Client</p>
+          <p class="font-semibold">{{ selectedOrder.clientEmail }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-slate-600 mb-1">Montant Total</p>
+          <p class="font-semibold text-lg">{{ selectedOrder.totalAmount | currency:'TND':'symbol':'1.2-2' }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-slate-600 mb-1">Date</p>
+          <p class="font-semibold">{{ selectedOrder.createdAt | date: 'medium' }}</p>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Statut de la Commande</label>
+        <div class="relative inline-block">
+          <button (click)="toggleDropdown(selectedOrder.id)" [ngClass]="getStatusColor(selectedOrder.status)" class="px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 hover:opacity-80 transition">
+            {{ getStatusLabel(selectedOrder.status) }}
+            <span class="material-symbols-outlined text-sm">expand_more</span>
+          </button>
+          <div *ngIf="openDropdown === selectedOrder.id" class="absolute right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-max">
+            <button *ngFor="let status of statusOptions"
+                    (click)="selectStatus(selectedOrder.id, status)"
+                    [ngClass]="getStatusColor(status)"
+                    class="w-full px-4 py-2 text-left text-sm font-semibold hover:opacity-80 transition first:rounded-t-lg last:rounded-b-lg">
+              {{ getStatusLabel(status) }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t pt-6">
+        <h4 class="font-semibold text-slate-900 mb-4">Articles de la Commande</h4>
+        <div *ngIf="selectedOrder.items && selectedOrder.items.length > 0" class="space-y-3">
+          <div *ngFor="let item of selectedOrder.items" class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+            <div>
+              <p class="font-semibold">{{ item.productName }}</p>
+              <p class="text-sm text-slate-600">Qté: {{ item.quantity }}</p>
+            </div>
+            <p class="font-semibold">{{ item.price | currency:'TND':'symbol':'1.2-2' }}</p>
+          </div>
+        </div>
+        <p *ngIf="!selectedOrder.items || selectedOrder.items.length === 0" class="text-slate-600">Aucune information sur les articles disponible</p>
+      </div>
+
+      <div class="mt-8 flex gap-4 justify-end">
+        <button (click)="closeModal()" class="px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

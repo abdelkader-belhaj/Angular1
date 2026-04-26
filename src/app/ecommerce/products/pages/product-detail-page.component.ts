@@ -31,28 +31,42 @@ export class ProductDetailPageComponent implements OnInit {
   }
 
   loadProduct(): void {
-    this.isLoading = true;
-    this.error = null;
+  this.isLoading = true;
+  this.error = null;
 
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
-      this.error = 'ID du produit non trouvé';
-      this.isLoading = false;
-      return;
-    }
-
-    this.productService.getProductById(parseInt(id)).subscribe({
-      next: (product) => {
-        this.product = product;
-        this.loadRelatedProducts();
-        this.isLoading = false;
-      },
-      error: () => {
-        this.error = 'Erreur lors du chargement du produit';
-        this.isLoading = false;
-      }
-    });
+  const id = this.route.snapshot.paramMap.get('id');
+  if (!id) {
+    this.error = 'ID du produit non trouvé';
+    this.isLoading = false;
+    return;
   }
+
+  this.productService.getProductById(parseInt(id)).subscribe({
+    next: (product) => {
+      this.product = product;
+        console.log('Product loaded, categoryId:', this.product.categoryId);  // ✅
+      if (this.product.categoryId) {
+        this.productService.getCategoryById(this.product.categoryId).subscribe({
+          next: (category) => {
+            console.log('Category fetched:', category);
+            if (this.product) {
+              this.product.category = category.name;
+            }
+          },
+          error: (err) => {
+            console.error('Category fetch error:', err);
+          }
+        });
+      }
+      this.loadRelatedProducts();
+      this.isLoading = false;
+    },
+    error: () => {
+      this.error = 'Erreur lors du chargement du produit';
+      this.isLoading = false;
+    }
+  });
+}
 
   loadRelatedProducts(): void {
     if (!this.product) return;

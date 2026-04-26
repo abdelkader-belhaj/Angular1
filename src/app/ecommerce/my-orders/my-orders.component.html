@@ -119,7 +119,7 @@
             <span class="label">Status:</span>
             <span
               class="status-badge"
-              [style.backgroundColor]="getStatusColor(selectedOrder.status)"
+              [style.backgroundColor]="getStatusColor(selectedOrder.status || '')"
             >
               {{ selectedOrder.status }}
             </span>
@@ -128,7 +128,7 @@
             <span class="label">Payment Status:</span>
             <span
               class="status-badge"
-              [style.backgroundColor]="getPaymentStatusColor(selectedOrder.paymentStatus)"
+              [style.backgroundColor]="getPaymentStatusColor(selectedOrder.paymentStatus || '')"
             >
               {{ selectedOrder.paymentStatus }}
             </span>
@@ -168,7 +168,7 @@
             <span>Subtotal:</span>
             <span>₽{{ selectedOrder.subtotal }}</span>
           </div>
-          <div *ngIf="selectedOrder.discountAmount > 0" class="total-row discount">
+          <div *ngIf="selectedOrder && selectedOrder.discountAmount && selectedOrder.discountAmount > 0" class="total-row discount">
             <span>Discount:</span>
             <span>-₽{{ selectedOrder.discountAmount }}</span>
           </div>

@@ -5,34 +5,41 @@
       <p class="text-on-surface-variant">Authentic craftsmanship, delivered from the Souks to your doorstep.</p>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-      <article class="flex flex-col gap-4">
-        <div class="aspect-square rounded-lg bg-surface-container-low p-8">
-          <img class="w-full h-full object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjfm_aWV0_j_kDw5ACpeJ8b2pvJqPpG1OA3nhtLWcr7xa8jbMiLG4Aj9VWwOVB1Li3sMuW7hrYcKF9cyxw9GwUpeNmE0jXdyG_Hq5QuGu3ZfkIqJ2kj2wzDzYrWIfU1b4Lk-0bYghadZSY-wEBvJ2TrEVQb8t2uIjgcWCqeDqCDQVwFl0oS5WMsce3m6FhhVL15LZs-T86c7NShFw8PdsSNocQhDt0GDaU8_6O5Ci-r07Xi7Vkriu8yB3oui_fVuF0cDMoV1E6pWU" alt="Platter"/>
-        </div>
-        <div><h4 class="font-bold text-primary">Nabeul Painted Platter</h4><p class="text-secondary font-bold text-sm">€45.00</p></div>
-      </article>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-on-surface-variant">Chargement des produits...</p>
+    </div>
 
-      <article class="flex flex-col gap-4">
-        <div class="aspect-square rounded-lg bg-surface-container-low p-8">
-          <img class="w-full h-full object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZMGZzO6VtjKLYpU_LjTiEnQ8nHair_p2HvJBqv-gNVabL2YmaNXECIeuFudy1KvtzPizJ2CF0LS6C5vsED9IBieGvmf2u2XS3hjVhOQqBogQN2FEzHbbDL3gv-2stGmhuMIXUaA9vTh62YGJGJ2n9eH1JBemsntnyD9zWhVvR2jPEGNbtNRMTnJvwLIYZw7RssMt8hf0Ks185edpmiaoHcDWPol7PR2NtN2uZZx6ZbfLlDK6cH0b-hYjsp0TeeDBOk54fGWHnUEc" alt="Rug"/>
+    <!-- Products Grid -->
+    <div *ngIf="!isLoading && products.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <article *ngFor="let product of products" (click)="goToProductDetail(product.id)" class="flex flex-col gap-4 cursor-pointer hover:opacity-80 transition">
+        <div class="aspect-square rounded-lg bg-surface-container-low overflow-hidden">
+          <img 
+            *ngIf="getProductImage(product)" 
+            class="w-full h-full object-cover" 
+            [src]="getProductImage(product)" 
+            [alt]="product.name"
+          />
+          <div *ngIf="!getProductImage(product)" class="w-full h-full flex items-center justify-center bg-gray-200">
+            <span class="text-gray-400">No Image</span>
+          </div>
         </div>
-        <div><h4 class="font-bold text-primary">Kairouan Silk-Wool Rug</h4><p class="text-secondary font-bold text-sm">€820.00</p></div>
+        <div>
+          <h4 class="font-bold text-primary">{{ product.name }}</h4>
+          <p class="text-secondary font-bold text-sm">
+            <span *ngIf="product.discountPrice">{{ product.discountPrice.toFixed(2) }} TND</span>
+            <span *ngIf="!product.discountPrice">{{ product.price.toFixed(2) }} TND</span>
+          </p>
+          <p *ngIf="product.originalPrice && product.discountPrice" class="text-xs text-gray-500 line-through">
+            {{ product.originalPrice.toFixed(2) }} TND
+          </p>
+        </div>
       </article>
+    </div>
 
-      <article class="flex flex-col gap-4">
-        <div class="aspect-square rounded-lg bg-surface-container-low p-8">
-          <img class="w-full h-full object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvJCkMScj_3oPcDpkZiA0gjHqjliFi986YQ0_fBu4CtM8DSflBHB6cnLSBRKy6sdMUY7rG3mMmn1AUB1l4jv-cHfX1T3Tx5QPQJqHIQivwTJu_6qLtXoVktsYRDt6Ywo4TBF2btACadF-8t1LR8Ssvr_SFUBQJV4fz721ncGAIV5VFriB8M-NdKXCJlZGWY7gQw2nhRLokhMGn3i-jPafgqQ_uHvnMCwkMJdbR0ifP3W1AOUrDpyxh3WLDPHv-UMD6PBiqKffVk5A" alt="Necklace"/>
-        </div>
-        <div><h4 class="font-bold text-primary">Silver Khomsa Filigree</h4><p class="text-secondary font-bold text-sm">€125.00</p></div>
-      </article>
-
-      <article class="flex flex-col gap-4">
-        <div class="aspect-square rounded-lg bg-surface-container-low p-8">
-          <img class="w-full h-full object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4waXdbPlXVqNjdWKegl4cIX9xH4cq68NojGN5OZHNkCKsHrQgvVJcadmu1NV17xkWk_GgEQue0f4f2KnMY5RqiWe6Rv87ajOIKsAWANFqDL_U5AMWwRWPRnt6dp_jqWBOPR_C_2v4K1C6xlfxXOoym8LVdsPZNP-pyuDMovmyJNoYuGLZBtLQo98lcUcFGP4WzAY_ag_Tcj-oEFq1keMj0mtQhft66gqpZHOFfL9bkJLhn01BMRw-3wDqMxU8_JfkaPmgvvX_zfk" alt="Glass set"/>
-        </div>
-        <div><h4 class="font-bold text-primary">Carthaginian Glass Set</h4><p class="text-secondary font-bold text-sm">€65.00</p></div>
-      </article>
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && products.length === 0" class="text-center py-12">
+      <p class="text-on-surface-variant">Aucun produit disponible</p>
     </div>
   </div>
 </section>

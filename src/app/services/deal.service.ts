@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, BehaviorSubject } from 'rxjs';
+import { Observable, map, BehaviorSubject, catchError, of } from 'rxjs';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -17,7 +17,7 @@ export interface Deal {
   location: string;
   category: string;
   region: string;
-  type: string; // Solo, Duo, Groupe, Flexible
+  activityType: string; // Solo, Duo, Groupe, Flexible
   environment: string; // Indoor, Outdoor, Les deux
   duration: number; // en heures
   budget: string; // TND, TND TND, TND TND TND
@@ -51,38 +51,38 @@ export class DealService {
   // ========== DEALS RETRIEVAL ==========
 
   getAllDeals(filters?: DealFilter): Observable<Deal[]> {
-    let params = new URLSearchParams();
-    if (filters) {
-      if (filters.search) params.append('search', filters.search);
-      if (filters.region) params.append('region', filters.region);
-      if (filters.category) params.append('category', filters.category);
-      if (filters.budget) params.append('budget', filters.budget);
-      if (filters.type) params.append('type', filters.type);
-      if (filters.environment) params.append('environment', filters.environment);
-      if (filters.duration) params.append('duration', filters.duration.toString());
-    }
-
-    const queryString = params.toString();
-    const url = queryString ? `${this.apiUrl}?${queryString}` : this.apiUrl;
-
-    return this.http
-      .get<ApiResponse<Deal[]>>(url)
-      .pipe(map((response) => response.data));
+  let params = new URLSearchParams();
+  if (filters) {
+    if (filters.search) params.append('search', filters.search);
+    if (filters.region) params.append('region', filters.region);
+    if (filters.category) params.append('category', filters.category);
+    if (filters.budget) params.append('budget', filters.budget);
+    if (filters.type) params.append('type', filters.type);
+    if (filters.environment) params.append('environment', filters.environment);
+    if (filters.duration) params.append('duration', filters.duration.toString());
   }
 
-  getDealById(id: number): Observable<Deal> {
-    return this.http
-      .get<ApiResponse<Deal>>(`${this.apiUrl}/${id}`)
-      .pipe(map((response) => response.data));
-  }
+  const queryString = params.toString();
+  const url = queryString ? `${this.apiUrl}?${queryString}` : this.apiUrl;
+
+  return this.http.get<any>(url).pipe(
+    map(response => Array.isArray(response) ? response : response.data ?? [])  // ✅ handle both wrapped and unwrapped
+  );
+}
 
   // ========== FAVORITES MANAGEMENT ==========
 
   getMyFavorites(): Observable<Deal[]> {
-    return this.http
-      .get<ApiResponse<Deal[]>>(`${this.apiUrl}/favorites`)
-      .pipe(map((response) => response.data));
-  }
+  return this.http
+    .get<any>('http://localhost:8080/api/ecommerce/deal-favorites/my-favorites')
+    .pipe(
+      map(response => {
+        console.log('Raw favorites response:', JSON.stringify(response));
+        return Array.isArray(response) ? response : response.data ?? [];
+      }),
+      catchError(() => of([]))
+    );
+}
 
   getFavoritesWithDetails(): Observable<Deal[]> {
     return this.getMyFavorites();
@@ -90,7 +90,7 @@ export class DealService {
 
   addToFavorites(dealId: number): Observable<void> {
     return this.http
-      .post<ApiResponse<null>>(`${this.apiUrl}/${dealId}/favorite`, {})
+      .post<ApiResponse<null>>('http://localhost:8080/api/ecommerce/deal-favorites', { dealId })
       .pipe(
         map(() => {
           const favorites = this.favoritesSubject$.value;
@@ -102,7 +102,7 @@ export class DealService {
 
   removeFromFavorites(dealId: number): Observable<void> {
     return this.http
-      .delete<ApiResponse<null>>(`${this.apiUrl}/${dealId}/favorite`)
+      .delete<ApiResponse<null>>(`http://localhost:8080/api/ecommerce/deal-favorites/${dealId}`)
       .pipe(
         map(() => {
           const favorites = this.favoritesSubject$.value;
@@ -133,23 +133,40 @@ export class DealService {
   // ========== PRIVATE METHODS ==========
 
   private loadFavorites(): void {
-    this.getMyFavorites().subscribe({
-      next: (deals) => {
+  this.getMyFavorites().subscribe({
+    next: (deals) => {
+      if (deals && Array.isArray(deals)) {
         const favoriteIds = new Set(deals.map((d) => d.id));
         this.favoritesSubject$.next(favoriteIds);
-      },
-      error: () => {
-        // User not authenticated, favorites empty
-        this.favoritesSubject$.next(new Set());
       }
-    });
-  }
-
-  toggleFavorite(dealId: number): Observable<void> {
-    if (this.isFavoriteSync(dealId)) {
-      return this.removeFromFavorites(dealId);
-    } else {
-      return this.addToFavorites(dealId);
+    },
+    error: () => {
+      this.favoritesSubject$.next(new Set());
     }
-  }
+  });
+}
+
+  getDealById(id: number): Observable<Deal> {
+  return this.http
+    .get<any>(`${this.apiUrl}/${id}`)
+    .pipe(map(response => response.data ?? response));
+}
+
+private readonly favoritesUrl = 'http://localhost:8080/api/ecommerce/deal-favorites';
+toggleFavorite(dealId: number): Observable<void> {
+  return this.http
+    .post<any>(`${this.favoritesUrl}/toggle/${dealId}`, {})
+    .pipe(
+      map((response) => {
+        const isFav = response.data;
+        const favorites = this.favoritesSubject$.value;
+        if (isFav) {
+          favorites.add(dealId);
+        } else {
+          favorites.delete(dealId);
+        }
+        this.favoritesSubject$.next(new Set(favorites));
+      })
+    );
+}
 }

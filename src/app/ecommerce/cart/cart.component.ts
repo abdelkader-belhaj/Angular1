@@ -71,4 +71,14 @@ export class CartComponent implements OnInit {
   continueShopping(): void {
     this.router.navigate(['/products']);
   }
+
+  getImageUrl(image: string): string {
+    if (!image) {
+      return '';
+    }
+    if (image.startsWith('http')) {
+      return image;
+    }
+    return `http://localhost:8080/${image}`;
+  }
 }

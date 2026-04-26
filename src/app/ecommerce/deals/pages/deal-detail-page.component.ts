@@ -51,7 +51,7 @@ export class DealDetailPageComponent implements OnInit {
     this.dealService.getAllDeals().subscribe(
       (deals) => {
         this.similarDeals = deals
-          .filter(d => d.type === this.deal.type && d.id !== this.deal.id)
+          .filter(d => d.activityType === this.deal.type && d.id !== this.deal.id)
           .slice(0, 3);
       },
       (error) => {

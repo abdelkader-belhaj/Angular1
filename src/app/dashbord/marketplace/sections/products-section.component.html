@@ -1,0 +1,136 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-slate-900">Gérer les Produits</h2>
+    <div class="text-sm text-slate-600">Total: {{ products.length }} produits</div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-950"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && products.length === 0 && !error" class="bg-slate-50 border border-slate-200 rounded-lg p-12 text-center">
+    <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">shopping_bag</span>
+    <p class="text-slate-600">Aucun produit trouvé</p>
+  </div>
+
+  <!-- Products Grid -->
+  <div *ngIf="!isLoading && paginatedProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let product of paginatedProducts" class="rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition bg-white">
+      <!-- Product Image -->
+      <div class="relative h-48 bg-slate-100 overflow-hidden">
+        <img *ngIf="product.image" [src]="product.image" [alt]="product.name"
+             class="w-full h-full object-cover">
+        <div *ngIf="!product.image" class="w-full h-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-4xl text-slate-300">image</span>
+        </div>
+        <!-- Discount Badge (Top Left) -->
+        <div
+          *ngIf="product.discountPrice && product.discountPrice < product.price"
+          class="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold text-white bg-red-500"
+        >
+          -{{ calculateDiscountPercentage(product.price, product.discountPrice) }}%
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="p-4">
+        <h3 class="font-semibold text-slate-900 mb-2">{{ product.name }}</h3>
+        <p class="text-sm text-slate-600 mb-3 line-clamp-2">{{ product.description }}</p>
+
+        <!-- Price & Stock -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <span class="text-lg font-bold text-slate-900">{{ product.price | currency:'TND':'symbol':'1.2-2' }}</span>
+            <span *ngIf="product.discountPrice" class="text-sm text-slate-600 line-through ml-2">
+              {{ product.discountPrice | currency:'TND':'symbol':'1.2-2' }}
+            </span>
+          </div>
+          <span class="text-sm text-slate-600">Stock: {{ product.stockQuantity }}</span>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="mb-4">
+          <span [ngClass]="{
+            'bg-green-100 text-green-700': product.status === 'active',
+            'bg-yellow-100 text-yellow-700': product.status === 'pending',
+            'bg-gray-100 text-gray-700': product.status === 'inactive'
+          }" class="text-xs font-semibold px-3 py-1 rounded-full">
+            {{ product.status === 'active' ? 'Actif' : (product.status === 'pending' ? 'En attente' : 'Inactif') }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2">
+          <button (click)="toggleProductStatus(product)"
+                  [class]="'w-full py-2 rounded-lg font-semibold transition text-sm ' + (product.status === 'active' ? 'bg-green-50 text-green-950 hover:bg-green-100' : 'bg-orange-50 text-orange-950 hover:bg-orange-100')"
+          >
+            <span class="material-symbols-outlined inline text-sm mr-1">{{ product.status === 'active' ? 'check_circle' : 'unpublished' }}</span>
+            {{ product.status === 'active' ? 'Désactiver' : 'Activer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && products.length > 0 && totalPages > 1"
+       class="flex items-center justify-center gap-2 mt-10 pt-8 border-t border-[#e8eff7] flex-wrap">
+
+    <!-- Previous -->
+    <button
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+      class="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+    >
+      <span class="material-symbols-outlined text-base">navigate_before</span>
+      Préc.
+    </button>
+
+    <!-- First page shortcut -->
+    <button
+      *ngIf="pages[0] > 1"
+      (click)="goToPage(1)"
+      class="w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] transition-all"
+    >1</button>
+    <span *ngIf="pages[0] > 2" class="text-[#5f6874] px-1">…</span>
+
+    <!-- Page numbers window -->
+    <button
+      *ngFor="let page of pages"
+      (click)="goToPage(page)"
+      [class]="page === currentPage
+        ? 'w-9 h-9 flex items-center justify-center border-2 border-[#003974] rounded-xl text-sm font-bold bg-[#003974] text-white shadow-md'
+        : 'w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] hover:text-[#003974] transition-all'"
+    >{{ page }}</button>
+
+    <!-- Last page shortcut -->
+    <span *ngIf="pages[pages.length - 1] < totalPages - 1" class="text-[#5f6874] px-1">…</span>
+    <button
+      *ngIf="pages[pages.length - 1] < totalPages"
+      (click)="goToPage(totalPages)"
+      class="w-9 h-9 flex items-center justify-center border-2 border-[#e8eff7] rounded-xl text-sm font-bold text-[#5f6874] hover:border-[#003974] transition-all"
+    >{{ totalPages }}</button>
+
+    <!-- Next -->
+    <button
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+      class="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+    >
+      Suiv.
+      <span class="material-symbols-outlined text-base">navigate_next</span>
+    </button>
+  </div>
+
+  <!-- Results count -->
+  <p *ngIf="!isLoading && products.length > 0" class="text-center text-xs text-[#5f6874] mt-4">
+    Affichage {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, products.length) }} sur {{ products.length }} produit(s)
+  </p>
+</div>

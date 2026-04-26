@@ -1,112 +1,196 @@
 <div class="min-h-screen bg-gradient-to-b from-[#f7f9fc] to-white py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-[#003974] mb-2">Mes bons favoris</h1>
-      <p class="text-[#5f6874]">Vos bons plans sauvegardés et offres favorites</p>
-    </div>
-
-    <!-- Filter Bar -->
-    <div class="mb-6 flex gap-4">
-      <select
-        [(ngModel)]="filterType"
-        class="px-4 py-2 border border-[#dbe1ea] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#003974]"
+    <div class="mb-12 flex items-center justify-between">
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+            <span class="material-symbols-outlined text-white text-2xl">favorite</span>
+          </div>
+          <h1 class="text-4xl font-bold text-[#003974]">Mes Favoris</h1>
+        </div>
+        <p class="text-[#5f6874] pl-16">Vos bons plans sauvegardés et offres préférées</p>
+      </div>
+      <a
+        routerLink="/deals"
+        class="px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-xl font-bold hover:shadow-lg transition-all duration-200 flex items-center gap-2 shadow-md"
       >
-        <option *ngFor="let option of filterOptions" [value]="option.value">
-          {{ option.label }}
-        </option>
-      </select>
+        <span class="material-symbols-outlined">explore</span>
+        Découvrir Plus
+      </a>
     </div>
 
     <!-- Loading State -->
     <div *ngIf="isLoading" class="text-center py-12">
-      <p class="text-[#5f6874]">Chargement de vos favoris...</p>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003974] mx-auto"></div>
+      <p class="text-[#5f6874] mt-4">Chargement de vos favoris...</p>
     </div>
 
-    <!-- Empty State -->
-    <div *ngIf="!isLoading && getFilteredFavorites().length === 0" class="text-center py-16">
-      <p class="text-6xl mb-4">♡</p>
-      <p class="text-[#5f6874] text-lg mb-6">Vous n'avez pas encore de bons favoris</p>
+    <!-- Filter (Always visible when not loading) -->
+    <div *ngIf="!isLoading && favorites.length > 0" class="bg-white rounded-2xl shadow-sm border border-[#e8eff7] p-6 transition-all duration-300 mb-8">
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-bold text-[#003974] flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">filter_list</span>
+          Filtrer par catégorie
+        </label>
+        <div class="w-1/3">
+          <app-custom-select
+            [options]="filterOptions"
+            [selectedValue]="filterType"
+            (onChange)="filterType = $event; applyFilters()"
+          ></app-custom-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State - No Favorites -->
+    <div *ngIf="!isLoading && favorites.length === 0" class="text-center py-20 bg-white rounded-2xl border border-[#e8eff7] shadow-sm">
+      <div class="text-7xl mb-4">♡</div>
+      <p class="text-[#003974] text-2xl font-bold mb-2">Aucun favori pour l'instant</p>
+      <p class="text-[#5f6874] mb-8">Vous n'avez pas encore de bons plans sauvegardés</p>
       <a
         routerLink="/deals"
-        class="px-6 py-3 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] inline-block"
+        class="px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-xl font-bold hover:shadow-lg inline-block transition-all duration-200"
       >
-        Découvrir les bons plans
+        Explorez les Bons Plans
       </a>
     </div>
 
-    <!-- Favorites Grid -->
-    <div *ngIf="!isLoading && getFilteredFavorites().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div
-        *ngFor="let deal of getFilteredFavorites()"
-        class="bg-white rounded-lg border border-[#dbe1ea] overflow-hidden hover:shadow-lg transition-shadow"
+    <!-- No Results Message - When filtering -->
+    <div *ngIf="!isLoading && favorites.length > 0 && filteredFavorites.length === 0" class="text-center py-16 bg-white rounded-2xl border border-[#e8eff7] shadow-sm">
+      <div class="text-5xl mb-4">🔍</div>
+      <p class="text-[#003974] text-xl font-bold mb-2">Aucun résultat</p>
+      <p class="text-[#5f6874] mb-8">Aucun bon plan ne correspond à votre filtre</p>
+      <button
+        (click)="filterType = 'all'; applyFilters()"
+        class="px-6 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-xl font-bold hover:shadow-lg inline-block transition-all duration-200"
       >
-        <!-- Deal Image -->
-        <div class="relative h-40 bg-[#f7f9fc] overflow-hidden">
-          <img
-            [src]="deal.image"
-            [alt]="deal.title"
-            class="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-            (click)="viewDeal(deal.id)"
-          />
-          <!-- Discount Badge -->
-          <div *ngIf="deal.discount" class="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 font-bold text-sm">
-            -{{ deal.discount }}%
-          </div>
-        </div>
+        Voir tous les favoris
+      </button>
+    </div>
 
-        <!-- Deal Info -->
-        <div class="p-6 space-y-4">
-          <!-- Type Badge -->
-          <div class="flex gap-2">
-            <span class="px-2 py-1 bg-[#d6e3ff] text-[#003974] rounded-full text-xs font-bold uppercase">
-              {{ deal.type }}
-            </span>
-          </div>
-
-          <!-- Title -->
-          <h3
-            (click)="viewDeal(deal.id)"
-            class="text-lg font-bold text-[#003974] line-clamp-2 cursor-pointer hover:text-[#002a54]"
-          >
-            {{ deal.title }}
-          </h3>
-
-          <!-- Description -->
-          <p class="text-[#5f6874] text-sm line-clamp-2">{{ deal.description }}</p>
-
-          <!-- Rating -->
-          <div *ngIf="deal.rating" class="flex items-center gap-2">
-            <span class="text-yellow-500">★</span>
-            <span class="text-sm font-semibold text-[#5f6874]">{{ deal.rating }}/5</span>
+    <!-- Favorites Grid -->
+    <ng-container *ngIf="!isLoading && filteredFavorites.length > 0">
+      <!-- Deals Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mb-12">
+        <div
+          *ngFor="let deal of paginatedFavorites; let i = index"
+          class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-[#e8eff7] hover:border-[#003974] group"
+        >
+          <!-- Deal Image with Remove Button -->
+          <div class="relative h-56 bg-gradient-to-br from-[#f7f9fc] to-[#e8eff7] overflow-hidden">
+            <img
+              [src]="getImageUrl(deal.image)" [alt]="deal.title"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+              (click)="viewDeal(deal.id)"
+            />
+            <!-- Overlay Badge -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"></div>
+            <!-- Remove Button -->
+            <button
+              (click)="removeFavorite(deal.id); $event.stopPropagation()"
+              class="absolute top-4 right-4 w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white flex items-center justify-center font-bold hover:shadow-lg transition-all shadow-lg duration-200 group-hover:scale-110 z-10"
+              title="Retirer des favoris"
+            >
+              <span class="material-symbols-outlined text-2xl fill">close</span>
+            </button>
           </div>
 
-          <!-- Price -->
-          <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-bold text-[#003974]">{{ deal.price }}€</span>
-            <span *ngIf="deal.originalPrice" class="text-[#5f6874] line-through text-sm">{{ deal.originalPrice }}€</span>
-          </div>
+          <!-- Deal Info -->
+          <div class="p-6 space-y-4">
+            <!-- Title -->
+            <h3
+              (click)="viewDeal(deal.id)"
+              class="text-lg font-bold text-[#003974] line-clamp-2 cursor-pointer hover:text-[#002a54] transition-colors"
+            >
+              {{ deal.title }}
+            </h3>
 
-          <!-- Validity -->
-          <p class="text-xs text-[#5f6874]">📅 Valide jusqu'au {{ deal.validUntil | date: 'dd/MM/yyyy' }}</p>
+            <!-- Location -->
+            <p class="text-[#5f6874] text-sm font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-base text-[#003974]">location_on</span>
+              {{ deal.location }}
+            </p>
 
-          <!-- Action Buttons -->
-          <div class="flex gap-3 pt-2 border-t border-[#dbe1ea]">
+            <!-- Description -->
+            <p class="text-[#5f6874] text-sm line-clamp-2">{{ deal.description }}</p>
+
+            <!-- Badges -->
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-200">
+                <span class="material-symbols-outlined inline text-sm mr-1">category</span>
+                {{ deal.activityType }}
+              </span>
+              <span class="px-3 py-1 bg-gradient-to-r from-green-100 to-green-50 text-green-700 rounded-full text-xs font-bold border border-green-200">
+                <span class="material-symbols-outlined inline text-sm mr-1">local_offer</span>
+                {{ deal.category }}
+              </span>
+            </div>
+
+            <!-- Favorites Count -->
+            <div class="flex items-center gap-2 text-red-600 font-bold text-sm bg-red-50 px-3 py-2 rounded-lg w-fit">
+              <span class="material-symbols-outlined text-base">favorite</span>
+              <span>{{ deal.favoriteCount }} Favoris</span>
+            </div>
+
+            <!-- View Button -->
             <button
               (click)="viewDeal(deal.id)"
-              class="flex-1 px-4 py-2 bg-[#003974] text-white rounded-lg font-bold hover:bg-[#002a54] text-sm"
+              class="w-full px-4 py-3 bg-gradient-to-r from-[#003974] to-[#002a54] text-white rounded-xl font-bold hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
-              Voir
-            </button>
-            <button
-              (click)="removeFavorite(deal.id)"
-              class="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-bold hover:bg-red-200 text-sm"
-            >
-              ✕ Retirer
+              <span class="material-symbols-outlined">arrow_forward</span>
+              Voir le détail
             </button>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="flex justify-center items-center gap-2 mt-12 pt-8 border-t border-[#e8eff7]">
+        <button 
+          (click)="previousPage()" 
+          [disabled]="currentPage === 1"
+          class="px-6 py-3 text-sm text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-semibold flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">navigate_before</span>
+          Précédent
+        </button>
+        
+        <div class="flex gap-2 flex-wrap justify-center mx-4">
+          <button 
+            *ngFor="let page of pages"
+            (click)="goToPage(page)"
+            [class.bg-gradient-to-r]="page === currentPage"
+            [class.from-[#003974]]="page === currentPage"
+            [class.to-[#002a54]]="page === currentPage"
+            [class.text-white]="page === currentPage"
+            [class.shadow-lg]="page === currentPage"
+            [class.text-[#5f6874]]="page !== currentPage"
+            [class.border-[#003974]]="page === currentPage"
+            [class.border-[#e8eff7]]="page !== currentPage"
+            class="w-10 h-10 flex items-center justify-center border-2 rounded-lg text-sm font-bold transition-all duration-200 hover:border-[#003974]"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <button 
+          (click)="nextPage()" 
+          [disabled]="currentPage === totalPages"
+          class="px-6 py-3 text-sm text-[#003974] border-2 border-[#e8eff7] rounded-xl hover:border-[#003974] hover:bg-[#f0f5fb] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 font-semibold flex items-center gap-2"
+        >
+          Suivant
+          <span class="material-symbols-outlined">navigate_next</span>
+        </button>
+      </div>
+
+      <!-- Results Count -->
+      <div class="mt-8 text-center text-[#5f6874]">
+        <p class="text-sm font-semibold">
+          Affichage {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, filteredFavorites.length) }} sur {{ filteredFavorites.length }} favori(s)
+        </p>
+      </div>
+    </ng-container>
   </div>
 </div>
+

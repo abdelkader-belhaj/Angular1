@@ -502,10 +502,14 @@ export class DemanderCourseComponent
         const idDemande = response.idDemande ?? (response as any).id;
 
         if (idDemande) {
-          // 2. Pre-autorisation penalite 20% avec reference carte confirmee.
-          const penaltyHold = Number(
-            (Number(this.estimatedPrice) * 0.2).toFixed(2),
+          // Use backend-confirmed estimate and round up to guarantee >= 20%.
+          const backendEstimatedPrice = Number(response.prixEstime);
+          const localEstimatedPrice = Number(this.estimatedPrice ?? 0);
+          const estimatedBase = Math.max(
+            Number.isFinite(backendEstimatedPrice) ? backendEstimatedPrice : 0,
+            Number.isFinite(localEstimatedPrice) ? localEstimatedPrice : 0,
           );
+          const penaltyHold = Math.ceil(estimatedBase * 0.2 * 100) / 100;
           this.demandeCourseService
             .preAuthorizePenalty(
               idDemande,

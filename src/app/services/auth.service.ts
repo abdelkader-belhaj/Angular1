@@ -309,7 +309,7 @@ export class AuthService {
       case 'ADMIN':           return '/dashbord';
       case 'CLIENT_TOURISTE': return '/homePage';
       case 'HEBERGEUR':       return '/hebergeur';
-      case 'TRANSPORTEUR':    return '/transporteur';
+      case 'TRANSPORTEUR':    return '/transport';
       case 'AIRLINE_PARTNER': return '/airline-partner';
       case 'ORGANISATEUR':    return '/organisateur';
       case 'VENDEUR_ARTI':    return '/vendeur-arti';

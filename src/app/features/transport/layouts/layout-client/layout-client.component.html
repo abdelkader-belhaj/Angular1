@@ -1,0 +1,39 @@
+<div class="layout-client">
+  <header class="header">
+    <div class="logo">
+      <mat-icon>local_taxi</mat-icon>
+      <span>TunisiaTour Transport</span>
+    </div>
+    <nav class="nav">
+      <a routerLink="/transport/demander-course" routerLinkActive="active">
+        <mat-icon>local_taxi</mat-icon>
+        <span>Course</span>
+      </a>
+      <a
+        routerLink="/transport/location/client/recherche"
+        routerLinkActive="active"
+      >
+        <mat-icon>directions_car</mat-icon>
+        <span>Location</span>
+      </a>
+      <a routerLink="/transport/historique-courses" routerLinkActive="active">
+        <mat-icon>history</mat-icon>
+        <span>Historique</span>
+      </a>
+    </nav>
+    <div class="user">
+      <button mat-icon-button [matMenuTriggerFor]="menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item>
+          <mat-icon>logout</mat-icon>
+          <span>Déconnexion</span>
+        </button>
+      </mat-menu>
+    </div>
+  </header>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

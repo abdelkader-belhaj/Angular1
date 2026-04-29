@@ -1,4 +1,4 @@
-<nav class="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r border-slate-100 bg-white/95 shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-4 gap-4 z-50 backdrop-blur-sm">
+<nav class="side-nav-scroll hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r border-slate-100 bg-white/95 shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-4 gap-4 z-50 backdrop-blur-sm">
   <div class="rounded-[1.75rem] bg-gradient-to-br from-blue-950 via-blue-900 to-sky-800 p-5 text-white shadow-lg shadow-blue-950/20">
     <div class="flex items-start justify-between gap-3">
       <div>
@@ -29,6 +29,7 @@
       <span class="text-sm">Dashboard</span>
     </a>
 
+
     <a
       routerLink="/dashbord/users"
       routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
@@ -52,6 +53,76 @@
       <span class="text-sm">Marketplace</span>
     </a>
 
+    <div>
+      <button
+        type="button"
+        (click)="toggleAccommodation()"
+        class="w-full group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+      >
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+          <span class="material-symbols-outlined text-[20px]">holiday_village</span>
+        </span>
+        <span class="text-sm flex-1 text-left">Accommodation</span>
+        <span class="material-symbols-outlined text-[18px] transition-transform" [class.rotate-180]="isAccommodationExpanded">expand_more</span>
+      </button>
+
+      <div *ngIf="isAccommodationExpanded" class="mt-1 ml-2 space-y-1 border-l-2 border-slate-200 pl-2">
+        <a
+          routerLink="/dashbord/categorie"
+          routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+          class="group flex items-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+        >
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+            <span class="material-symbols-outlined text-[16px]">category</span>
+          </span>
+          <span class="text-xs">Catégories</span>
+        </a>
+
+        <a
+          routerLink="/dashbord/logements"
+          routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+          class="group flex items-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+        >
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+            <span class="material-symbols-outlined text-[16px]">inventory_2</span>
+          </span>
+          <span class="text-xs">Logements</span>
+        </a>
+
+        <a
+          routerLink="/dashbord/reservations"
+          routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+          class="group flex items-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+        >
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+            <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+          </span>
+          <span class="text-xs">Réservations</span>
+        </a>
+
+        <a
+          routerLink="/dashbord/reclamations"
+          routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+          class="group flex items-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+        >
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+            <span class="material-symbols-outlined text-[16px]">support_agent</span>
+          </span>
+          <span class="text-xs">Réclamations</span>
+        </a>
+
+        <a
+          routerLink="/dashbord/notifications"
+          routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+          class="group flex items-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+        >
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+            <span class="material-symbols-outlined text-[16px]">notifications</span>
+          </span>
+          <span class="text-xs">Notifications</span>
+        </a>
+      </div>
+    </div>
     <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
       <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
         <span class="material-symbols-outlined text-[20px]">calendar_month</span>
@@ -64,18 +135,43 @@
       </span>
       <span class="text-sm">Inventory</span>
     </a>
-    <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
-      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
-        <span class="material-symbols-outlined text-[20px]">analytics</span>
-      </span>
-      <span class="text-sm">Analytics</span>
+    <!-- ✅ ajout venant du repo -->
+    <a 
+      class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl"
+      routerLink="/community-admin">
+      <span class="material-symbols-outlined">groups</span>
+      <span class="text-sm">Community</span>
     </a>
+    <a
+      routerLink="/dashbord/transport-stats"
+      routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+      class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">directions_car</span>
+      </span>
+      <span class="text-sm">Statistiques Transport</span>
+    </a>
+
+    <a
+      routerLink="/dashbord/events"
+      routerLinkActive="bg-blue-950 text-white shadow-lg shadow-blue-950/15"
+      class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-950"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-900">
+        <span class="material-symbols-outlined text-[20px]">event_note</span>
+      </span>
+      <span class="flex-1 text-sm">Gérer les événements</span>
+    </a>
+
+
     <a class="group flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-blue-950" href="#">
       <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-900">
         <span class="material-symbols-outlined text-[20px]">settings</span>
       </span>
       <span class="text-sm">Settings</span>
     </a>
+
   </div>
 
   <div class="mt-auto rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">

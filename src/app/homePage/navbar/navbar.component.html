@@ -2,39 +2,87 @@
   <div class="navbar-inner">
     <a routerLink="/" fragment="top" class="brand">TunisiaTour</a>
 
-    <ul class="menu">
-      <li><a routerLink="/" fragment="accueil">Accueil</a></li>
+<ul class="menu" *ngIf="showDefaultMenu">      <li><a routerLink="/" fragment="accueil">Accueil</a></li>
       <li><a routerLink="/" fragment="voyages">Voyages</a></li>
       <li><a routerLink="/" fragment="hotels">Hotels</a></li>
       <li><a routerLink="/deals">Bons Plans</a></li>
-      <li><a routerLink="/" fragment="contact">Contact</a></li>
+          <li><a routerLink="/events">Événements</a></li>
+
+
+    <li>
+  <a routerLink="/" fragment="community">Community</a>
+</li>
+      
+
+
     </ul>
 
-    <button *ngIf="!isAuthenticated" class="btn" type="button" (click)="openLoginDialog()">
-      Connexion
-    </button>
+     <!-- NAVBAR ÉVÉNEMENTS (hors organisateur) -->
+    <div class="menu events-menu" *ngIf="showEventsMenu">
+      <a routerLink="/events" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Tous les événements
+      </a>
+      <a routerLink="/events/promos" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Nos promos
+      </a>
+      <a routerLink="/mes-reservations-event" *ngIf="isClientTouriste" routerLinkActive="active">
+        Mes réservations
+      </a>
+    </div>
 
-    <div *ngIf="isAuthenticated" class="user-menu" (click)="$event.stopPropagation()">
-      <button class="user-trigger" type="button" (click)="toggleUserMenu($event)">
-        <span class="user-avatar">{{ currentUserName.charAt(0) }}</span>
-        <span class="user-meta">
-          <strong>{{ currentUserName }}</strong>
-          <small>{{ currentUserRole }}</small>
-        </span>
-      </button>
+    <!-- NAVBAR ORGANISATEUR -->
+    <div class="menu events-menu" *ngIf="showOrganisateurMenu">
+      <a routerLink="/organisateur" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        Espace organisateur
+      </a>
+    </div>
 
-      <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu" aria-label="Menu utilisateur">
-        <div class="user-bio-preview">
-          <p>{{ currentUserBio }}</p>
+
+    <div class="auth-section">
+      <ng-container *ngIf="!isAuthenticated">
+        <button class="btn" type="button" (click)="openLoginDialog()">Connexion</button>
+      </ng-container>
+
+      <ng-container *ngIf="isAuthenticated">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          
+          <!-- Bouton Mes Réservations (calendrier) avec badge notifications§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ -->
+          <button 
+            *ngIf="isClientTouriste" 
+            routerLink="/mes-reservations-logement" 
+            class="reservations-btn" 
+            style="padding: 8px; position: relative; margin-right: 15px;" 
+            title="Mes Réservations">
+            <span class="material-symbols-outlined w-5 h-5 text-slate-700">calendar_month</span>
+            <span *ngIf="unreadNotifsCount > 0" class="notif-badge">{{ unreadNotifsCount }}</span>
+            <span *ngIf="unreadNotifsCount > 0" class="notif-badge-ping" aria-hidden="true"></span>
+          </button>
+
+          <div class="user-menu" (click)="$event.stopPropagation()">
+            <button class="user-trigger" type="button" (click)="toggleUserMenu($event)">
+              <span class="user-avatar">{{ currentUserName.charAt(0) }}</span>
+              <span class="user-meta">
+                <strong>{{ currentUserName }}</strong>
+                <small>{{ currentUserRole }}</small>
+              </span>
+            </button>
+
+            <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu" aria-label="Menu utilisateur">
+              <div class="user-bio-preview">
+                <p>{{ currentUserBio }}</p>
+              </div>
+              <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
+                Gerer mon module
+              </button>
+              <button type="button" role="menuitem" (click)="goToProfile()">Mon profil</button>
+              <button type="button" role="menuitem" (click)="goToSecurity()">Securite et mot de passe</button>
+              <hr />
+              <button type="button" role="menuitem" class="logout-item" (click)="logout()">Deconnexion</button>
+            </div>
+          </div>
         </div>
-        <button *ngIf="!isAdminUser" type="button" role="menuitem" (click)="goToRoleModule()">
-          Gerer mon module
-        </button>
-        <button type="button" role="menuitem" (click)="goToProfile()">Mon profil</button>
-        <button type="button" role="menuitem" (click)="goToSecurity()">Securite et mot de passe</button>
-        <hr />
-        <button type="button" role="menuitem" class="logout-item" (click)="logout()">Deconnexion</button>
-      </div>
+      </ng-container>
+
     </div>
   </div>
 </header>

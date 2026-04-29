@@ -2,20 +2,280 @@
   <app-dash-side-nav></app-dash-side-nav>
 
   <main class="md:ml-64 p-6 lg:p-10">
-    <app-dash-header></app-dash-header>
-    <app-stats-overview></app-stats-overview>
+    <app-dash-header *ngIf="!isCategoriePage"></app-dash-header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2 space-y-8">
-        <app-bookings-table></app-bookings-table>
-        <app-inventory-cards></app-inventory-cards>
+    <!-- Dashboard principal — masqué quand une page enfant est active -->
+    <ng-container *ngIf="!isChildRoute">
+      
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="flex items-center justify-center py-16">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+          <p class="text-slate-600">Chargement des données du tableau de bord...</p>
+        </div>
       </div>
 
-      <aside class="space-y-8">
-        <app-inquiries-panel></app-inquiries-panel>
-      </aside>
-    </div>
+      <!-- Error State -->
+      <div *ngIf="dataError && !isLoading" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        <strong>Erreur:</strong> {{ dataError }}
+      </div>
+
+      <!-- Main Dashboard Content -->
+      <div *ngIf="!isLoading" class="space-y-8">
+        
+        <!-- Header with Refresh Button -->
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-slate-900">Tableau de Bord</h1>
+          <button (click)="refreshData()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+            ↻ Rafraîchir
+          </button>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- STATS OVERVIEW CARDS -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Total Reservations Card -->
+          <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Réservations Totales</p>
+                <h3 class="text-3xl font-bold text-slate-900 mt-2">{{ totalReservations }}</h3>
+              </div>
+              <div class="text-3xl text-blue-500">📅</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">
+              <span class="text-green-600 font-medium">{{ confirmedReservations }} confirmées</span> • 
+              <span class="text-red-600 font-medium">{{ cancelledReservations }} annulées</span>
+            </p>
+          </div>
+
+          <!-- Total Revenue Card -->
+          <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Revenu Total</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ formatCurrency(totalRevenueFromReservations) }}</h3>
+              </div>
+              <div class="text-3xl text-green-500">💰</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">Depuis les réservations confirmées</p>
+          </div>
+
+          <!-- Total Logements Card -->
+          <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Logements</p>
+                <h3 class="text-3xl font-bold text-slate-900 mt-2">{{ totalLogements }}</h3>
+              </div>
+              <div class="text-3xl text-purple-500">🏠</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">
+              <span class="text-green-600 font-medium">{{ availableLogements }} disponibles</span> • 
+              <span class="text-orange-600 font-medium">{{ maintenanceLogements }} en maintenance</span>
+            </p>
+          </div>
+
+          <!-- Reclamations Card -->
+          <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Réclamations</p>
+                <h3 class="text-3xl font-bold text-slate-900 mt-2">{{ totalReclamations }}</h3>
+              </div>
+              <div class="text-3xl text-red-500">⚠️</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">
+              <span class="text-orange-600 font-medium">{{ openReclamations }} ouvertes</span> • 
+              <span class="text-blue-600 font-medium">{{ inProgressReclamations }} en cours</span>
+            </p>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- SECONDARY STATS -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Average Price Card -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Prix Moyen/Nuit</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ formatCurrency(avgPricePerNight) }}</h3>
+              </div>
+              <div class="text-2xl">💵</div>
+            </div>
+          </div>
+
+          <!-- Total Capacity Card -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Capacité Totale</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">{{ totalCapacity }} personnes</h3>
+              </div>
+              <div class="text-2xl">👥</div>
+            </div>
+          </div>
+
+          <!-- Notifications Card -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-slate-600 text-sm font-medium">Notifications</p>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">
+                  {{ unreadNotifications }}<span class="text-sm text-slate-500"> / {{ totalNotifications }}</span>
+                </h3>
+              </div>
+              <div class="text-2xl">🔔</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">{{ unreadNotifications }} non lues</p>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <!-- MAIN CONTENT GRID -->
+        <!-- ════════════════════════════════════════════════════════════════ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Left Column: Tables and Lists -->
+          <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Recent Reservations Table -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
+                <h2 class="text-white font-bold text-lg">📋 Réservations Récentes</h2>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full" *ngIf="recentReservations.length > 0; else noReservations">
+                  <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Logement</th>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Client</th>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Dates</th>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Prix</th>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200">
+                    <tr *ngFor="let res of recentReservations" class="hover:bg-slate-50 transition">
+                      <td class="px-4 py-3 text-sm text-slate-900">{{ res.nomLogement }}</td>
+                      <td class="px-4 py-3 text-sm text-slate-900">{{ res.nomClient }}</td>
+                      <td class="px-4 py-3 text-sm text-slate-600">
+                        {{ formatDate(res.dateDebut) }} → {{ formatDate(res.dateFin) }}
+                      </td>
+                      <td class="px-4 py-3 text-sm font-medium text-green-600">
+                        {{ formatCurrency(parsePriceToNumber(res.prixTotal)) }}
+                      </td>
+                      <td class="px-4 py-3 text-sm">
+                        <span [ngClass]="getStatusColor(res.statut)" class="px-3 py-1 rounded-full text-xs font-medium">
+                          {{ res.statut }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <ng-template #noReservations>
+                <div class="p-8 text-center text-slate-500">
+                  <p>Aucune réservation trouvée</p>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Reclamations Summary -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-lg font-bold text-slate-900 mb-4">⚠️ Résumé des Réclamations</h2>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="bg-orange-50 rounded-lg p-4 text-center">
+                  <p class="text-orange-600 text-2xl font-bold">{{ openReclamations }}</p>
+                  <p class="text-orange-700 text-sm">Ouvertes</p>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                  <p class="text-blue-600 text-2xl font-bold">{{ inProgressReclamations }}</p>
+                  <p class="text-blue-700 text-sm">En Cours</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                  <p class="text-green-600 text-2xl font-bold">{{ resolvedReclamations }}</p>
+                  <p class="text-green-700 text-sm">Résolues</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Sidebar -->
+          <aside class="space-y-8">
+            
+            <!-- Quick Stats -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-lg font-bold text-slate-900 mb-4">📊 Statistiques</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                  <span class="text-slate-600 text-sm">Taux d'Occupation</span>
+                  <span class="font-semibold text-slate-900">
+                    {{ totalLogements > 0 ? ((confirmedReservations / totalLogements) * 100).toFixed(0) : 0 }}%
+                  </span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                  <span class="text-slate-600 text-sm">Logements Actifs</span>
+                  <span class="font-semibold text-green-600">{{ availableLogements }} / {{ totalLogements }}</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                  <span class="text-slate-600 text-sm">Taux Résolution</span>
+                  <span class="font-semibold text-slate-900">
+                    {{ totalReclamations > 0 ? ((resolvedReclamations / totalReclamations) * 100).toFixed(0) : 0 }}%
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 text-sm">Moyenne Par Réservation</span>
+                  <span class="font-semibold text-blue-600">
+                    {{ confirmedReservations > 0 ? formatCurrency(totalRevenueFromReservations / confirmedReservations) : formatCurrency(0) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
+              <h2 class="text-lg font-bold text-slate-900 mb-4">ℹ️ À propos</h2>
+              <p class="text-sm text-slate-600 mb-4">
+                Ce tableau de bord affiche les données en temps réel collectées depuis tous les modules de l'application.
+              </p>
+              <button (click)="refreshData()" class="w-full px-4 py-2 bg-slate-300 hover:bg-slate-400 text-slate-900 rounded-lg font-medium transition text-sm">
+                ↻ Actualiser maintenant
+              </button>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </div>
+
+      <!-- Original Components (Stats Overview) -->
+      <app-stats-overview *ngIf="false"></app-stats-overview>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" *ngIf="false">
+        <div class="lg:col-span-2 space-y-8">
+          <app-bookings-table></app-bookings-table>
+          <app-inventory-cards></app-inventory-cards>
+        </div>
+        <aside class="space-y-8">
+          <app-inquiries-panel></app-inquiries-panel>
+        </aside>
+      </div>
+
+    </ng-container>
+
+    <!-- Pages enfants (categorie, etc.) -->
+    <router-outlet></router-outlet>
+
   </main>
 
-  <app-dash-footer></app-dash-footer>
+  <app-dash-footer *ngIf="!isFooterHidden"></app-dash-footer>
 </div>

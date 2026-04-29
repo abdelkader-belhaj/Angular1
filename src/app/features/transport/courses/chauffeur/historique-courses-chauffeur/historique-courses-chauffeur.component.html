@@ -1,0 +1,280 @@
+<div class="dashboard-container history-container">
+  <div class="sand-sea-orb orb-left"></div>
+  <div class="sand-sea-orb orb-right"></div>
+
+  <div class="dashboard-shell history-shell">
+    <app-chauffeur-sidenav
+      [activeSection]="'history'"
+      [showCta]="true"
+      [ctaLabel]="'Retour dashboard'"
+      [ctaDisabled]="false"
+      (ctaClick)="goToDashboard()"
+    ></app-chauffeur-sidenav>
+
+    <main class="dashboard-main history-main">
+      <!-- Header Section -->
+      <header class="dashboard-header glass-surface history-header">
+        <div>
+          <h1
+            class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight leading-none mb-2"
+          >
+            Historique des courses
+          </h1>
+          <p class="text-on-surface-variant font-medium">
+            Consultez vos trajets passés et les retours de vos clients.
+          </p>
+        </div>
+     
+      </header>
+
+      <!-- Loading State -->
+      <div
+        *ngIf="isLoading"
+        class="flex flex-col items-center justify-center py-24"
+      >
+        <div class="animate-spin mb-4">
+          <span class="material-symbols-outlined text-4xl text-primary">
+            settings
+          </span>
+        </div>
+        <p class="text-on-surface-variant font-medium">
+          Chargement de l'historique...
+        </p>
+      </div>
+
+      <!-- Error State -->
+      <div
+        *ngIf="error && !isLoading"
+        class="bg-error-container text-error rounded-lg p-6 mb-8 flex items-start gap-4"
+      >
+        <span class="material-symbols-outlined flex-shrink-0">warning</span>
+        <div>
+          <p class="font-semibold mb-1">Une erreur s'est produite</p>
+          <p class="text-sm">{{ error }}</p>
+        </div>
+      </div>
+
+      <!-- History List -->
+      <div
+        *ngIf="!isLoading && !error && courses.length"
+        class="space-y-8 pb-12"
+      >
+        <article
+          *ngFor="let course of courses"
+          class="bg-surface-container-lowest rounded-lg shadow-[0_20px_40px_rgba(0,57,116,0.06)] overflow-hidden transition-transform hover:scale-[1.01] duration-300"
+          [class.opacity-80]="course.statut === 'CANCELLED'"
+          [class.grayscale-[0.3]]="course.statut === 'CANCELLED'"
+        >
+          <!-- Section 1: Identification -->
+          <div
+            class="px-8 py-5 flex justify-between items-center bg-surface-container-low"
+          >
+            <span
+              [class]="
+                'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2 ' +
+                (course.statut === 'COMPLETED'
+                  ? 'status-pill-finished'
+                  : course.statut === 'CANCELLED'
+                    ? 'status-pill-cancelled'
+                    : course.statut === 'IN_PROGRESS' ||
+                        course.statut === 'STARTED'
+                      ? 'status-pill-ongoing'
+                      : 'status-pill-accepted')
+              "
+            >
+              <span class="w-2 h-2 rounded-full bg-current"></span>
+              {{ getStatusLabel(course.statut) }}
+            </span>
+          </div>
+
+          <!-- Section 2: Itinerary -->
+          <div class="px-8 py-6 grid md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary-container">
+                  person
+                </span>
+                <div>
+                  <p
+                    class="text-[10px] uppercase font-bold text-outline tracking-wider leading-none mb-1"
+                  >
+                    Client
+                  </p>
+                  <p class="font-semibold text-on-surface">
+                    {{ getClientName(course) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-4 relative">
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <span class="material-symbols-outlined text-primary text-xl">
+                    location_on
+                  </span>
+                  <div class="w-0.5 h-6 bg-outline-variant/30 my-1"></div>
+                  <span
+                    class="material-symbols-outlined text-secondary text-xl"
+                  >
+                    sports_score
+                  </span>
+                </div>
+                <div class="space-y-4">
+                  <div>
+                    <p
+                      class="text-[10px] uppercase font-bold text-outline tracking-wider leading-none mb-1"
+                    >
+                      Départ
+                    </p>
+                    <p class="text-sm font-medium text-on-surface">
+                      {{ getDeparture(course) }}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      class="text-[10px] uppercase font-bold text-outline tracking-wider leading-none mb-1"
+                    >
+                      Arrivée
+                    </p>
+                    <p class="text-sm font-medium text-on-surface">
+                      {{ getArrival(course) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Meta -->
+          <div
+            class="px-8 py-4 flex justify-between items-center border-t border-outline-variant/15"
+          >
+            <div
+              class="flex items-center gap-2 text-on-surface-variant font-medium text-sm"
+            >
+              <span class="material-symbols-outlined text-base">
+                calendar_today
+              </span>
+              <span>{{ formatCourseWhen(course) }}</span>
+            </div>
+            <div
+              class="text-xl font-black"
+              [class]="
+                course.statut === 'CANCELLED' ? 'text-error' : 'text-primary'
+              "
+            >
+              {{ formatAmount(course.prixFinal || 0) }}
+            </div>
+          </div>
+
+          <!-- Section 4: Review Panel -->
+          <div
+            *ngIf="getEvaluationForCourse(course) as evaluation"
+            class="mx-6 mb-6 p-6 rounded-xl bg-primary-fixed/20 border-l-4 border-primary"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span
+                  class="text-xs font-bold text-primary uppercase tracking-widest block mb-1"
+                  >Évaluation reçue</span
+                >
+                <span class="text-xs text-on-surface-variant">
+                  Reçu le {{ formatWhen(evaluation.dateCreation) }}
+                </span>
+              </div>
+              <div class="flex text-secondary gap-0">
+                <span
+                  class="material-symbols-outlined"
+                  *ngFor="let filled of getRatingStars(evaluation.note)"
+                  [class.filled]="filled"
+                >
+                  star
+                </span>
+              </div>
+            </div>
+            <p
+              *ngIf="evaluation.commentaire"
+              class="italic text-on-surface/80 leading-relaxed mb-3"
+            >
+              "{{ evaluation.commentaire }}"
+            </p>
+            <p
+              *ngIf="evaluation.evaluateurNom"
+              class="text-xs font-semibold text-primary"
+            >
+              Par {{ evaluation.evaluateurNom }}
+            </p>
+          </div>
+
+          <!-- No Review -->
+          <div
+            *ngIf="!getEvaluationForCourse(course)"
+            class="px-8 py-6 text-center italic text-outline/60 text-sm bg-surface-container-low/50"
+          >
+            Aucune évaluation client pour cette course.
+          </div>
+        </article>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="!isLoading && !error && !courses.length"
+        class="flex flex-col items-center justify-center py-24"
+      >
+        <span
+          class="material-symbols-outlined text-6xl text-outline-variant mb-4"
+        >
+          inbox
+        </span>
+        <p class="text-on-surface-variant font-medium text-lg">
+          Aucune course trouvée pour le moment.
+        </p>
+        <p class="text-on-surface-variant text-sm mt-2">
+          Vos trajets apparaîtront ici une fois complétés.
+        </p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Bottom Navigation Shell (Mobile) -->
+<nav
+  class="lg:hidden fixed bottom-0 left-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl flex justify-around items-center px-6 pb-8 pt-4 rounded-t-[3rem] z-40 shadow-[0_-10px_40px_rgba(0,57,116,0.08)] border-t border-slate-200/50 dark:border-slate-800/50"
+>
+  <a
+    routerLink="/transport/chauffeur-dashboard"
+    class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 scale-90 active:scale-75 transition-transform"
+  >
+    <span class="material-symbols-outlined">home</span>
+    <span
+      class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider"
+      >Accueil</span
+    >
+  </a>
+  <a
+    href="#"
+    class="flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 rounded-full w-12 h-12 transition-all"
+  >
+    <span class="material-symbols-outlined">receipt_long</span>
+  </a>
+  <a
+    href="#"
+    class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 scale-90 active:scale-75 transition-transform"
+  >
+    <span class="material-symbols-outlined">savings</span>
+    <span
+      class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider"
+      >Revenus</span
+    >
+  </a>
+  <a
+    href="#"
+    class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 scale-90 active:scale-75 transition-transform"
+  >
+    <span class="material-symbols-outlined">person</span>
+    <span
+      class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider"
+      >Compte</span
+    >
+  </a>
+</nav>

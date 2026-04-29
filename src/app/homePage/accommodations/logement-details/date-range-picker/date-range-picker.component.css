@@ -1,0 +1,27 @@
+button:disabled {
+  cursor: not-allowed;
+}
+
+.bg-slate-900 {
+  background-color: #0f172a;
+}
+
+.text-white {
+  color: white;
+}
+
+.bg-slate-100 {
+  background-color: #f1f5f9;
+}
+
+.bg-slate-200 {
+  background-color: #e2e8f0;
+}
+
+.hover\:bg-slate-100:hover {
+  background-color: #f1f5f9;
+}
+
+.hover\:bg-slate-200:hover {
+  background-color: #e2e8f0;
+}

@@ -1,0 +1,115 @@
+<section class="onboarding-wrap">
+  <div class="onboarding-card">
+    <h1>Profil Transporteur</h1>
+    <p class="subtitle">
+      Premiere connexion detectee. Choisissez le profil a creer pour continuer.
+    </p>
+
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+    <div *ngIf="mode === 'choix'" class="choice-grid">
+      <button type="button" class="choice-btn" (click)="choisirChauffeur()">
+        <strong>Profil Chauffeur</strong>
+        <span>Courses transport (taxi / VTC)</span>
+      </button>
+
+      <button type="button" class="choice-btn" (click)="choisirAgence()">
+        <strong>Profil Agence de location</strong>
+        <span>Gestion de flotte et reservations</span>
+      </button>
+    </div>
+
+    <form
+      *ngIf="mode === 'chauffeur'"
+      (ngSubmit)="submitChauffeur()"
+      class="form-grid"
+    >
+      <label>
+        Telephone
+        <input
+          type="text"
+          [(ngModel)]="chauffeurForm.telephone"
+          name="chauffeurTelephone"
+          placeholder="Ex: 22123456"
+          required
+        />
+      </label>
+
+      <label>
+        Numero de licence
+        <input
+          type="text"
+          [(ngModel)]="chauffeurForm.numeroLicence"
+          name="numeroLicence"
+          placeholder="Ex: LIC-TN-2026-001"
+          required
+        />
+      </label>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn-light"
+          (click)="retourChoix()"
+          [disabled]="submitting"
+        >
+          Retour
+        </button>
+        <button type="submit" [disabled]="submitting">
+          {{ submitting ? "Creation..." : "Creer profil chauffeur" }}
+        </button>
+      </div>
+    </form>
+
+    <form
+      *ngIf="mode === 'agence'"
+      (ngSubmit)="submitAgence()"
+      class="form-grid"
+    >
+      <label>
+        Nom de l'agence
+        <input
+          type="text"
+          [(ngModel)]="agenceForm.nomAgence"
+          name="nomAgence"
+          placeholder="Ex: Tunisia Mobility"
+          required
+        />
+      </label>
+
+      <label>
+        Telephone
+        <input
+          type="text"
+          [(ngModel)]="agenceForm.telephone"
+          name="agenceTelephone"
+          placeholder="Ex: 70111222"
+        />
+      </label>
+
+      <label>
+        Adresse
+        <input
+          type="text"
+          [(ngModel)]="agenceForm.adresse"
+          name="adresseAgence"
+          placeholder="Ex: Rue de Marseille, Tunis"
+        />
+      </label>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn-light"
+          (click)="retourChoix()"
+          [disabled]="submitting"
+        >
+          Retour
+        </button>
+        <button type="submit" [disabled]="submitting">
+          {{ submitting ? "Creation..." : "Creer profil agence" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

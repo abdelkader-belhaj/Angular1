@@ -1,0 +1,130 @@
+<div class="notif-page">
+  <section class="notif-hero">
+    <div class="hero-head">
+      <div class="hero-icon-wrap">
+        <span class="material-symbols-outlined">mark_email_unread</span>
+      </div>
+      <div>
+        <p class="hero-kicker">Votre Centre</p>
+        <h2 class="hero-title">Notifications</h2>
+      </div>
+    </div>
+
+    <p class="hero-description">
+      Restez informe des actions clients, reservations, messages et paiements en temps reel.
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat-chip">
+        <span class="material-symbols-outlined">inbox</span>
+        <span><strong>{{ notifications.length + backendNotifs.length }}</strong> actifs</span>
+      </div>
+      <div class="stat-chip" *ngIf="unreadCount > 0">
+        <span class="material-symbols-outlined">notifications</span>
+        <span><strong>{{ unreadCount }}</strong> non-lus</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="notif-actions">
+    <button *ngIf="unreadCount > 0" type="button" (click)="markAllAsRead()" class="btn-main">
+      <span class="material-symbols-outlined">done_all</span>
+      <span>Marquer comme lu</span>
+    </button>
+
+    <button *ngIf="notifications.length > 0" type="button" (click)="clearAll()" class="btn-muted">
+      <span class="material-symbols-outlined">delete_sweep</span>
+      <span>Effacer</span>
+    </button>
+  </div>
+
+  <div class="filters-row">
+    <button type="button" (click)="setFilter('all')" class="filter-pill" [ngClass]="viewFilter === 'all' ? 'active' : ''">
+      <span class="material-symbols-outlined">format_list_bulleted</span>
+      <span>Tous</span>
+      <strong>{{ getFilterCount('all') }}</strong>
+    </button>
+
+    <button type="button" (click)="setFilter('important')" class="filter-pill" [ngClass]="viewFilter === 'important' ? 'active' : ''">
+      <span class="material-symbols-outlined">priority_high</span>
+      <span>Importants</span>
+      <strong>{{ getFilterCount('important') }}</strong>
+    </button>
+
+    <button type="button" (click)="setFilter('archived')" class="filter-pill" [ngClass]="viewFilter === 'archived' ? 'active' : ''">
+      <span class="material-symbols-outlined">inventory_2</span>
+      <span>Archives</span>
+      <strong>{{ getFilterCount('archived') }}</strong>
+    </button>
+  </div>
+
+  <section *ngIf="!hasVisibleNotifications" class="empty-state">
+    <span class="material-symbols-outlined">inbox</span>
+    <h3>Aucune notification</h3>
+    <p>Le filtre selectionne ne contient aucun element pour le moment.</p>
+  </section>
+
+  <div *ngIf="hasVisibleNotifications" class="groups-wrap">
+    <section *ngFor="let group of visibleGroups" class="notif-group">
+      <header class="group-header">
+        <div class="group-left">
+          <div class="group-icon" [ngClass]="'group-' + group.key">
+            <span class="material-symbols-outlined">{{ group.icon }}</span>
+          </div>
+          <div>
+            <h3>{{ group.label }}</h3>
+            <p>{{ group.items.length }} notification(s)</p>
+          </div>
+        </div>
+      </header>
+
+      <div class="cards-stack">
+        <article *ngFor="let item of group.items" class="notif-card" [ngClass]="'accent-' + item.accent + (item.archived ? ' is-archived' : '')">
+          <div class="card-main">
+            <div class="card-head">
+              <div class="card-head-left">
+                <div class="mini-icon" [ngClass]="'mini-' + item.accent">
+                  <span class="material-symbols-outlined">
+                    {{ item.kind === 'reservation' ? 'event_available' : item.kind === 'payment' ? 'payments' : item.kind === 'message' ? 'mail' : 'admin_panel_settings' }}
+                  </span>
+                </div>
+                <div>
+                  <h4>
+                    {{ item.title }}
+                    <span *ngIf="!item.read && !item.archived" class="dot-unread"></span>
+                  </h4>
+                  <p class="time">{{ timeAgo(item.date) }}</p>
+                </div>
+              </div>
+
+              <div class="head-badges">
+                <span *ngIf="item.important" class="badge badge-important">Important</span>
+                <span *ngIf="item.archived" class="badge badge-archived">Archive</span>
+              </div>
+            </div>
+
+            <p class="msg">{{ item.message }}</p>
+            <p *ngIf="item.source === 'local'" class="meta">{{ item.rawLocal?.logementNom }}</p>
+            <p *ngIf="item.reason" class="reason"><strong>Contexte:</strong> {{ item.reason }}</p>
+
+            <div *ngIf="isReclamationNotification(item)" class="reclamation-actions">
+              <button type="button" class="btn-inline" (click)="goToReclamation(item, $event)">
+                <span class="material-symbols-outlined">description</span>
+                <span>Voir details et repondre</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button type="button" (click)="archiveItem(item, $event)" [title]="getArchiveLabel(item)" [attr.aria-label]="getArchiveLabel(item)" class="icon-btn">
+              <span class="material-symbols-outlined">{{ getArchiveIcon(item) }}</span>
+            </button>
+            <button type="button" (click)="deleteItem(item, $event)" title="Supprimer" aria-label="Supprimer" class="icon-btn danger">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,88 @@
+<div class="chauffeur-confirmation-wait-page">
+  <section class="wait-card">
+    <div class="card-accent" aria-hidden="true"></div>
+    <div class="wait-badge">Validation client</div>
+
+    <h1>Course acceptee</h1>
+    <p class="wait-subtitle">
+      Vous etes en attente de la confirmation client. La redirection vers la
+      course active sera automatique des validation.
+    </p>
+
+    <div class="wait-visual" aria-hidden="true">
+      <span class="ring ring-1"></span>
+      <span class="ring ring-2"></span>
+      <span class="ring ring-3"></span>
+      <div class="wait-core"></div>
+    </div>
+
+    <div class="countdown-block" *ngIf="!isAutoCancelling">
+      <p>Delai de confirmation</p>
+      <div class="countdown-value">
+        <strong>{{ secondsLeft }}</strong>
+        <span>s</span>
+      </div>
+    </div>
+    <p class="timeout-line" *ngIf="isAutoCancelling">
+      Temps ecoule. Annulation automatique de la proposition...
+    </p>
+
+    <div class="course-meta" *ngIf="course as c">
+      <div class="meta-head">
+        <div>
+          <p class="meta-label">Client</p>
+          <p class="meta-value">{{ c.demande.client.username || 'Client' }}</p>
+        </div>
+        <div class="meta-status">
+          <p class="meta-label">Statut course</p>
+          <p class="meta-value">{{ c.statut }}</p>
+        </div>
+      </div>
+
+      <div class="meta-route">
+        <div class="route-marker" aria-hidden="true">
+          <span class="route-dot start"></span>
+          <span class="route-line"></span>
+          <span class="route-dot end"></span>
+        </div>
+        <div class="route-content">
+          <div>
+            <p class="meta-label">Depart</p>
+            <p class="meta-value">
+              {{ c.localisationDepart.adresse || 'Non disponible' }}
+            </p>
+          </div>
+          <div>
+            <p class="meta-label">Arrivee</p>
+            <p class="meta-value">
+              {{ c.localisationArrivee.adresse || 'Non disponible' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="meta-confirmation">
+        <p class="meta-label">Confirmation client</p>
+        <p class="meta-confirmation-value">
+          <span class="live-dot"></span>
+          {{ c.demande.approbationClientRequise ? 'En attente' : 'Confirmee' }}
+        </p>
+      </div>
+    </div>
+
+    <p *ngIf="isLoading" class="loading-line">Chargement des informations...</p>
+
+    <div class="wait-actions">
+      <button type="button" class="btn-refresh" (click)="refreshCourse()">
+        Rafraichir
+      </button>
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="retournerDashboard()"
+      >
+        Retour dashboard
+      </button>
+    </div>
+  </section>
+</div>

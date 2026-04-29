@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+.payment-shell {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(34, 211, 238, 0.18), transparent 36%),
+    radial-gradient(circle at 88% 15%, rgba(30, 64, 175, 0.18), transparent 42%),
+    linear-gradient(145deg, #e2e8f0 0%, #eef2ff 45%, #ecfeff 100%);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #334155;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.field-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+}
+
+.field-error {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #be123c;
+}

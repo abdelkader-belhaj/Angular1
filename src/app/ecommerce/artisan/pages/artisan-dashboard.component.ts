@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { ArtisanService, Artisan, ArtisanProduct } from '../../../services/artisan.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -82,8 +83,12 @@ export class ArtisanDashboardComponent implements OnInit {
     this.sidebarOpen = !this.sidebarOpen;
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/']);
+  async logout(): Promise<void> {
+    try {
+      await firstValueFrom(this.authService.logout());
+    } catch {
+      this.authService.clearLocalAuth();
+    }
+    await this.router.navigate(['/']);
   }
 }

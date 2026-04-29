@@ -1,0 +1,75 @@
+<div class="evaluation-page">
+  <section class="evaluation-hero">
+    <p class="hero-kicker">Évaluation intelligente</p>
+    <h1>Lisez le résumé IA avant de noter</h1>
+    <p class="hero-copy">
+      Le système condense les retours clients pour vous aider à juger plus vite
+      la qualité du trajet, la conduite et le confort à bord.
+    </p>
+  </section>
+
+  <section class="summary-card" *ngIf="smartReviewSummary as summary">
+    <div class="summary-head">
+      <div>
+        <p class="summary-kicker">Résumé Review Smart</p>
+        <h2>{{ summary.title }}</h2>
+        <p class="summary-subtitle">{{ summary.subtitle }}</p>
+      </div>
+      <div class="summary-score">
+        <strong>{{ summary.averageNote | number: '1.1-1' }}/5</strong>
+        <span>{{ summary.confidence }}</span>
+      </div>
+    </div>
+
+    <p class="summary-text">{{ summary.summary }}</p>
+
+    <div class="summary-grid">
+      <article>
+        <h3>Ce qui ressort</h3>
+        <div class="chip-row">
+          <span class="chip positive" *ngFor="let item of summary.highlights">
+            {{ item }}
+          </span>
+        </div>
+      </article>
+
+      <article>
+        <h3>À confirmer dans votre avis</h3>
+        <div class="chip-row">
+          <span class="chip warning" *ngFor="let item of summary.concerns">
+            {{ item }}
+          </span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="review-actions">
+    <article class="action-card accent">
+      <span class="action-icon">⏱</span>
+      <h3>Gain de temps</h3>
+      <p>
+        Les points clés sont déjà synthétisés, vous pouvez donc rédiger votre
+        note en quelques secondes.
+      </p>
+    </article>
+
+    <article class="action-card">
+      <span class="action-icon">✦</span>
+      <h3>Vision plus claire</h3>
+      <p>
+        L'IA isole les tendances répétées pour éviter de relire des dizaines de
+        commentaires.
+      </p>
+    </article>
+
+    <article class="action-card">
+      <span class="action-icon">✓</span>
+      <h3>Décision rapide</h3>
+      <p>
+        Vous identifiez immédiatement si le trajet mérite une excellente note ou
+        une réserve.
+      </p>
+    </article>
+  </section>
+</div>

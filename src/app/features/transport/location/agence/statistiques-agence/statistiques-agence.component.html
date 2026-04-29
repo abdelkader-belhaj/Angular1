@@ -1,0 +1,162 @@
+<section class="stats-shell">
+  <header class="stats-header" *ngIf="!isLoading; else loadingState">
+    <div>
+      <p class="eyebrow">Rapports flotte</p>
+      <h1>Statistiques de flotte</h1>
+      <p>
+        Vue consolidée des performances de l'agence
+        {{ agency?.nomAgence ? '- ' + agency?.nomAgence : '' }}.
+      </p>
+    </div>
+  </header>
+
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <svg class="spinner" style="margin-bottom: 20px;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+      <br/>Chargement des statistiques...
+    </div>
+  </ng-template>
+
+  <div class="error-banner" *ngIf="error">
+    <svg style="margin-right: 8px; vertical-align: text-bottom;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    {{ error }}
+  </div>
+
+  <section class="kpi-grid" *ngIf="!isLoading && agency">
+    <article class="kpi-card kpi-occupation">
+      <div class="kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#003974;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+      </div>
+      <p>Taux d'occupation</p>
+      <strong>{{ occupationRate }}%</strong>
+      <small>{{ vehicleStatusSlices[0].value }} véhicules loués</small>
+    </article>
+
+    <article class="kpi-card kpi-revenue">
+      <div class="kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#795900;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+      </div>
+      <p>Revenu mensuel</p>
+      <strong>{{
+        monthlyRevenue | currency: 'TND' : 'symbol' : '1.0-0'
+      }}</strong>
+      <small>Basé sur les réservations du mois courant</small>
+    </article>
+
+    <article class="kpi-card kpi-maintenance">
+      <div class="kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#2c3c4a;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+      </div>
+      <p>En maintenance</p>
+      <strong>{{ maintenanceCount }}</strong>
+      <small>Véhicules indisponibles actuellement</small>
+    </article>
+
+    <article class="kpi-card kpi-top">
+      <div class="kpi-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#795900;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </div>
+      <p>Véhicule top</p>
+      <strong>{{ topVehicleLabel }}</strong>
+      <small>{{ topVehicleUsage }}</small>
+    </article>
+  </section>
+
+  <section class="content-grid" *ngIf="!isLoading && agency">
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Distribution du statut</h2>
+          <p>Répartition actuelle du parc</p>
+        </div>
+        <strong>{{ vehicles.length }} véhicules</strong>
+      </div>
+
+      <div class="distribution-grid">
+        <div class="donut-mock">
+          <span>{{ vehicles.length }}</span>
+          <small>Total</small>
+        </div>
+
+        <div class="legend-list">
+          <div class="legend-item" *ngFor="let slice of vehicleStatusSlices">
+            <span class="dot" [ngClass]="slice.colorClass"></span>
+            <span>{{ slice.label }}</span>
+            <strong>{{ slice.value }}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Revenu par catégorie</h2>
+          <p>Répartition des montants générés</p>
+        </div>
+      </div>
+
+      <div class="bar-list">
+        <div class="bar-row" *ngFor="let row of categoryRevenue">
+          <div class="bar-label-row">
+            <span>{{ row.label }}</span>
+            <strong>{{
+              row.amount | currency: 'TND' : 'symbol' : '1.0-0'
+            }}</strong>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill"
+              [ngClass]="row.colorClass"
+              [style.width.%]="row.width"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel panel-map">
+      <div class="panel-head">
+        <div>
+          <h2>Géolocalisation live</h2>
+          <p>Suivi synthétique de la flotte active</p>
+        </div>
+      </div>
+
+      <div class="map-mock">
+        <div class="map-overlay"></div>
+        <div class="pin pin-1"></div>
+        <div class="pin pin-2"></div>
+        <div class="pin pin-3"></div>
+        <div class="map-badge">
+          {{ vehicleStatusSlices[0].value }} véhicules actifs sur la route
+        </div>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Échéances et alertes</h2>
+          <p>Priorités opérationnelles à surveiller</p>
+        </div>
+      </div>
+
+      <div class="alert-list">
+        <div
+          class="alert-item"
+          *ngFor="let alert of upcomingAlerts"
+          [ngClass]="{ danger: alert.tone === 'danger' }"
+        >
+          <div class="alert-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <div>
+            <strong>{{ alert.title }}</strong>
+            <p>{{ alert.note }}</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+</section>

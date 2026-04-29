@@ -1,0 +1,211 @@
+<section class="state-shell" *ngIf="reservation; else loadingState">
+  <header class="state-hero">
+    <div>
+      <p class="eyebrow">État des lieux</p>
+      <h1>#{{ reservation.idReservation }}</h1>
+      <p>{{ getVehicleLabel() }} · {{ getStatusLabel(reservation.statut) }}</p>
+    </div>
+    <span class="status-chip">{{ reservation.depositStatus || "-" }}</span>
+  </header>
+
+  <div class="state-grid">
+    <article class="panel">
+      <h2>Check-in</h2>
+      <p class="muted">
+        État des lieux de départ: ajoutez plusieurs photos (angles différents),
+        elles seront taggées CHECK_IN avec horodatage automatique.
+      </p>
+      <div *ngIf="!hideCheckInForm; else checkInDoneBlock">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          (change)="onCheckInFilesSelected($event)"
+        />
+        <ul class="photo-list" *ngIf="checkInFileNames.length">
+          <li *ngFor="let name of checkInFileNames">{{ name }}</li>
+        </ul>
+        <button
+          type="button"
+          class="button button-primary"
+          (click)="submitCheckIn()"
+          [disabled]="isSubmitting"
+        >
+          {{
+            isSubmitting
+              ? "Validation..."
+              : "Confirmer remise des clés (Check-in)"
+          }}
+        </button>
+        <p class="muted" *ngIf="!canSubmitCheckIn">
+          Le bouton reste cliquable, mais le check-in sera accepté seulement
+          après confirmation de la réservation et caution HELD.
+        </p>
+      </div>
+      <ng-template #checkInDoneBlock>
+        <p class="step-done">Check-in déjà validé avec photos enregistrées.</p>
+      </ng-template>
+      <div class="photo-grid checkin-grid" *ngIf="hasCheckInPhotos">
+        <figure *ngFor="let photo of checkInGallery">
+          <button
+            type="button"
+            class="photo-button"
+            (click)="openPhoto(photo)"
+            aria-label="Agrandir la photo check-in"
+          >
+            <img [src]="photo.url" [alt]="photo.label || 'Photo check-in'" />
+          </button>
+          <figcaption>{{ photo.label || "Check-in" }}</figcaption>
+        </figure>
+      </div>
+      <p class="muted" *ngIf="!hasCheckInPhotos">
+        Aucune photo check-in disponible.
+      </p>
+    </article>
+
+    <article class="panel">
+      <h2>Check-out</h2>
+      <p class="muted">
+        État des lieux de retour: ajoutez les photos finales CHECK_OUT avant
+        clôture.
+      </p>
+      <div *ngIf="!hideCheckOutForm; else checkOutDoneBlock">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          (change)="onCheckOutFilesSelected($event)"
+        />
+        <ul class="photo-list" *ngIf="checkOutFileNames.length">
+          <li *ngFor="let name of checkOutFileNames">{{ name }}</li>
+        </ul>
+        <div class="damage-box">
+          <label class="damage-toggle">
+            <input
+              type="checkbox"
+              [(ngModel)]="checkoutHasDamages"
+              (ngModelChange)="onCheckoutDamageToggle()"
+            />
+            <span>Constat de dommages</span>
+          </label>
+
+          <div class="damage-grid" *ngIf="checkoutHasDamages">
+            <label>
+              Montant estimé réparations (TND)
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="checkoutDamageAmount"
+              />
+            </label>
+            <label>
+              Montant retenu sur caution (TND)
+              <input
+                type="number"
+                min="0"
+                [max]="checkoutRetainedMax"
+                step="0.01"
+                [(ngModel)]="checkoutRetainedAmount"
+                (ngModelChange)="onCheckoutRetainedAmountChange()"
+              />
+            </label>
+          </div>
+
+          <label class="damage-description" *ngIf="checkoutHasDamages">
+            Description des dommages
+            <textarea
+              rows="3"
+              [(ngModel)]="checkoutDamageDescription"
+              placeholder="Ex: Rayure portière arrière, feu cassé..."
+            ></textarea>
+          </label>
+
+          <div class="damage-summary">
+            <p>
+              <span>Caution totale</span>
+              <strong>{{
+                depositAmountValue | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </p>
+            <p>
+              <span>Montant retenu</span>
+              <strong>{{
+                checkoutRetainedNormalized
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </p>
+            <p>
+              <span>Montant restitué (auto)</span>
+              <strong>{{
+                checkoutRestitutedAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</strong>
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="button button-secondary"
+          (click)="submitCheckOut()"
+          [disabled]="isSubmitting || !canSubmitCheckOut"
+        >
+          Valider le check-out
+        </button>
+        <p class="muted" *ngIf="!canSubmitCheckOut">
+          Le check-out est disponible lorsque la location est en cours.
+        </p>
+      </div>
+      <ng-template #checkOutDoneBlock>
+        <p class="step-done">Check-out déjà validé avec photos enregistrées.</p>
+      </ng-template>
+      <div class="photo-grid checkout-grid" *ngIf="hasCheckOutPhotos">
+        <figure *ngFor="let photo of checkOutGallery">
+          <button
+            type="button"
+            class="photo-button"
+            (click)="openPhoto(photo)"
+            aria-label="Agrandir la photo check-out"
+          >
+            <img [src]="photo.url" [alt]="photo.label || 'Photo check-out'" />
+          </button>
+          <figcaption>{{ photo.label || "Check-out" }}</figcaption>
+        </figure>
+      </div>
+      <p class="muted" *ngIf="!hasCheckOutPhotos">
+        Aucune photo check-out disponible.
+      </p>
+    </article>
+  </div>
+
+  <p class="success-banner" *ngIf="success">{{ success }}</p>
+  <p class="error-banner" *ngIf="error">{{ error }}</p>
+
+  <div
+    class="photo-overlay"
+    *ngIf="enlargedPhoto"
+    (click)="onPhotoOverlayClick($event)"
+  >
+    <div class="photo-modal">
+      <button
+        type="button"
+        class="close-modal"
+        (click)="closePhoto()"
+        aria-label="Fermer l'aperçu"
+      >
+        ×
+      </button>
+      <img
+        [src]="enlargedPhoto.url"
+        [alt]="enlargedPhoto.label || 'Photo état des lieux'"
+      />
+      <p>{{ enlargedPhoto.label || "État des lieux" }}</p>
+    </div>
+  </div>
+</section>
+
+<ng-template #loadingState>
+  <div class="loading-state" *ngIf="isLoading">
+    Chargement de l'état des lieux...
+  </div>
+  <div class="loading-state" *ngIf="!isLoading && error">{{ error }}</div>
+</ng-template>

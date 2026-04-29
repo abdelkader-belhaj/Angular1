@@ -1,9 +1,11 @@
-<header class="admin-header flex flex-col gap-4 mb-10 lg:flex-row lg:items-start lg:justify-between">
-  <div *ngIf="showContextBlock">
-    <h1 class="text-3xl font-extrabold tracking-tight text-primary">Tableau de Bord</h1>
-    <p class="text-on-surface-variant">Espace administrateur pour gerer le compte courant et la session.</p>
+<header class="admin-header flex flex-col gap-4 mb-10 lg:flex-row lg:items-center lg:justify-between px-6 py-4 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200">
+
+  <div class="flex-1">
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary" *ngIf="showContextBlock">Tableau de Bord</h1>
+    <p class="text-on-surface-variant" *ngIf="showContextBlock">Espace administrateur pour gerer le compte courant et la session.</p>
   </div>
 
+  <!-- Admin Menu Button - RIGHT SIDE -->
   <div class="admin-menu" (click)="$event.stopPropagation()">
     <button class="admin-trigger" type="button" (click)="toggleAccountMenu($event)">
       <span class="admin-avatar material-symbols-outlined">admin_panel_settings</span>
@@ -22,4 +24,5 @@
       </li>
     </ul>
   </div>
+
 </header>

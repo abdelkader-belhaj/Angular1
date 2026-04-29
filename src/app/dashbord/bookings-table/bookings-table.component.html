@@ -1,31 +1,88 @@
 <section class="bg-surface-container-lowest rounded-lg overflow-hidden">
-  <div class="p-6 border-b border-surface-container flex justify-between items-center">
-    <h2 class="text-xl font-bold text-primary">Active Bookings</h2>
-    <button class="text-sm text-primary font-semibold hover:underline" type="button">View All</button>
+  <div class="p-6 border-b border-surface-container flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center">
+    <h2 class="text-xl font-bold text-primary">Toutes les réservations</h2>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" (click)="setViewMode('active')" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition" [ngClass]="viewMode === 'active' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
+        <span class="material-symbols-outlined text-base">visibility</span>
+        Actives
+      </button>
+      <button type="button" (click)="setViewMode('archived')" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition" [ngClass]="viewMode === 'archived' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'">
+        <span class="material-symbols-outlined text-base">archive</span>
+        Archivées
+      </button>
+      <button type="button" (click)="setViewMode('all')" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition" [ngClass]="viewMode === 'all' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'">
+        <span class="material-symbols-outlined text-base">layers</span>
+        Toutes
+      </button>
+    </div>
   </div>
 
-  <div class="overflow-x-auto">
+  <div *ngIf="loading" class="animate-pulse space-y-4 p-6">
+    <div *ngFor="let i of [1,2,3]" class="h-12 w-full rounded bg-slate-100"></div>
+  </div>
+
+  <div *ngIf="!loading && error" class="p-6 text-center text-rose-700 bg-rose-50 rounded-lg m-6">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && !error && reservations.length === 0" class="p-12 text-center">
+    <h3 class="font-semibold text-slate-900">Aucune réservation</h3>
+    <p class="mt-2 text-sm text-slate-500">Le système n'a enregistré aucune réservation pour le moment.</p>
+  </div>
+
+  <div *ngIf="!loading && visibleReservations.length > 0" class="overflow-x-auto">
     <table class="w-full text-left">
       <thead class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface-variant">
         <tr>
-          <th class="px-6 py-4">Client Name</th>
-          <th class="px-6 py-4">Service</th>
-          <th class="px-6 py-4">Date</th>
-          <th class="px-6 py-4">Status</th>
+          <th class="px-6 py-4">Client</th>
+          <th class="px-6 py-4">Hébergement</th>
+          <th class="px-6 py-4">Période</th>
+          <th class="px-6 py-4">Détails</th>
+          <th class="px-6 py-4">Statut</th>
+          <th class="px-6 py-4 text-right">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-surface-container">
-        <tr class="hover:bg-surface-container-low transition-colors">
-          <td class="px-6 py-5 text-sm font-medium">Elena Rodriguez</td>
-          <td class="px-6 py-5 text-sm">Carthage Heritage Tour</td>
-          <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 12, 2024</td>
-          <td class="px-6 py-5"><span class="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-full uppercase">Confirmed</span></td>
-        </tr>
-        <tr class="hover:bg-surface-container-low transition-colors">
-          <td class="px-6 py-5 text-sm font-medium">Jean-Luc Picard</td>
-          <td class="px-6 py-5 text-sm">Luxury Coastal Suite</td>
-          <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 14, 2024</td>
-          <td class="px-6 py-5"><span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full uppercase">In Progress</span></td>
+        <tr *ngFor="let res of visibleReservations" class="hover:bg-surface-container-low transition-colors" [ngClass]="getRowClass(res)">
+          <td class="px-6 py-5 text-sm font-medium text-slate-900">
+            <div class="flex items-center gap-2">
+              <span>{{ res.nomClient || 'Inconnu' }}</span>
+              <span *ngIf="res.archived" class="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-700">Archivée</span>
+            </div>
+          </td>
+          <td class="px-6 py-5">
+            <div class="text-sm text-slate-900">{{ res.nomLogement || 'ID: ' + res.idLogement }}</div>
+            <div class="text-[11px] text-slate-500">{{ res.villeLogement }}</div>
+          </td>
+          <td class="px-6 py-5">
+            <div class="text-sm text-slate-900">{{ formatDate(res.dateDebut) }}</div>
+            <div class="text-[11px] text-slate-500">au {{ formatDate(res.dateFin) }}</div>
+          </td>
+          <td class="px-6 py-5">
+            <div class="text-sm font-medium text-slate-900">{{ res.prixTotal }}</div>
+            <div class="text-[11px] text-slate-500">{{ res.nbPersonnes }} pers.</div>
+          </td>
+          <td class="px-6 py-5">
+            <span class="px-3 py-1 text-[10px] font-bold rounded-full uppercase" [ngClass]="getStatusClass(res.statut)">
+              {{ getStatusLabel(res.statut) }}
+            </span>
+          </td>
+          <td class="px-6 py-5 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button *ngIf="!res.archived" type="button" (click)="archiveReservation(res)" class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition disabled:opacity-60" [disabled]="actionLoadingId === res.idReservation">
+                <span class="material-symbols-outlined text-base">archive</span>
+                Archiver
+              </button>
+              <button *ngIf="res.archived" type="button" (click)="unarchiveReservation(res)" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-60" [disabled]="actionLoadingId === res.idReservation">
+                <span class="material-symbols-outlined text-base">unarchive</span>
+                Restaurer
+              </button>
+              <button type="button" (click)="deleteReservation(res)" class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition disabled:opacity-60" [disabled]="actionLoadingId === res.idReservation">
+                <span class="material-symbols-outlined text-base">delete</span>
+                Supprimer
+              </button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>

@@ -1,0 +1,72 @@
+<!-- src/app/event/components/mes-reservations-event/mes-reservations-event.component.html -->
+
+<div class="mr">
+  <div class="mr-hero">
+    <h1>Mes Réservations</h1>
+    <p>Retrouvez tous vos billets et gérez vos réservations.</p>
+  </div>
+
+  <div class="mr-body">
+    <div *ngIf="errorMsg" class="err">{{ errorMsg }}</div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="skels">
+      <div class="skel" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <!-- Vide -->
+    <div *ngIf="!loading && reservations.length === 0" class="empty">
+      <div class="empty-ico">🎫</div>
+      <h3>Aucune réservation</h3>
+      <p>Vous n'avez pas encore réservé d'événement.</p>
+      <a routerLink="/events" class="btn-explore">Explorer les événements →</a>
+    </div>
+
+    <!-- Liste -->
+    <div class="res-list" *ngIf="!loading && reservations.length > 0">
+      <div class="res-card" *ngFor="let r of reservations">
+
+        <!-- Bande statut -->
+        <div class="rc-status" [ngClass]="getStatusClass(r.status)">
+          {{ getStatusLabel(r.status) }}
+        </div>
+
+        <div class="rc-body">
+          <div class="rc-info">
+            <h3 (click)="goToEvent(r.eventId)">{{ r.eventTitle }}</h3>
+            <div class="rc-meta">
+              <span>🎫 {{ r.numberOfTickets }} billet{{ r.numberOfTickets > 1 ? 's' : '' }}</span>
+              <span>💰 {{ r.totalPrice | number:'1.0-0' }} TND</span>
+              <span>📅 {{ r.reservationDate | date:'d MMM y' : '' : 'fr' }}</span>
+            </div>
+          </div>
+
+          <div class="rc-actions">
+            <!-- Ticket — seulement si CONFIRMED -->
+            <button *ngIf="r.status === 'CONFIRMED'"
+                    class="btn-ticket"
+                    (click)="goToTicket(r.id)">
+              🎫 Mon Ticket
+            </button>
+
+            <!-- Payer — seulement si PENDING -->
+            <button *ngIf="r.status === 'PENDING'"
+                    class="btn-pay"
+                    (click)="goToPayment(r.id)">
+              💳 Payer maintenant
+            </button>
+
+            <!-- ✅ Annuler — seulement si canCancel() -->
+            <button *ngIf="canCancel(r)"
+                    class="btn-cancel"
+                    (click)="cancel(r.id)"
+                    [disabled]="cancelingId === r.id">
+              {{ cancelingId === r.id ? 'Annulation…' : '✕ Annuler' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,250 @@
+<div class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+  <!-- Hero Section - Design doux et minimaliste -->
+  <section class="relative pt-28 pb-12 px-4 overflow-hidden">
+    <!-- Formes décoratives douces en arrière-plan -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-20 left-10 w-72 h-72 bg-sky-100 rounded-full blur-3xl opacity-40"></div>
+      <div class="absolute top-40 right-20 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-30"></div>
+      <div class="absolute bottom-20 left-1/3 w-80 h-80 bg-violet-100 rounded-full blur-3xl opacity-30"></div>
+    </div>
+    
+    <div class="relative max-w-7xl mx-auto text-center" style="animation: fadeUp 0.6s ease-out">
+      <h1 class="text-5xl md:text-6xl font-light mb-4 text-gray-900" style="animation: fadeUp 0.6s ease-out 0.1s both">
+        Votre séjour <span class="font-semibold text-slate-700">parfait</span>
+      </h1>
+      
+      <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto font-light" style="animation: fadeUp 0.6s ease-out 0.2s both">
+        Découvrez des hébergements soigneusement sélectionnés pour des moments inoubliables
+      </p>
+
+      <!-- Barre de recherche épurée -->
+      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 max-w-4xl mx-auto" style="animation: fadeUp 0.6s ease-out 0.3s both">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div class="relative flex items-center">
+            <lucide-icon name="map-pin" class="absolute left-4 w-4 h-4 text-gray-400"></lucide-icon>
+            <input
+              type="text"
+              placeholder="Où souhaitez-vous aller ?"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange()"
+              class="w-full pl-11 h-12 border border-gray-200 rounded-2xl focus:border-slate-300 focus:ring-slate-200 focus:outline-none"
+            />
+          </div>
+
+          <div class="relative flex items-center">
+            <lucide-icon name="calendar" class="absolute left-4 w-4 h-4 text-gray-400 pointer-events-none z-10"></lucide-icon>
+            <input
+              type="date"
+              placeholder="Arrivée"
+              class="w-full pl-11 pr-4 h-12 border border-gray-200 rounded-2xl focus:border-slate-300 focus:ring-slate-200 focus:outline-none text-gray-500 bg-transparent"
+            />
+          </div>
+
+          <div class="relative flex items-center">
+            <lucide-icon name="calendar" class="absolute left-4 w-4 h-4 text-gray-400 pointer-events-none z-10"></lucide-icon>
+            <input
+              type="date"
+              placeholder="Départ"
+              class="w-full pl-11 pr-4 h-12 border border-gray-200 rounded-2xl focus:border-slate-300 focus:ring-slate-200 focus:outline-none text-gray-500 bg-transparent"
+            />
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            (click)="toggleFilters()"
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm h-11 px-4 py-2 gap-2 rounded-2xl border-gray-200 hover:bg-gray-50"
+          >
+            <lucide-icon name="sliders-horizontal" class="w-4 h-4"></lucide-icon>
+            Filtres
+          </button>
+
+          <!-- Bouton Préférences (clients uniquement) -->
+          <button *ngIf="isClient"
+            (click)="showPreferencesForm = true"
+            class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors h-11 px-4 py-2 gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+            🔍 Mon séjour idéal
+          </button>
+          
+          <button class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow flex-1 h-11 bg-slate-900 hover:bg-slate-800 rounded-2xl gap-2 text-white">
+            <lucide-icon name="search" class="w-4 h-4"></lucide-icon>
+            Rechercher
+          </button>
+        </div>
+
+        <!-- Filtres étendus -->
+        <div *ngIf="showFilters" 
+            class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100 transition-all origin-top duration-300 animate-in slide-in-from-top-4 fade-in">
+          <div class="text-left">
+            <label class="block text-sm font-medium mb-2 text-gray-700">Catégorie</label>
+            <select
+              [(ngModel)]="selectedCategory"
+              (ngModelChange)="selectCategory($event)"
+              class="w-full h-11 rounded-2xl border border-gray-200 px-3 focus:border-slate-300 focus:ring-slate-200 focus:outline-none bg-white"
+            >
+              <option value="all">Toutes les catégories</option>
+              <option *ngFor="let cat of categories" [value]="cat.idCategorie.toString()" [disabled]="!cat.statut">
+                {{ cat.nomCategorie }}{{ cat.statut ? '' : ' (Coming Soon)' }}
+              </option>
+            </select>
+          </div>
+
+          <div class="text-left">
+            <label class="block text-sm font-medium mb-2 text-gray-700">Budget</label>
+            <select
+              [(ngModel)]="priceRange"
+              (ngModelChange)="onPriceChange()"
+              class="w-full h-11 rounded-2xl border border-gray-200 px-3 focus:border-slate-300 focus:ring-slate-200 focus:outline-none bg-white"
+            >
+              <option value="all">Tous les prix</option>
+              <option value="low">Moins de 100€</option>
+              <option value="medium">100€ - 300€</option>
+              <option value="high">Plus de 300€</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IA Bar — type Airbnb -->
+  <div *ngIf="isClient && recommendations.length > 0"
+    style="border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; background: #fafafa;">
+    <div class="max-w-7xl mx-auto px-4" style="height:44px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <!-- Gauche : indicateur IA -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:13px; font-weight:700; color:#111827; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.2);"></span>
+          Recommandations IA
+        </span>
+        <span style="font-size:12px; color:#6b7280;">—</span>
+        <span *ngIf="!activePrefs" style="font-size:12px; color:#6b7280;">{{ recommendations.length }} logements classés par score</span>
+        <span *ngIf="activePrefs" style="font-size:12px; color:#059669; font-weight:600;">✓ Triés selon vos critères personnels</span>
+      </div>
+      <!-- Droite : bouton -->
+      <button (click)="showPreferencesForm = true"
+        style="font-size:13px; font-weight:800; color:white; background:linear-gradient(135deg,#6366f1,#ec4899); border:none; border-radius:999px; padding:8px 22px; cursor:pointer; letter-spacing:0.3px; box-shadow:0 4px 18px rgba(99,102,241,0.45); transition:transform .15s, box-shadow .15s;"
+        onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 24px rgba(99,102,241,0.6)'"
+        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 18px rgba(99,102,241,0.45)'">
+        {{ activePrefs ? '✏️ Modifier mes critères' : '✨ Mon séjour idéal' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Section Catégories - Épurée -->
+  <section class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" *ngIf="categories.length > 0">
+      <!-- Badge "Tous" -->
+      <div
+        class="inline-flex items-center border font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer whitespace-nowrap px-5 py-2 rounded-full transition-all text-sm"
+        [ngClass]="selectedCategory === 'all' ? 'border-transparent bg-slate-900 text-white hover:bg-slate-800 shadow' : 'bg-transparent border-gray-200 hover:bg-gray-50 text-gray-700'"
+        (click)="selectCategory('all')"
+      >
+        Tous
+      </div>
+      <!-- Badges Catégories -->
+      <div *ngFor="let cat of categories"
+        class="inline-flex items-center border font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap px-5 py-2 rounded-full transition-all text-sm"
+        [ngClass]="!cat.statut ? 'coming-soon-chip border-amber-200 bg-amber-50 text-amber-700 cursor-not-allowed' : (selectedCategory === cat.idCategorie.toString() ? 'border-transparent bg-slate-900 text-white hover:bg-slate-800 shadow cursor-pointer' : 'bg-transparent border-gray-200 hover:bg-gray-50 text-gray-700 cursor-pointer')"
+        (click)="selectCategory(cat.idCategorie.toString())"
+      >
+        {{ cat.nomCategorie }}
+        <span *ngIf="!cat.statut" class="ml-2 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-700">Coming Soon</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grille unique des logements -->
+  <section class="max-w-7xl mx-auto px-4 pb-20">
+
+    <!-- En-tête de la grille avec indicateur IA -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div *ngIf="!loading">
+        <h2 class="text-2xl font-light text-gray-900">
+          <span class="font-semibold">{{ filteredLogements.length }}</span>
+          logement{{ filteredLogements.length > 1 ? 's' : '' }} trouvé{{ filteredLogements.length > 1 ? 's' : '' }}
+        </h2>
+        <!-- Badge indicateur de tri actif -->
+        <p *ngIf="isClient && recommendations.length > 0" class="text-sm mt-1 flex items-center gap-1.5">
+          <span *ngIf="!activePrefs" class="inline-flex items-center gap-1 text-indigo-600 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            Triés par score IA
+          </span>
+          <span *ngIf="activePrefs" class="inline-flex items-center gap-1 text-violet-600 font-medium">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Personnalisés selon vos critères ·
+            <button (click)="activePrefs = null; applyLocalFilters()" class="underline underline-offset-2 hover:text-violet-800">Réinitialiser</button>
+          </span>
+        </p>
+      </div>
+      <h2 class="text-2xl font-light text-gray-900" *ngIf="loading">
+        Chargement des hébergements...
+      </h2>
+    </div>
+
+    <div *ngIf="!loading && maintenanceCategory" class="coming-soon-panel mb-8 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-100/60 p-8 text-center">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 shadow-sm ring-4 ring-amber-200/60">
+        <lucide-icon name="sparkles" class="w-7 h-7"></lucide-icon>
+      </div>
+      <h3 class="text-2xl font-black text-slate-900">{{ maintenanceCategory.nomCategorie }} · Coming Soon</h3>
+      <p class="mt-2 text-slate-600">Cette catégorie est actuellement en maintenance. Le contenu revient bientôt avec une expérience améliorée.</p>
+      <p class="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Accès temporairement indisponible</p>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+      <div *ngFor="let item of [1,2,3]" class="bg-gray-200 rounded-3xl h-96 w-full"></div>
+    </div>
+
+    <!-- Grille principale (triée IA + préférences) -->
+    <div *ngIf="!loading && filteredLogements.length > 0" 
+         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+         [@listAnimation]="filteredLogements.length">
+      <app-logement-card 
+        *ngFor="let logement of filteredLogements; let i = index" 
+        [logement]="logement" 
+        [aiScore]="getAiScore(logement.idLogement)"
+        [index]="i">
+      </app-logement-card>
+    </div>
+
+    <!-- Si aucun logement -->
+    <div *ngIf="!loading && !maintenanceCategory && filteredLogements.length === 0" class="text-center py-20 animate-in fade-in zoom-in duration-500">
+      <p class="text-xl text-gray-500 font-light mb-4">Aucun logement trouvé</p>
+      <button (click)="resetFilters()"
+        class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors border border-input bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 rounded-2xl border-gray-200 hover:bg-gray-50">
+        Réinitialiser les filtres
+      </button>
+    </div>
+  </section>
+</div>
+<app-footer></app-footer>
+
+<!-- Formulaire Préférences -->
+<app-preferences-form
+  [visible]="showPreferencesForm"
+  [availableVilles]="availableVilles"
+  (closed)="showPreferencesForm = false"
+  (saved)="onPreferencesSaved($event)">
+</app-preferences-form>
+
+<style>
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>

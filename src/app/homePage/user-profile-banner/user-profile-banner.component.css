@@ -1,0 +1,70 @@
+.profile-banner {
+  background: linear-gradient(135deg, #003974 0%, #4a5f8f 100%);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(0, 57, 116, 0.3);
+}
+
+.profile-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.value {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.role-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.profile-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .profile-banner {
+    padding: 10px 16px;
+  }
+
+  .profile-content {
+    gap: 16px;
+  }
+
+  .label {
+    display: none;
+  }
+
+  .profile-divider {
+    display: none;
+  }
+
+  .value {
+    font-size: 12px;
+  }
+}

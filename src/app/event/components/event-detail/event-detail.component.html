@@ -1,0 +1,318 @@
+<div class="det">
+  <div class="det-topbar" *ngIf="!hideBackButton">
+    <button class="btn-back" (click)="goBack()">← Retour </button>
+  </div>
+
+  <!-- HERO IMAGE -->
+  <div class="det-hero" [style.backgroundImage]="'url('+getImage()+')'">
+    <div class="det-hero-overlay"></div>
+    <div class="det-hero-content">
+      <span class="det-cat">{{ event?.categoryName }}</span>
+      <h1 class="det-title">{{ event?.title }}</h1>
+      <div class="det-hero-meta">
+        <span>📍 {{ event?.city }}</span>
+        <span>🗓 {{ event?.startDate | date:'d MMM y · HH:mm':'':'fr' }}</span>
+        <span *ngIf="discount.hasDiscount" class="hero-discount">
+          🔥 -{{ discount.discountPercent }}% — {{ discount.reason }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="det-loading" *ngIf="loading">
+    <div class="skel-block" style="height:60px;width:60%;margin:0 auto 16px"></div>
+    <div class="skel-block" style="height:200px"></div>
+  </div>
+
+  <div class="det-body" *ngIf="!loading && event">
+    <div class="det-left">
+
+      <!-- À PROPOS -->
+      <div class="info-card">
+        <h2>À propos</h2>
+        <p>{{ event.description }}</p>
+      </div>
+
+      <!-- DATES + LIEU -->
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-ico">🗓</span>
+          <div>
+            <small>Début</small>
+            <b>{{ event.startDate | date:'EEEE d MMMM y':'':'fr' }}</b>
+            <span class="meta-time">{{ event.startDate | date:'HH:mm':'':'fr' }}</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-ico">🏁</span>
+          <div>
+            <small>Fin</small>
+            <b>{{ event.endDate | date:'EEEE d MMMM y':'':'fr' }}</b>
+            <span class="meta-time">{{ event.endDate | date:'HH:mm':'':'fr' }}</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-ico">📍</span>
+          <div>
+            <small>Lieu</small>
+            <b>{{ event.address }}</b>
+            <span class="meta-time">{{ event.city }}</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-ico">🏷</span>
+          <div>
+            <small>Catégorie</small>
+            <b>{{ event.categoryName }}</b>
+            <span class="meta-time">{{ event.type === 'EVENT' ? 'Événement' : 'Activité' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLACES DISPO -->
+      <div class="seats-card">
+        <div class="seats-row">
+          <span>Places disponibles</span>
+          <b>{{ event.availableSeats }} / {{ event.capacity }}</b>
+        </div>
+        <div class="seats-track">
+          <div class="seats-fill"
+            [style.width.%]="((event.capacity - event.availableSeats) / event.capacity) * 100"
+            [class.danger]="event.availableSeats / event.capacity < 0.15">
+          </div>
+        </div>
+        <span class="seats-warn"
+          *ngIf="event.availableSeats > 0 && event.availableSeats / event.capacity < 0.15">
+          🔥 Presque complet !
+        </span>
+        <span class="seats-full" *ngIf="event.availableSeats === 0">
+          Événement complet
+        </span>
+      </div>
+
+      <!-- MÉTÉO -->
+      <div class="weather-card" *ngIf="weather && weather.city !== 'Indisponible'">
+        <div class="wc-title">🌤 Météo à {{ weather.city }}</div>
+        <div class="wc-head">
+          <img [src]="'https://openweathermap.org/img/wn/'+weather.icon+'@2x.png'"
+               width="52" height="52" alt="météo"/>
+          <div>
+            <span class="wc-temp">{{ weather.temperature | number:'1.0-0' }}°C</span>
+            <span class="wc-feel">Ressenti {{ weather.feelsLike | number:'1.0-0' }}°C</span>
+          </div>
+        </div>
+        <p class="wc-desc">{{ weather.description | titlecase }}</p>
+        <div class="wc-stats">
+          <span>💧 {{ weather.humidity }}%</span>
+          <span>💨 {{ weather.windSpeed | number:'1.1-1' }} m/s</span>
+        </div>
+        <p class="wc-advice" *ngIf="weather.temperature >= 25">
+          ☀️ Temps idéal pour cet événement !
+        </p>
+        <p class="wc-advice warn" *ngIf="weather.temperature < 15">
+          🧥 Prévoyez une veste.
+        </p>
+      </div>
+
+      <div class="location-card">
+        <div class="loc-head">
+          <h2>Emplacement</h2>
+          <small>{{ event.city }}</small>
+        </div>
+        <p class="loc-address">{{ event.address }}</p>
+        <div class="loc-actions">
+          <button class="loc-btn primary" type="button" (click)="openLocationModal()" [disabled]="!hasCoordinates">
+            📍 Voir le lieu & Vue 360°
+          </button>
+          <button class="loc-btn" type="button" (click)="openGoogleMaps()">Ouvrir l'itinéraire Google Maps</button>
+        </div>
+      </div>
+
+      <div class="location-modal-backdrop" *ngIf="showLocationModal" (click)="closeLocationModal()">
+        <div class="location-modal" role="dialog" aria-modal="true" aria-labelledby="locationModalTitle" (click)="$event.stopPropagation()">
+          <div class="location-modal-head">
+            <div>
+              <h3 id="locationModalTitle">📍 Localisation de l'événement</h3>
+              <p>{{ event.city }} · {{ event.address }}</p>
+            </div>
+            <button class="modal-close" type="button" (click)="closeLocationModal()">✕</button>
+          </div>
+
+          <div class="location-modal-tabs" *ngIf="hasCoordinates">
+            <button type="button" (click)="selectLocationTab('map')" [class.active]="locationTab === 'map'">🗺️ Carte</button>
+            <button type="button" (click)="selectLocationTab('street')" [class.active]="locationTab === 'street'">🔄 Vue 360°</button>
+          </div>
+
+          <div class="location-modal-body" *ngIf="locationTab === 'map'">
+            <div class="map-embed" *ngIf="mapEmbedUrl as safeMap">
+              <iframe [src]="safeMap" loading="lazy"></iframe>
+            </div>
+            <p class="modal-hint">Marker positionné sur le lieu exact de l'événement.</p>
+          </div>
+
+          <div class="location-modal-body street" *ngIf="locationTab === 'street'">
+            <div class="sv-card">
+              <p>Ce bouton ouvre directement Google Street View sur l'emplacement ciblé.</p>
+              <p class="sv-note">La vue 360° dépend de la couverture Google dans la zone: certains lieux (ex: El Jem) sont couverts, d'autres peuvent ne pas avoir d'images Street View.</p>
+              <button class="btn-sv-open" type="button" (click)="openStreetViewInNewTab()">🔄 Ouvrir lieu + Vue 360° Google</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AVIS À LA FIN -->
+      <div class="reviews-card">
+        <div class="reviews-head">
+          <h2>L’avis des client·es</h2>
+          <div class="reviews-global" *ngIf="reviews.length > 0; else noGlobalReview">
+            <strong>{{ averageRating }}/5</strong>
+            <span>{{ averageRatingRounded }} étoile{{ averageRatingRounded > 1 ? 's' : '' }} sur 5</span>
+            <small>d’après {{ reviews.length }} avis</small>
+          </div>
+          <ng-template #noGlobalReview>
+            <div class="reviews-global empty">
+              <strong>Pas encore d'avis</strong>
+              <small>Soyez le premier à laisser un retour.</small>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="review-form" *ngIf="canReview; else reviewEligibilityNote">
+          <p class="review-form-title">Donner votre avis</p>
+          <div class="stars-picker" aria-label="Choix de la note">
+            <button
+              type="button"
+              class="star-btn"
+              *ngFor="let s of [1,2,3,4,5]"
+              [class.active]="s <= reviewRating"
+              (click)="setReviewRating(s)">
+              {{ s <= reviewRating ? '★' : '☆' }}
+            </button>
+          </div>
+          <textarea
+            class="review-input"
+            [(ngModel)]="reviewComment"
+            placeholder="Partagez votre expérience (minimum 10 caractères)">
+          </textarea>
+          <div class="review-feedback error" *ngIf="reviewError">{{ reviewError }}</div>
+          <div class="review-feedback success" *ngIf="reviewSuccess">{{ reviewSuccess }}</div>
+          <button class="btn-review-submit" type="button" (click)="submitReview()">Publier mon avis</button>
+        </div>
+
+        <ng-template #reviewEligibilityNote>
+          <p class="review-login-note">{{ reviewEligibilityMessage }}</p>
+        </ng-template>
+
+        <div class="reviews-list" *ngIf="reviews.length > 0">
+          <article class="review-item" *ngFor="let r of reviews">
+            <div class="review-item-top">
+              <strong>{{ r.userName }}</strong>
+              <span class="review-stars">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5 - r.rating) }}</span>
+            </div>
+            <p>{{ r.comment }}</p>
+            <small>{{ r.createdAt | date:'dd/MM/yyyy HH:mm':'':'fr' }}</small>
+          </article>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANNEAU RÉSERVATION -->
+    <div class="det-right">
+      <div class="reserve-box">
+
+        <!-- PRIX + DISCOUNT -->
+        <div class="price-section">
+          <span class="price-lbl">Prix par place</span>
+          <div class="price-row">
+            <span class="price-old" *ngIf="discount.hasDiscount">
+              {{ event.price | number:'1.2-2' }} TND
+            </span>
+            <span class="price-main" [class.red]="discount.hasDiscount">
+              {{ discount.hasDiscount
+                ? (discount.finalPrice | number:'1.2-2')
+                : (event.price | number:'1.2-2') }} TND
+            </span>
+          </div>
+
+          <!-- PROMO BANNER -->
+          <div class="promo-banner" *ngIf="discount.hasDiscount">
+            <span>🎉 {{ discount.reason }}</span>
+            <span class="promo-pct">-{{ discount.discountPercent }}%</span>
+          </div>
+
+          <div class="promo-banner" *ngIf="event.promoCode">
+            <span>🎟️ Code promo disponible: <strong class="promo-code-value">{{ event.promoCode }}</strong></span>
+          </div>
+
+          <div class="promo-banner" *ngIf="event.promoStartDate || event.promoEndDate">
+            <span>
+              📅 Date de validité:
+              <span *ngIf="event.promoStartDate">du {{ event.promoStartDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngIf="event.promoStartDate && event.promoEndDate"> au </span>
+              <span *ngIf="event.promoEndDate">{{ event.promoEndDate | date:'dd/MM/yyyy HH:mm' }}</span>
+            </span>
+          </div>
+
+          <div class="promo-detail-card" *ngIf="discount.hasDiscount">
+            <p class="promo-expire">Expire le {{ event.startDate | date:'d MMMM':'':'fr' }}</p>
+            <div class="promo-from-row">
+              <span class="promo-from-label">À partir de</span>
+              <span class="promo-from-pct">-{{ discount.discountPercent }} %</span>
+            </div>
+            <p class="promo-final-price">{{ discount.finalPrice | number:'1.2-2' }} TND</p>
+            <p class="promo-per">par personne</p>
+            <p class="promo-original">Prix d'origine : <strong>{{ event.price | number:'1.2-2' }} TND</strong></p>
+            <p class="promo-children" *ngIf="event.type === 'ACTIVITY'">Tarifs réduits pour enfants</p>
+          </div>
+
+          <div class="total-row" *ngIf="event.availableSeats > 0 && !isReserved">
+            <span>Total ({{ numberOfTickets }} billet{{ numberOfTickets > 1 ? 's' : '' }})</span>
+            <b>{{ totalPrice | number:'1.2-2' }} TND</b>
+          </div>
+        </div>
+
+        <!-- SÉLECTEUR TICKETS -->
+        <div class="qty-section" *ngIf="!isReserved && event.availableSeats > 0">
+          <label>Nombre de places</label>
+          <div class="qty">
+            <button (click)="decrementTickets()">−</button>
+            <span>{{ numberOfTickets }}</span>
+            <button (click)="incrementTickets()">+</button>
+          </div>
+        </div>
+
+        <div class="err-msg" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+        <!-- NON CONNECTÉ -->
+        <div *ngIf="!isLoggedIn" class="not-logged">
+          <p>Connectez-vous pour réserver</p>
+          <a routerLink="/" class="btn-login">Se connecter</a>
+        </div>
+
+        <!-- DÉJÀ RÉSERVÉ -->
+        <div *ngIf="isLoggedIn && isReserved" class="already-res">
+          <div class="check-big">✅</div>
+          <b>Vous avez déjà réservé !</b>
+          <a routerLink="/mes-reservations-event">Voir mes réservations →</a>
+        </div>
+
+        <!-- BOUTON RÉSERVER -->
+        <button
+          *ngIf="isLoggedIn && !isReserved && isClient && event.availableSeats > 0"
+          class="btn-reserve-main"
+          (click)="reserve()"
+          [disabled]="reserving">
+          {{ reserving ? 'En cours…' : '🎫 Réserver maintenant' }}
+        </button>
+
+        <!-- COMPLET -->
+        <div class="complet-msg" *ngIf="event.availableSeats === 0">
+          Cet événement est complet.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

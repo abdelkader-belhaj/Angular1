@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe, CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
+import { HomeSharedModule } from '../../homePage/home-shared.module';
 
 @Component({
   selector: 'app-my-orders',
   templateUrl: './my-orders.component.html',
   styleUrls: ['./my-orders.component.css'],
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, HomeSharedModule],
   providers: [DatePipe]
 })
 export class MyOrdersComponent implements OnInit {

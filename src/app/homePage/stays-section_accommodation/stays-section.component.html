@@ -1,0 +1,69 @@
+<section class="py-24 px-8 max-w-screen-2xl mx-auto">
+
+  <div class="flex justify-between items-end mb-12">
+    <div>
+      <h2 class="font-headline text-4xl font-extrabold text-primary mb-2">
+        Nos Catégories
+      </h2>
+      <p class="text-on-surface-variant max-w-md">
+        Découvrez les différents types de logements disponibles
+      </p>
+    </div>
+  </div>
+
+  <!-- loading -->
+  <div *ngIf="loading" class="text-center">
+    Chargement...
+  </div>
+
+  <!-- erreur -->
+  <div *ngIf="error" class="text-center text-red-500">
+    Erreur lors du chargement
+    <button (click)="loadCategories()" class="bg-blue-600 text-white px-4 py-2 rounded ml-3">
+      Réessayer
+    </button>
+  </div>
+
+  <!-- categories -->
+  <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+    <article
+      *ngFor="let c of categories"
+      [routerLink]="canOpenCategory(c) ? ['/stays'] : null"
+      [queryParams]="canOpenCategory(c) ? {category: c.idCategorie} : null"
+      class="group relative overflow-hidden rounded-lg aspect-[4/5] shadow-sm"
+      [ngClass]="canOpenCategory(c) ? 'cursor-pointer' : 'cursor-not-allowed coming-soon-card'">
+
+      <img
+        class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        [src]="getImage(c.icone)"
+        [alt]="c.nomCategorie">
+
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+      <div *ngIf="!canOpenCategory(c)" class="absolute inset-0 bg-gradient-to-t from-amber-700/65 via-amber-500/20 to-transparent"></div>
+
+      <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+        <h3 class="text-2xl font-bold">
+          {{c.nomCategorie}}
+        </h3>
+
+        <div *ngIf="!canOpenCategory(c)" class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50/90 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-amber-700 mt-2 mb-3">
+          <span class="material-symbols-outlined text-sm">auto_awesome</span>
+          Coming Soon
+        </div>
+
+        <p class="text-sm text-white/80 mb-4">
+          {{ canOpenCategory(c) ? c.description : 'En maintenance. Bientôt disponible avec une expérience enrichie.' }}
+        </p>
+
+        <span class="font-bold" *ngIf="canOpenCategory(c)">
+          {{c.nbLogements}} logements
+        </span>
+        <span class="font-bold text-amber-200" *ngIf="!canOpenCategory(c)">Accès temporairement indisponible</span>
+      </div>
+
+    </article>
+
+  </div>
+
+</section>

@@ -1,0 +1,47 @@
+<div class="reclam-page">
+  <div class="head">
+    <h1>📝 Nouvelle réclamation</h1>
+    <p class="sub">
+      Décrivez votre problème. Vous serez notifié sur le site et par email quand une réponse est ajoutée.
+    </p>
+  </div>
+
+  <div class="context" *ngIf="reservationRef || reservationId">
+    <div class="ctx-title">Réservation liée</div>
+    <div class="ctx-value">
+      <span *ngIf="reservationRef"><strong>{{ reservationRef }}</strong></span>
+      <span *ngIf="!reservationRef && reservationId">#{{ reservationId }}</span>
+    </div>
+  </div>
+
+  <div class="feedback"
+       *ngIf="message"
+       [class.success]="messageType==='success'"
+       [class.erreur]="messageType==='error'">
+    {{ message }}
+  </div>
+
+  <form class="card" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="label">Type</label>
+    <select class="select" formControlName="priorite">
+      <option *ngFor="let p of priorites" [value]="p.value">{{ p.label }}</option>
+    </select>
+
+    <label class="label">Sujet / description</label>
+    <textarea class="textarea"
+              rows="7"
+              placeholder="Expliquez ce qui s’est passé (date, vol, référence, etc.)"
+              formControlName="sujet"></textarea>
+    <div class="hint" *ngIf="form.get('sujet')?.invalid && (form.get('sujet')?.touched || form.get('sujet')?.dirty)">
+      Minimum 10 caractères.
+    </div>
+
+    <div class="actions">
+      <button class="btn-secondary" type="button" (click)="retour()" [disabled]="loading">Retour</button>
+      <button class="btn-primary" type="submit" [disabled]="loading">
+        {{ loading ? 'Envoi...' : 'Envoyer' }}
+      </button>
+    </div>
+  </form>
+</div>
+

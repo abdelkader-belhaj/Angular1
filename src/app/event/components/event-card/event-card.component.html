@@ -1,0 +1,52 @@
+<div class="ec" (click)="goToDetail()">
+
+  <div class="ec-img">
+    <img [src]="getImage()" [alt]="event.title" loading="lazy" (error)="onImgError($event)"/>
+
+    <button
+      class="ec-fav"
+      [class.active]="isFavorite"
+      (click)="toggleFavorite($event)"
+      type="button"
+      [attr.aria-label]="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+      [attr.title]="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+    >
+      {{ isFavorite ? '♥' : '♡' }}
+    </button>
+
+    <div class="ec-overlay"></div>
+
+    <span class="ec-cat">{{ event.categoryName }}</span>
+
+    <span class="ec-discount" *ngIf="discount.hasDiscount">
+      -{{ discount.discountPercent }}%
+    </span>
+
+    <div class="ec-bottom">
+      <span class="ec-city">📍 {{ event.city }}</span>
+      <span class="ec-seats hot" *ngIf="almostFull && event.availableSeats > 0">
+        🔥 {{ event.availableSeats }} places
+      </span>
+      <span class="ec-seats full" *ngIf="event.availableSeats === 0">
+        Complet
+      </span>
+    </div>
+  </div>
+
+  <div class="ec-body">
+    <p class="ec-date">🗓 {{ event.startDate | date:'d MMM y · HH:mm':'':'fr' }}</p>
+    <h3 class="ec-title">{{ event.title }}</h3>
+
+    <div class="ec-footer">
+      <div class="ec-price">
+        <span class="ec-old" *ngIf="discount.hasDiscount">{{ event.price | number:'1.0-0' }} TND</span>
+        <strong [class.red]="discount.hasDiscount">
+          {{ discount.hasDiscount ? (discount.finalPrice | number:'1.0-0') : (event.price | number:'1.0-0') }} TND
+        </strong>
+        <small *ngIf="discount.hasDiscount">{{ discount.reason }}</small>
+      </div>
+      <span class="ec-arrow">→</span>
+    </div>
+  </div>
+
+</div>

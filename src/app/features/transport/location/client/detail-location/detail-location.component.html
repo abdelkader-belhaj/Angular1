@@ -1,0 +1,1408 @@
+<div class="page-container" *ngIf="reservation; else loadingState">
+  <main
+    class="main-content max-w-7xl mx-auto px-6 mt-6 mb-12 flex-grow w-full space-y-8"
+  >
+    <!-- Info/Banners -->
+    <div class="alert-banner alert-info shadow-sm" *ngIf="waitingMessage">
+      <span class="material-symbols-outlined icon-small">info</span>
+      <span>{{ waitingMessage }}</span>
+    </div>
+    <div class="alert-banner alert-success shadow-sm" *ngIf="rentalStartedInfo">
+      <span class="material-symbols-outlined icon-small">local_taxi</span>
+      <span>{{ rentalStartedInfo }}</span>
+    </div>
+    <div class="alert-banner alert-error shadow-sm" *ngIf="error">
+      <span class="material-symbols-outlined icon-small">error</span>
+      <span>{{ error }}</span>
+    </div>
+    <div class="alert-banner alert-success shadow-sm" *ngIf="success">
+      <span class="material-symbols-outlined icon-small">check_circle</span>
+      <span>{{ success }}</span>
+    </div>
+
+    <!-- Header Section -->
+    <header
+      class="detail-header flex-col lg-flex-row lg-flex-between lg-items-end gap-6 mb-8 mt-6 pb-6 border-b border-light"
+    >
+      <div class="header-titles space-y-1">
+        <div class="flex items-center gap-3 mb-3">
+          <span
+            class="badge badge-primary-light uppercase tracking-widest text-[10px] font-bold"
+            >Réservation</span
+          >
+          <span class="badge badge-warning text-[10px] uppercase font-bold">{{
+            getStatusLabel(reservation.statut)
+          }}</span>
+        </div>
+        <h1
+          class="text-4xl font-headline font-extrabold text-primary tracking-tighter"
+        >
+          {{ getVehicleLabel() }}
+        </h1>
+        <p class="text-muted font-medium text-lg">{{ getAgencyLabel() }}</p>
+      </div>
+
+      <div
+        class="chrono-row flex flex-wrap gap-4"
+        *ngIf="departureCountdown || returnCountdown"
+      >
+        <div
+          class="chrono-card flex items-center gap-4 bg-lowest rounded-lg p-4 shadow-premium border border-light"
+        >
+          <div class="bg-blue-50 text-primary p-2 rounded-md flex-center">
+            <span class="material-symbols-outlined">schedule</span>
+          </div>
+          <div class="flex-col">
+            <p
+              class="text-[10px] uppercase font-bold text-muted tracking-wider mb-1"
+            >
+              Départ prévu
+            </p>
+            <p
+              class="text-lg font-headline font-bold text-primary leading-none"
+            >
+              {{ departureCountdown || "-" }}
+            </p>
+          </div>
+        </div>
+        <div
+          class="chrono-card flex items-center gap-4 bg-lowest rounded-lg p-4 shadow-premium border border-light"
+        >
+          <div class="bg-amber-50 text-secondary p-2 rounded-md flex-center">
+            <span class="material-symbols-outlined">event_repeat</span>
+          </div>
+          <div class="flex-col">
+            <p
+              class="text-[10px] uppercase font-bold text-muted tracking-wider mb-1"
+            >
+              Retour prévu
+            </p>
+            <p class="text-lg font-headline font-bold text-dark leading-none">
+              {{ returnCountdown || "-" }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Véhicule loué -->
+    <section
+      class="card bg-lowest p-6 rounded-lg shadow-premium border border-light-subtle rented-vehicle w-full"
+    >
+      <div class="rented-vehicle__layout">
+        <div class="rented-vehicle__media">
+          <div
+            class="rented-vehicle__hero-img"
+            *ngIf="
+              getRentedVehiclePhotos().length > 0;
+              else clientNoVehiclePhoto
+            "
+          >
+            <img
+              [src]="resolveRentedVehiclePhotoUrl(getRentedVehiclePhotos()[0])"
+              [alt]="getVehicleLabel() || 'Véhicule'"
+            />
+          </div>
+          <ng-template #clientNoVehiclePhoto>
+            <div class="rented-vehicle__placeholder">
+              <span class="material-symbols-outlined">directions_car</span>
+            </div>
+          </ng-template>
+          <div
+            class="rented-vehicle__thumbs"
+            *ngIf="getRentedVehiclePhotos().length > 1"
+          >
+            <img
+              *ngFor="let p of getRentedVehiclePhotos().slice(1, 5)"
+              [src]="resolveRentedVehiclePhotoUrl(p)"
+              alt=""
+              class="rented-vehicle__thumb"
+            />
+          </div>
+        </div>
+        <div class="rented-vehicle__body flex-col gap-2 flex-1">
+          <p
+            class="text-[10px] font-black text-muted uppercase tracking-widest"
+          >
+            Votre véhicule
+          </p>
+          <h2
+            class="text-2xl font-headline font-black text-primary tracking-tight"
+          >
+            {{ getVehicleLabel() || "Véhicule de location" }}
+          </h2>
+          <div class="flex flex-wrap gap-4 text-sm text-dark">
+            <span
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Immat.</span
+              >
+              {{ getRentedVehiclePlate() }}</span
+            >
+            <span *ngIf="getRentedVehicleType()"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Type</span
+              >
+              {{ getRentedVehicleType() }}</span
+            >
+            <span *ngIf="getRentedVehiclePassengers() != null"
+              ><span class="text-muted font-bold uppercase text-[10px]"
+                >Places</span
+              >
+              {{ getRentedVehiclePassengers() }}</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions Rapides -->
+    <div
+      class="flex flex-wrap items-center gap-4 mb-8 p-4 bg-surface-low rounded-lg border border-light shadow-sm"
+    >
+      <button
+        class="btn btn-primary flex items-center gap-2 text-sm shadow-sm"
+        *ngIf="showFinalInvoiceDetails"
+        (click)="downloadFinalInvoicePdf()"
+      >
+        <span class="material-symbols-outlined icon-small">description</span>
+        Facture Locale
+      </button>
+      <button
+        class="btn btn-subtle bg-white flex items-center gap-2 text-sm shadow-sm"
+        *ngIf="canDownloadContract"
+        (click)="openContract()"
+      >
+        <span class="material-symbols-outlined icon-small">picture_as_pdf</span>
+        Contrat Juridique
+      </button>
+      <a
+        routerLink="/transport/location/client/mes-locations"
+        class="btn btn-subtle bg-white flex items-center gap-2 text-sm shadow-sm"
+      >
+        <span class="material-symbols-outlined icon-small">arrow_back</span> Mes
+        Locations
+      </a>
+      <div class="flex-grow"></div>
+      <button
+        class="btn btn-danger-outline bg-white flex items-center gap-2 text-sm shadow-sm"
+        *ngIf="canCancelReservation"
+        (click)="cancelReservation()"
+      >
+        <span class="material-symbols-outlined icon-small">cancel</span>
+        {{ cancelActionLabel }}
+      </button>
+    </div>
+
+    <section
+      class="card premium-shadow bg-surface-low rounded-lg p-6 border border-light mb-6"
+      *ngIf="reservation && showFinalInvoiceDetails"
+    >
+      <div class="flex items-center gap-2 mb-4 text-primary">
+        <span class="material-symbols-outlined">receipt</span>
+        <h3 class="font-headline font-bold text-lg">
+          Résumé Financier Clôture
+        </h3>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex-between">
+          <span>Prix Total Location:</span>
+          <strong>{{
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Avance Payée:</span>
+          <strong>{{
+            advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Paiement Final Reçu:</span>
+          <strong>{{
+            remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Caution Configurée:</span>
+          <strong>{{
+            depositAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between">
+          <span>Motif dégâts:</span>
+          <strong>{{ cautionDamageReason }}</strong>
+        </div>
+        <ng-container *ngIf="hasCautionSettlementDetails">
+          <div class="flex-between">
+            <span>Montant dommages:</span>
+            <strong>{{
+              cautionDamageAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution retenue:</span>
+            <strong class="text-warning">{{
+              cautionRetainedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution restituée:</span>
+            <strong class="text-success">{{
+              cautionRestitutedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Issue caution:</span>
+            <strong>{{ cautionOutcomeLabel }}</strong>
+          </div>
+          <div class="flex-between">
+            <span>Caution remboursée:</span>
+            <strong>{{ cautionRefundedDisplay }}</strong>
+          </div>
+        </ng-container>
+        <div class="flex-between text-base pt-1 border-t border-light mt-2">
+          <span class="text-primary font-bold">Total Facture:</span>
+          <strong class="text-primary font-black">{{
+            totalInvoiceAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Horizontal Workflow Progression -->
+    <div
+      class="card premium-shadow bg-lowest rounded-lg p-6 w-full border border-light-subtle mb-6 overflow-x-auto"
+    >
+      <div
+        class="flex flex-col md-flex-row md-items-center justify-between mb-8 gap-4 border-b border-light pb-4"
+      >
+        <h3
+          class="font-headline font-bold text-lg text-primary flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">timeline</span> Progression du
+          Dossier
+        </h3>
+      </div>
+      <div class="flex-between items-start relative w-full min-w-[600px] px-8">
+        <div
+          class="absolute top-[16px] left-[10%] right-[10%] h-[2px] bg-surface-high z-0"
+        ></div>
+        <div
+          class="flex-col items-center relative z-10 text-center flex-1 px-2"
+          *ngFor="let step of processSteps; let last = last"
+          [class.opacity-50]="!step.done && !step.active"
+        >
+          <div
+            class="h-9 w-9 rounded-full flex-center text-sm shadow-sm mx-auto mb-3 border-2 transition-transform bg-lowest"
+            [ngClass]="
+              step.done
+                ? 'bg-success text-white border-success'
+                : step.active
+                  ? 'text-primary border-primary shadow-md ring-4 ring-primary-20 scale-110'
+                  : 'bg-surface border-light text-muted'
+            "
+          >
+            <span
+              class="material-symbols-outlined text-[16px]"
+              *ngIf="step.done"
+              >check</span
+            >
+            <span
+              class="material-symbols-outlined text-[16px]"
+              *ngIf="step.active"
+              >edit</span
+            >
+            <span
+              class="material-symbols-outlined text-[16px] opacity-40"
+              *ngIf="!step.done && !step.active"
+              >horizontal_rule</span
+            >
+          </div>
+          <p
+            class="font-bold text-[11px] leading-tight"
+            [ngClass]="
+              step.done
+                ? 'text-dark'
+                : step.active
+                  ? 'text-primary'
+                  : 'text-muted'
+            "
+          >
+            {{ step.label }}
+          </p>
+          <p
+            class="text-[9px] uppercase text-success mt-1 font-bold"
+            *ngIf="step.done"
+          >
+            Terminé
+          </p>
+          <p
+            class="text-[9px] uppercase text-primary mt-1 font-bold"
+            *ngIf="step.active"
+          >
+            En cours
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid-12 gap-8">
+      <!-- Left Column: Details & Profile -->
+      <div class="lg-col-7 space-y-8 flex-col">
+        <!-- Booking Details -->
+        <section
+          class="card bg-lowest p-8 rounded-lg shadow-premium border border-light-subtle"
+        >
+          <h2
+            class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined">info</span> Informations de
+            location
+          </h2>
+
+          <div class="grid-2 gap-8 mb-6 pb-6 border-b border-light">
+            <div class="space-y-1">
+              <span
+                class="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1"
+                >Agence & Lieu</span
+              >
+              <p class="font-bold text-dark text-base">
+                {{ getAgencyLabel() }}
+              </p>
+              <p class="text-sm text-muted">{{ getAgencyAddress() }}</p>
+            </div>
+            <div class="space-y-1">
+              <span
+                class="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1"
+                >Période</span
+              >
+              <p class="font-bold text-dark text-base">
+                {{ reservation.dateDebut | date: "mediumDate" }} —
+                {{ reservation.dateFin | date: "mediumDate" }}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-surface p-6 rounded-lg space-y-4 border border-light">
+            <div class="flex-between text-sm items-center">
+              <span class="text-muted"
+                >Prix Total Estimé
+                <span class="badge badge-surface text-[10px] ml-2"
+                  >Phase: {{ paymentPhaseLabel }}</span
+                ></span
+              >
+              <span class="font-bold text-dark text-base">{{
+                displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <div class="flex-between text-sm items-center">
+              <span class="text-muted"
+                >Acompte 30%
+                <span
+                  class="ml-2 badge text-[10px] uppercase font-bold"
+                  [ngClass]="
+                    reservation.advanceStatus === 'PAID'
+                      ? 'badge-success'
+                      : 'badge-surface'
+                  "
+                  >{{ reservation.advanceStatus || "-" }}</span
+                ></span
+              >
+              <span class="font-bold text-dark">{{
+                advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <div
+              class="flex-between text-sm items-center pt-3 border-t border-light mt-1"
+            >
+              <span class="font-bold text-dark">Solde Frais Location</span>
+              <span class="font-black text-primary text-xl">{{
+                remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <div
+              class="flex-between text-sm items-center pt-3 border-t border-light mt-1"
+            >
+              <span class="text-muted flex items-center gap-1 font-medium"
+                ><span class="material-symbols-outlined icon-small text-warning"
+                  >lock</span
+                >
+                Dépôt de garantie (Caution)
+                <span class="badge badge-warning text-[9px] ml-2 font-bold">{{
+                  getDepositStatusLabel(reservation.depositStatus)
+                }}</span></span
+              >
+              <span class="font-bold text-secondary text-lg">{{
+                depositAmount | currency: "TND" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <p class="text-xs text-muted italic mt-2 opacity-70">
+              {{ financialSummaryLabel }}
+            </p>
+          </div>
+
+          <div
+            class="mt-4 p-4 rounded-md bg-warning-light text-warning-dark border border-warning-20 text-sm"
+            *ngIf="reservation.note"
+          >
+            <span class="font-bold block mb-1">Note de la réservation:</span>
+            {{ reservation.note }}
+          </div>
+        </section>
+
+        <!-- Driver Profile & License -->
+        <section
+          class="card bg-lowest p-8 rounded-lg shadow-premium border border-light-subtle"
+        >
+          <div class="flex-between items-start mb-6 pb-4 border-b border-light">
+            <h2
+              class="text-xl font-headline font-bold text-primary flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined">badge_outline</span>
+              Conducteur principal
+            </h2>
+            <span
+              class="badge font-bold uppercase text-[10px] tracking-widest"
+              [ngClass]="
+                reservation.licenseStatus === 'APPROVED'
+                  ? 'badge-success'
+                  : reservation.licenseStatus === 'REJECTED'
+                    ? 'badge-error'
+                    : 'badge-surface'
+              "
+              >Statut: {{ reservation.licenseStatus || "En attente" }}</span
+            >
+          </div>
+
+          <div class="flex-col md-flex-row gap-8 items-start">
+            <!-- ID Card Preview -->
+            <div class="w-full md-w-1-3">
+              <div
+                class="relative group aspect-3-2 overflow-hidden rounded-md border-2 border-dashed border-light hover:border-primary transition cursor-pointer bg-surface h-full min-h-[140px] flex-center"
+                *ngIf="permitImageUrl"
+                (click)="
+                  openPhoto({
+                    url: permitImageUrl,
+                    label: 'Permis de conduire',
+                  })
+                "
+              >
+                <img
+                  [src]="permitImageUrl"
+                  alt="Permis Document"
+                  class="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                />
+                <div
+                  class="absolute inset-0 flex-center opacity-0 group-hover:opacity-100 bg-primary-20 backdrop-blur-sm transition-opacity"
+                >
+                  <span
+                    class="bg-white text-primary px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1"
+                    ><span class="material-symbols-outlined text-[14px]"
+                      >zoom_in</span
+                    >
+                    Aperçu</span
+                  >
+                </div>
+              </div>
+              <div
+                class="w-full h-full min-h-[140px] aspect-3-2 rounded-md border border-light bg-surface flex-col flex-center text-muted"
+                *ngIf="!permitImageUrl"
+              >
+                <span class="material-symbols-outlined text-3xl opacity-40 mb-1"
+                  >no_photography</span
+                >
+                <span class="text-xs">Document manquant</span>
+              </div>
+            </div>
+
+            <!-- Details -->
+            <div class="flex-1 w-full space-y-4">
+              <div>
+                <p class="text-2xl font-headline font-bold text-dark">
+                  {{ reservation.prenom || "-" }} {{ reservation.nom || "-" }}
+                </p>
+                <p class="text-muted text-sm mt-1">
+                  Numéro permis:
+                  <strong>{{ reservation.numeroPermis || "-" }}</strong>
+                </p>
+                <p class="text-muted text-sm">
+                  Date de naissance:
+                  <strong>{{
+                    reservation.dateNaiss
+                      ? (reservation.dateNaiss | date: "mediumDate")
+                      : "-"
+                  }}</strong>
+                </p>
+              </div>
+
+              <!-- Rejection Box -->
+              <div
+                class="alert-left-border border-error bg-error-light/50 p-4 rounded-r-lg"
+                *ngIf="hasRejectedLicense"
+              >
+                <div class="flex items-center gap-2 text-error mb-2">
+                  <span class="material-symbols-outlined icon-small"
+                    >report_problem</span
+                  >
+                  <p class="font-bold text-sm">
+                    Action requise : Document refusé
+                  </p>
+                </div>
+                <p class="text-[11px] text-error-dark leading-relaxed">
+                  {{
+                    licenseRejectionReason ||
+                      "Le permis téléchargé n'est pas conforme. Veuillez soumettre une photo claire et valide."
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resubmission Form (Client input) -->
+          <div
+            class="resubmission-form mt-8 pt-6 border-t border-light"
+            *ngIf="canResubmitLicense"
+          >
+            <h4 class="font-bold text-sm text-dark mb-4 text-primary">
+              Re-soumettre un permis corrigé
+            </h4>
+            <div class="grid-2 gap-4">
+              <input
+                type="text"
+                class="input-form w-full"
+                [(ngModel)]="resubmissionForm.prenom"
+                placeholder="Prénom"
+              />
+              <input
+                type="text"
+                class="input-form w-full"
+                [(ngModel)]="resubmissionForm.nom"
+                placeholder="Nom"
+              />
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-muted uppercase"
+                  >Date naissance</label
+                ><input
+                  type="date"
+                  class="input-form w-full"
+                  [(ngModel)]="resubmissionForm.dateNaiss"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-muted uppercase"
+                  >Expiration</label
+                ><input
+                  type="date"
+                  class="input-form w-full"
+                  [(ngModel)]="resubmissionForm.licenseExpiryDate"
+                />
+              </div>
+              <input
+                type="text"
+                class="input-form w-full lg-col-2 mt-1"
+                [(ngModel)]="resubmissionForm.numeroPermis"
+                placeholder="Numéro officiel du permis"
+              />
+            </div>
+
+            <div class="flex md-flex-row flex-col gap-4 mt-4 items-center">
+              <label
+                class="flex-1 bg-surface p-3 rounded-md border border-light flex-between items-center cursor-pointer hover:bg-surface-high transition-colors w-full border-dashed group"
+              >
+                <span
+                  class="text-xs text-muted font-medium truncate group-hover:text-primary transition"
+                  >{{
+                    selectedResubmissionFileName ||
+                      "Sélectionner nouvelle photo du permis..."
+                  }}</span
+                >
+                <span class="material-symbols-outlined text-primary text-sm"
+                  >upload_file</span
+                >
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  (change)="onResubmissionFileSelected($event)"
+                />
+              </label>
+              <button
+                class="btn btn-primary shadow-sm flex-none w-full md-w-auto py-3 text-xs"
+                (click)="submitLicenseResubmission()"
+                [disabled]="isResubmitting"
+              >
+                {{ isResubmitting ? "Traitement..." : "SOUMETTRE LE DOCUMENT" }}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Photos Etat des lieux (Read Only for client) -->
+        <section
+          class="card bg-lowest p-8 rounded-lg shadow-premium border border-light-subtle"
+          *ngIf="hasEtatDesLieuxPhotos"
+        >
+          <h2
+            class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined">directions_car</span> Photos
+            État des Lieux
+          </h2>
+          <div class="grid-3 gap-3">
+            <figure
+              *ngFor="let photo of getEtatDesLieuxPhotos()"
+              class="photo-thumbnail relative group overflow-hidden border border-light rounded-md bg-surface aspect-square cursor-pointer flex-center"
+              (click)="openPhoto(photo)"
+              aria-label="Agrandir photo"
+            >
+              <img
+                [src]="photo.url"
+                [alt]="photo.label || 'Etat des lieux'"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+              <button
+                class="absolute inset-0 bg-primary/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity text-white border-none"
+              >
+                <span class="material-symbols-outlined text-xl">zoom_in</span>
+              </button>
+              <div
+                class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate"
+              >
+                {{ photo.label || "Photo" }}
+              </div>
+            </figure>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: Process & Actions -->
+      <div class="lg-col-5 space-y-8 flex-col flex-1">
+        <!-- Mega Payment Block (Initial or Final logic) -->
+        <section
+          class="card bg-primary text-white rounded-lg p-8 shadow-[0_20px_40px_rgba(0,57,116,0.2)] overflow-hidden relative"
+          *ngIf="
+            canPayInitialAdvance ||
+            isAdvancePaymentCompleted ||
+            showFinalPaymentSummary
+          "
+        >
+          <!-- abstract visual -->
+          <div
+            class="absolute -right-[50px] -bottom-[50px] w-48 h-48 bg-white/5 rounded-full blur-[40px] pointer-events-none"
+          ></div>
+          <div
+            class="absolute -left-[20px] top-[0] w-32 h-32 bg-secondary-fixed/10 rounded-full blur-[30px] pointer-events-none"
+          ></div>
+
+          <h3
+            class="text-xl font-headline font-bold mb-6 flex items-center gap-2 relative z-10"
+          >
+            <span class="material-symbols-outlined">payments</span> Hub de
+            Paiement
+          </h3>
+
+          <ng-container
+            *ngIf="canPayInitialAdvance || isAdvancePaymentCompleted"
+          >
+            <div class="relative z-10 text-sm">
+              <p
+                class="text-xs text-white/70 mb-4 border-b border-white/20 pb-2"
+              >
+                Paiement initial incluant l'acompte de confirmation de la
+                location et le blocage de la garantie.
+              </p>
+              <div class="space-y-2 mb-6">
+                <div class="flex-between text-sm opacity-90">
+                  <span>Total Séjour Estimé</span
+                  ><span>{{
+                    displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+                <div class="flex-between text-sm opacity-90">
+                  <span class="font-medium">Avance (30%)</span
+                  ><span>{{
+                    advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+                <div
+                  class="flex-between text-sm opacity-90 border-b border-white/20 pb-3"
+                >
+                  <span class="font-medium">Dépôt (Caution)</span
+                  ><span>{{
+                    depositAmount | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+                <div class="flex-between text-lg font-black pt-2">
+                  <span>A Prélever</span
+                  ><span class="text-secondary-fixed">{{
+                    upfrontPaymentAmount | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+              </div>
+
+              <div
+                class="p-3 bg-success/20 text-white font-bold text-xs rounded-md border border-success/30 flex items-center gap-2 mb-4"
+                *ngIf="isAdvancePaymentCompleted"
+              >
+                <span class="material-symbols-outlined icon-small"
+                  >task_alt</span
+                >
+                Paiement initial validé avec succès
+              </div>
+
+              <button
+                class="btn w-full bg-white text-primary text-sm py-4 border-none hover:bg-blue-50 transition-colors shadow-lg font-extrabold flex-center gap-2"
+                *ngIf="canPayInitialAdvance"
+                (click)="openInitialAdvancePaymentStep()"
+                [disabled]="isSubmittingInitialPayment"
+              >
+                <span class="material-symbols-outlined text-xl"
+                  >credit_card</span
+                >
+                {{
+                  isSubmittingInitialPayment
+                    ? "Ouverture module..."
+                    : "Payer Avance + Bloquer Caution"
+                }}
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Final Summary replaces initial logic if needed (it is shown dynamically when necessary) -->
+          <ng-container *ngIf="showFinalPaymentSummary">
+            <div
+              class="relative z-10 text-sm mt-6 pt-6 border-t border-white/20"
+              *ngIf="canPayInitialAdvance || isAdvancePaymentCompleted"
+            ></div>
+            <div class="relative z-10 text-sm">
+              <p
+                class="text-xs text-white/70 mb-4 border-b border-white/20 pb-2"
+                *ngIf="!(canPayInitialAdvance || isAdvancePaymentCompleted)"
+              >
+                Détails finaux de la transaction après validation par l'agence.
+              </p>
+              <p
+                class="text-xs font-bold text-secondary-fixed mb-2"
+                *ngIf="canPayInitialAdvance || isAdvancePaymentCompleted"
+              >
+                SOLDES FINAUX LOCATION
+              </p>
+              <div class="space-y-2 mb-6">
+                <div class="flex-between text-sm opacity-90">
+                  <span>Total Location</span
+                  ><span>{{
+                    displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+                <div
+                  class="flex-between text-sm opacity-90 border-b border-white/20 pb-2"
+                >
+                  <span>Avance payée</span
+                  ><span
+                    >-
+                    {{
+                      advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+                    }}</span
+                  >
+                </div>
+                <div class="flex-between text-xl font-black pt-2">
+                  <span class="text-white">Reste à payer</span
+                  ><span class="text-secondary-fixed">{{
+                    remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+                  }}</span>
+                </div>
+
+                <div
+                  class="mt-3 pt-3 border-t border-white/20 space-y-2 text-xs"
+                  *ngIf="showFinalInvoiceDetails"
+                >
+                  <div class="flex-between text-white/90">
+                    <span>Statut remboursement caution</span>
+                    <strong class="text-white">{{
+                      paymentCardRefundStatusLabel
+                    }}</strong>
+                  </div>
+                  <div class="flex-between text-white/90">
+                    <span>Issue caution</span>
+                    <strong class="text-white">{{
+                      cautionOutcomeLabel
+                    }}</strong>
+                  </div>
+                  <div class="text-white/80">
+                    Motif dégâts: {{ cautionDamageReason }}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="p-3 bg-success/20 text-white font-bold text-xs rounded-md border border-success/30 flex items-center gap-2 mb-4"
+                *ngIf="isFinalPaymentCompleted"
+              >
+                <span class="material-symbols-outlined icon-small"
+                  >task_alt</span
+                >
+                Solde location payé.
+              </div>
+
+              <button
+                class="btn w-full bg-white text-primary text-sm py-4 border-none hover:bg-blue-50 transition-colors shadow-lg font-extrabold flex-center gap-2"
+                *ngIf="isFinalPaymentRequired"
+                (click)="openFinalPaymentModal()"
+                [disabled]="isPreparingFinalPayment || isSubmittingFinalPayment"
+              >
+                <span class="material-symbols-outlined text-xl">payments</span>
+                {{
+                  isPreparingFinalPayment
+                    ? "Chargement Stripe..."
+                    : "Scanner carte pour le solde"
+                }}
+              </button>
+            </div>
+          </ng-container>
+        </section>
+
+        <!-- Error notice for final payment -->
+        <div class="alert-banner alert-error text-xs" *ngIf="finalPaymentError">
+          {{ finalPaymentError }}
+        </div>
+
+        <!-- Electronic Signature -->
+        <section
+          class="card bg-lowest rounded-lg p-8 shadow-premium border border-warning"
+          *ngIf="canSignContract"
+        >
+          <h2
+            class="text-xl font-headline font-bold text-dark flex items-center gap-2 mb-4"
+          >
+            <span class="material-symbols-outlined text-primary">draw</span>
+            Signature du Contrat
+          </h2>
+          <div class="space-y-4">
+            <label
+              class="flex items-start gap-3 cursor-pointer group p-3 bg-surface rounded-md border border-light"
+            >
+              <input
+                type="checkbox"
+                class="mt-1 w-4 h-4 rounded text-primary focus:ring-primary border-light cursor-pointer"
+                [(ngModel)]="acceptedTerms"
+                name="acceptedTerms"
+              />
+              <span class="text-xs text-muted leading-relaxed select-none"
+                >J'accepte et approuve dématérialiser ma location et accepte les
+                <a href="#" class="text-primary font-bold hover:underline"
+                  >Conditions Générales location automobile</a
+                >.</span
+              >
+            </label>
+
+            <div
+              class="bg-surface-low border-2 border-dashed border-light rounded-md h-40 relative overflow-hidden group hover:border-primary-light transition-colors"
+            >
+              <div
+                class="absolute inset-0 flex-center pointer-events-none opacity-40 group-hover:opacity-10 pointer-events-none p-4 text-center"
+              >
+                <span
+                  class="text-xl font-black text-outline uppercase tracking-[0.2em] opacity-10"
+                  >SIGNATURE</span
+                >
+              </div>
+              <canvas
+                #signatureCanvas
+                class="w-full h-full cursor-crosshair relative z-10 touch-none bg-transparent"
+                width="620"
+                height="200"
+                (mousedown)="beginSignature($event)"
+                (mousemove)="drawSignature($event)"
+                (mouseup)="endSignature()"
+                (mouseleave)="endSignature()"
+                (touchstart)="beginSignature($event)"
+                (touchmove)="drawSignature($event)"
+                (touchend)="endSignature()"
+              ></canvas>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+              <button
+                class="btn bg-surface hover:bg-surface-high border border-light flex-1 text-xs text-muted font-bold"
+                (click)="clearSignature()"
+                [disabled]="isSigning"
+              >
+                EFFACER
+              </button>
+              <button
+                class="btn btn-warning flex-2 text-dark font-black shadow-md"
+                (click)="submitSignature()"
+                [disabled]="isSigning"
+              >
+                {{ isSigning ? "Encodage..." : "JE SIGNE LE CONTRAT" }}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Extensions Tracker (Client Side View) -->
+        <section
+          class="card bg-surface-low rounded-lg p-6 shadow-sm border border-light"
+          *ngIf="extensionRequest"
+        >
+          <div class="flex-between mb-4 border-b border-light pb-3">
+            <h3
+              class="font-headline font-bold text-sm text-primary flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined">more_time</span>
+              Modification de Location
+            </h3>
+            <span
+              class="badge text-[10px] font-bold"
+              [ngClass]="
+                extensionRequest.status === 'APPROVED'
+                  ? 'badge-success'
+                  : 'badge-warning'
+              "
+              >{{ extensionStatusLabel }}</span
+            >
+          </div>
+          <div class="space-y-2 text-sm text-dark">
+            <div class="flex-between">
+              <span>Jours supplémentaires:</span>
+              <strong>+{{ extensionRequest.extraDays }} j</strong>
+            </div>
+            <div class="flex-between">
+              <span>Nouvelle date de livraison:</span>
+              <strong>{{
+                extensionRequest.proposedEndDate | date: "mediumDate"
+              }}</strong>
+            </div>
+            <div
+              class="flex-between border-t border-light pt-2 text-primary font-bold"
+            >
+              <span>Total mis à jour:</span>
+              <span>{{
+                extensionRequest.proposedTotalPrice
+                  | currency: "TND" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+          </div>
+          <div
+            class="bg-lowest p-3 rounded-md text-xs text-muted mt-3 shadow-sm border-l-2 border-primary"
+            *ngIf="extensionRequest.reviewReason"
+          >
+            <span class="font-bold text-dark block mb-1"
+              >Message de l'agence:</span
+            >
+            "{{ extensionRequest.reviewReason }}"
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Print / PDF Invoice -->
+  <section
+    class="print-view invoice-sheet"
+    *ngIf="reservation && showFinalInvoiceDetails"
+  >
+    <div class="pdf-top-accent"></div>
+
+    <header class="pdf-header">
+      <div>
+        <p class="pdf-subtitle">FACTURE DE LOCATION</p>
+        <h1 class="pdf-title">{{ getAgencyLabel() }}</h1>
+        <p class="invoice-kicker">
+          Facture finale de clôture générée automatiquement.
+        </p>
+      </div>
+
+      <div class="pdf-meta">
+        <div
+          class="invoice-badge"
+          [ngClass]="
+            isFinalPaymentCompleted
+              ? 'invoice-badge-success'
+              : 'invoice-badge-warning'
+          "
+        >
+          {{ isFinalPaymentCompleted ? "Acquittée" : "En attente de solde" }}
+        </div>
+        <div class="pdf-ref">Facture #{{ reservation.idReservation }}</div>
+        <div class="pdf-date">
+          Émise le {{ reservation.dateDebut | date: "dd MMM yyyy" }}
+        </div>
+      </div>
+    </header>
+
+    <section class="invoice-hero">
+      <div>
+        <p class="invoice-hero-label">Client</p>
+        <h2>{{ getClientLabel() }}</h2>
+        <p>
+          {{ reservation.prenom || "-" }} {{ reservation.nom || "-" }} ·
+          {{ getClientUsername() }}
+        </p>
+      </div>
+
+      <div class="invoice-hero-summary">
+        <div class="invoice-hero-item">
+          <span>Véhicule</span>
+          <strong>{{ getVehicleLabel() || "Véhicule de location" }}</strong>
+        </div>
+        <div class="invoice-hero-item">
+          <span>Période</span>
+          <strong
+            >{{ reservation.dateDebut | date: "mediumDate" }} -
+            {{ reservation.dateFin | date: "mediumDate" }}</strong
+          >
+        </div>
+        <div class="invoice-hero-item">
+          <span>Phase</span>
+          <strong>{{ paymentPhaseLabel }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="invoice-card-grid">
+      <article class="invoice-card">
+        <h3 class="pdf-section-title">
+          <span class="pdf-section-dot"></span> Informations dossier
+        </h3>
+        <div class="invoice-detail-list">
+          <div class="invoice-detail-row">
+            <span>Agence</span><strong>{{ getAgencyLabel() }}</strong>
+          </div>
+          <div class="invoice-detail-row">
+            <span>Adresse</span><strong>{{ getAgencyAddress() }}</strong>
+          </div>
+          <div class="invoice-detail-row">
+            <span>Statut réservation</span
+            ><strong>{{ getStatusLabel(reservation.statut) }}</strong>
+          </div>
+          <div class="invoice-detail-row">
+            <span>Statut caution</span
+            ><strong>{{
+              getDepositStatusLabel(reservation.depositStatus)
+            }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="invoice-card">
+        <h3 class="pdf-section-title">
+          <span class="pdf-section-dot"></span> Répartition rapide
+        </h3>
+        <div class="invoice-summary-metrics">
+          <div>
+            <span>Location</span>
+            <strong>{{
+              displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div>
+            <span>Avance</span>
+            <strong>{{
+              advanceAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div>
+            <span>Solde</span>
+            <strong>{{
+              remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div>
+            <span>Caution</span>
+            <strong>{{
+              depositAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="invoice-card invoice-ledger">
+      <h3 class="pdf-section-title">
+        <span class="pdf-section-dot"></span> Détail financier
+      </h3>
+      <div class="pdf-finance-table">
+        <div class="pdf-fin-row">
+          <span>Prix total location</span>
+          <strong>{{
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="pdf-fin-row">
+          <span>Avance payée</span>
+          <strong
+            >-
+            {{ advanceAmount | currency: "TND" : "symbol" : "1.0-0" }}</strong
+          >
+        </div>
+        <div class="pdf-fin-row">
+          <span>Paiement final reçu</span>
+          <strong>{{
+            remainingAmountToPay | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="pdf-fin-row">
+          <span>Dépôt de garantie</span>
+          <strong>{{
+            depositAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="pdf-fin-row">
+          <span>Etat de la caution</span>
+          <strong>{{
+            hasCautionSettlementDetails
+              ? cautionOutcomeLabel
+              : getDepositStatusLabel(reservation.depositStatus)
+          }}</strong>
+        </div>
+        <div class="pdf-fin-row">
+          <span>Motif dégâts</span>
+          <strong>{{ cautionDamageReason }}</strong>
+        </div>
+        <ng-container *ngIf="hasCautionSettlementDetails">
+          <div class="pdf-fin-row">
+            <span>Montant dommages</span>
+            <strong>{{
+              cautionDamageAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution retenue</span>
+            <strong>{{
+              cautionRetainedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution restituée</span>
+            <strong>{{
+              cautionRestitutedAmount | currency: "TND" : "symbol" : "1.0-0"
+            }}</strong>
+          </div>
+          <div class="pdf-fin-row">
+            <span>Caution remboursée</span>
+            <strong>{{ cautionRefundedDisplay }}</strong>
+          </div>
+        </ng-container>
+        <div class="pdf-fin-row pdf-fin-total">
+          <span>Total facture</span>
+          <strong>{{
+            totalInvoiceAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+      </div>
+      <p class="pdf-note">{{ financialSummaryLabel }}</p>
+    </section>
+
+    <section class="invoice-card invoice-notes">
+      <h3 class="pdf-section-title">
+        <span class="pdf-section-dot"></span> Conditions et mentions
+      </h3>
+      <ul class="pdf-conditions">
+        <li>
+          Les montants affichés couvrent la période réservée et la caution
+          associée au dossier.
+        </li>
+        <li>
+          La caution est restituée selon le résultat de l’état des lieux et les
+          règles de restitution appliquées au dossier.
+        </li>
+        <li>
+          En cas de solde restant dû, le paiement final doit être confirmé avant
+          la clôture administrative.
+        </li>
+      </ul>
+    </section>
+
+    <section class="pdf-signatures">
+      <div class="pdf-sig-box">
+        <div class="pdf-sig-header">Agence</div>
+        <div class="pdf-sig-body">
+          <div class="pdf-stamp pdf-stamp-valid">VALIDÉ</div>
+          <p>{{ getAgencyLabel() }}</p>
+          <p>{{ getAgencyAddress() }}</p>
+        </div>
+      </div>
+      <div class="pdf-sig-box">
+        <div class="pdf-sig-header">Client</div>
+        <div class="pdf-sig-body">
+          <div class="pdf-stamp pdf-stamp-success">SIGNÉ</div>
+          <p>{{ getClientLabel() }}</p>
+          <p>{{ reservation.prenom || "-" }} {{ reservation.nom || "-" }}</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pdf-footer">
+      <p>
+        <strong>ServeurHub Mobility</strong> · Document généré automatiquement à
+        partir du dossier de location.
+      </p>
+      <p>
+        Réservation {{ reservation.idReservation }} ·
+        {{ reservation.dateDebut | date: "dd/MM/yyyy" }} -
+        {{ reservation.dateFin | date: "dd/MM/yyyy" }}
+      </p>
+    </footer>
+  </section>
+
+  <!-- Modals -->
+  <!-- Card Payment Modal (External component) -->
+  <app-card-payment-modal
+    [isOpen]="initialPaymentModalOpen"
+    [estimatedPrice]="upfrontPaymentAmount"
+    [holdPercentage]="100"
+    [paymentPurpose]="'RESERVATION_ADVANCE'"
+    (cardConfirmed)="onInitialAdvanceCardConfirmed($event)"
+    (cardCancelled)="onInitialAdvanceCardCancelled()"
+  ></app-card-payment-modal>
+
+  <!-- Photo Enlarge Overlay -->
+  <div
+    class="modal-overlay"
+    *ngIf="enlargedPhoto"
+    (click)="onPhotoOverlayClick($event)"
+  >
+    <div
+      class="modal-photo zoom-in flex-col flex-center"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="btn-icon absolute top-4 right-4 bg-dark/60 text-white w-10 h-10 rounded-full flex-center hover:bg-black transition z-50 border-none shadow-lg shadow-black/50"
+        (click)="closePhoto()"
+        aria-label="Fermer"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <img
+        [src]="enlargedPhoto.url"
+        [alt]="enlargedPhoto.label || 'Document'"
+        class="max-w-full max-h-[85vh] object-contain rounded-md mx-auto shadow-2xl bg-black border border-white/10"
+      />
+      <p
+        class="text-center text-white mt-4 font-bold tracking-widest uppercase text-xs"
+      >
+        {{ enlargedPhoto.label || "Document Vérifié" }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Final Payment Inline Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="finalPaymentModalOpen"
+    (click)="cancelFinalPaymentModal()"
+  >
+    <div class="modal-content zoom-in" (click)="$event.stopPropagation()">
+      <div class="flex-between border-b border-light pb-4 mb-5">
+        <h2 class="font-headline font-bold text-xl text-primary">
+          Paiement Final Réservation
+        </h2>
+        <button
+          class="btn-icon bg-surface-low hover:bg-surface-high p-2 rounded-full transition"
+          (click)="cancelFinalPaymentModal()"
+          [disabled]="isSubmittingFinalPayment"
+        >
+          <span class="material-symbols-outlined text-muted">close</span>
+        </button>
+      </div>
+
+      <div class="bg-surface-low p-5 rounded-lg border border-light mb-6">
+        <div class="flex-between text-sm text-muted mb-2">
+          <span>Sous-total Location</span>
+          <strong class="text-dark">{{
+            displayTotalAmount | currency: "TND" : "symbol" : "1.0-0"
+          }}</strong>
+        </div>
+        <div class="flex-between text-sm text-muted mb-3">
+          <span>Avance Initiale Payée</span>
+          <strong class="text-dark"
+            >-
+            {{ advanceAmount | currency: "TND" : "symbol" : "1.0-0" }}</strong
+          >
+        </div>
+        <div
+          class="flex-between text-lg text-primary pt-3 border-t border-light-subtle font-black"
+        >
+          <span>Total À Payer</span>
+          <span class="text-2xl">{{
+            finalPaymentDetails?.montant ?? remainingAmountToPay
+              | currency: "TND" : "symbol" : "1.0-0"
+          }}</span>
+        </div>
+        <p class="text-[10px] mt-3 uppercase font-bold text-warning">
+          {{ financialSummaryLabel }}
+        </p>
+      </div>
+
+      <div class="mb-4">
+        <h3 class="font-bold text-sm text-dark mb-3">
+          <span class="material-symbols-outlined icon-small text-primary"
+            >credit_card</span
+          >
+          Paiement par Carte (Stripe)
+        </h3>
+        <!-- STRIPE ID PRESERVED -->
+        <div
+          id="final-payment-card-element"
+          class="payment-stripe-element border border-light p-3 rounded-md bg-white shadow-sm"
+        ></div>
+        <p class="text-[10px] text-muted mt-2 italic font-medium opacity-70">
+          Secured Encrypted Transaction Gateway par Stripe Inc.
+        </p>
+      </div>
+      <div
+        class="alert-banner alert-error text-xs p-3 mt-4"
+        *ngIf="finalPaymentError"
+      >
+        {{ finalPaymentError }}
+      </div>
+
+      <div class="flex flex-col md-flex-row gap-3 w-full mt-6">
+        <button
+          class="btn btn-surface flex-1 py-3 text-sm font-bold"
+          (click)="cancelFinalPaymentModal()"
+          [disabled]="isSubmittingFinalPayment"
+        >
+          Annuler Transaction
+        </button>
+        <button
+          class="btn btn-primary flex-1 py-3 text-sm font-bold shadow-md"
+          (click)="submitFinalPayment()"
+          [disabled]="isSubmittingFinalPayment"
+        >
+          {{
+            isSubmittingFinalPayment
+              ? "Autorisation en cours..."
+              : "CONFIRMER ET PAYER"
+          }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fallback Layout Config -->
+<ng-template #loadingState>
+  <div class="fixed inset-0 bg-background flex-center flex-col z-[100]">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4 shadow-sm"
+    ></div>
+    <p
+      class="text-muted font-bold tracking-widest text-xs uppercase"
+      *ngIf="isLoading"
+    >
+      Validation ServeurHub...
+    </p>
+    <div
+      class="alert-banner alert-error max-w-md text-center shadow-premium mt-6"
+      *ngIf="!isLoading && error"
+    >
+      <span class="material-symbols-outlined text-3xl mb-2 text-error"
+        >error</span
+      >
+      <p class="font-medium">{{ error }}</p>
+    </div>
+  </div>
+</ng-template>

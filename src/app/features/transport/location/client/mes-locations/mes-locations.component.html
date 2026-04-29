@@ -1,0 +1,112 @@
+<section class="page-container relative bg-background min-h-screen">
+
+  <!-- Header Section -->
+  <div class="bg-surface border-b border-light pb-6 pt-10 px-6 md-px-10">
+    <div class="max-w-7xl mx-auto flex-col md-flex-row md-items-end justify-between gap-6">
+      <div class="flex-col gap-2">
+        <p class="text-xs uppercase font-bold text-secondary tracking-widest">Espace Client</p>
+        <h1 class="text-4xl font-headline font-extrabold text-primary tracking-tighter">Mes locations</h1>
+        <p class="text-muted font-medium text-base mt-2 max-w-2xl">
+          Retrouvez l'historique et l'état de chaque location en cours ou terminée.
+        </p>
+      </div>
+      <div class="flex-none">
+        <a routerLink="/transport/location/client/recherche" class="btn btn-primary shadow-sm flex-row gap-2 text-sm">
+          <span class="material-symbols-outlined icon-small">add_circle</span> Nouvelle réservation
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content max-w-7xl mx-auto p-6 md-p-10 flex-col gap-8 w-full">
+    
+    <!-- Alerts & States -->
+    <div class="alert-banner alert-error" *ngIf="error">
+       <span class="material-symbols-outlined">error</span>
+       <span>{{ error }}</span>
+    </div>
+
+    <div class="flex-col flex-center min-h-[30vh] w-full" *ngIf="isLoading">
+       <div class="animate-spin h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full mb-4"></div>
+       <p class="text-muted font-bold tracking-wider uppercase text-xs">Chargement de vos locations...</p>
+    </div>
+
+    <div class="flex-col flex-center min-h-[30vh] w-full border-2 border-dashed border-light rounded-xl bg-surface-lowest p-8" *ngIf="!isLoading && !reservations.length && !error">
+       <span class="material-symbols-outlined icon-3xl text-muted opacity-50 mb-4">directions_car</span>
+       <h3 class="font-headline font-bold text-xl text-dark mb-2">Aucune location</h3>
+       <p class="text-muted text-center max-w-md">Vous n'avez pas encore effectué de réservation de véhicule sur votre compte.</p>
+       <a routerLink="/transport/location/client/recherche" class="btn btn-primary mt-6 text-sm">Réserver maintenant</a>
+    </div>
+
+    <!-- Data Grid (Responsive Cards) -->
+    <div class="grid-2 lg-grid-2 gap-6" *ngIf="reservations.length">
+      
+      <article class="card premium-shadow bg-lowest rounded-2xl border border-light flex-col overflow-hidden transition-all duration-300 hover:shadow-premium hover:-translate-y-1 group" *ngFor="let reservation of reservations">
+        
+        <!-- Image Header -->
+        <div class="relative h-56 w-full bg-surface-low overflow-hidden border-b border-light">
+          <img *ngIf="getVehiclePhoto(reservation)" [src]="getVehiclePhoto(reservation)" alt="Véhicule" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div *ngIf="!getVehiclePhoto(reservation)" class="w-full h-full flex-center bg-surface-low">
+             <span class="material-symbols-outlined icon-3xl text-muted opacity-30">directions_car</span>
+          </div>
+          
+          <div class="absolute top-4 right-4">
+             <span class="badge uppercase font-bold tracking-widest shadow-md text-[10px]"
+                   [ngClass]="{
+                     'badge-success': reservation.statut === 'COMPLETED' || reservation.statut === 'CONFIRMED' || reservation.statut === 'ACTIVE',
+                     'badge-warning': reservation.statut === 'PENDING' || reservation.statut === 'DRAFT' || reservation.statut === 'KYC_PENDING' || reservation.statut === 'IN_PROGRESS',
+                     'badge-error': reservation.statut === 'CANCELLED',
+                     'badge-primary-light': reservation.statut === 'DEPOSIT_HELD' || reservation.statut === 'CONTRACT_SIGNED'
+                   }">
+                {{ getStatusLabel(reservation.statut) }}
+             </span>
+          </div>
+
+          <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex-col justify-end min-h-[50%]">
+             <span class="badge bg-white/20 backdrop-blur-md text-white border border-white/30 text-[10px] font-bold uppercase tracking-wider w-max mb-2 shadow-sm">{{ getAgencyLabel(reservation) }}</span>
+             <h2 class="font-headline font-extrabold text-2xl text-white drop-shadow-md">
+                {{ getVehicleLabel(reservation) }}
+             </h2>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6 grid-2 gap-5 flex-grow text-sm bg-surface">
+           <div class="flex-col gap-1.5">
+              <span class="text-[10px] uppercase font-bold text-muted tracking-widest">Date de Début</span>
+              <span class="font-bold text-dark flex items-center gap-2">
+                <span class="material-symbols-outlined icon-small text-primary">event</span> 
+                {{ reservation.dateDebut ? (reservation.dateDebut | date: "mediumDate") : '-' }}
+              </span>
+           </div>
+           <div class="flex-col gap-1.5">
+              <span class="text-[10px] uppercase font-bold text-muted tracking-widest">Date de Fin</span>
+              <span class="font-bold text-dark flex items-center gap-2">
+                <span class="material-symbols-outlined icon-small text-secondary">event_available</span> 
+                {{ reservation.dateFin ? (reservation.dateFin | date: "mediumDate") : '-' }}
+              </span>
+           </div>
+           <div class="flex-col gap-1.5 col-span-full pt-4 mt-2 border-t border-light-subtle flex-between flex-row items-center">
+              <span class="text-xs font-bold text-muted uppercase tracking-widest">Montant de location</span>
+              <strong class="font-headline font-black text-2xl text-primary">{{ reservation.prixTotal | currency: "TND" : "symbol" : "1.0-0" }}</strong>
+           </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="p-5 bg-surface-lowest border-t border-light flex justify-between items-center">
+          <div class="flex items-center gap-2" *ngIf="reservation.depositStatus">
+             <span class="material-symbols-outlined icon-small text-warning">lock</span>
+             <span class="text-xs font-bold text-muted">{{ reservation.depositStatus }}</span>
+          </div>
+          <div *ngIf="!reservation.depositStatus"></div>
+          
+          <a class="btn btn-primary text-sm font-bold shadow-md flex items-center gap-2 transition-transform hover:-translate-y-0.5"
+             [routerLink]="['/transport/location/client/detail', reservation.idReservation]">
+            Consulter <span class="material-symbols-outlined icon-small">arrow_forward</span>
+          </a>
+        </div>
+      </article>
+
+    </div>
+  </main>
+</section>

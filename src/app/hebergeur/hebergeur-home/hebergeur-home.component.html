@@ -1,0 +1,173 @@
+<div *ngIf="loading" class="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">
+  Chargement du tableau de bord…
+</div>
+
+<div *ngIf="error" class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">{{ error }}</div>
+
+<div *ngIf="!loading && !error" class="space-y-8">
+  <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-[#0f2744] via-[#153a5f] to-[#0f2744] p-8 text-white shadow-lg">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-200/90">TunisiaTour</p>
+    <h2 class="mt-2 font-headline text-2xl font-extrabold tracking-tight md:text-3xl">Bonjour, {{ userName }}</h2>
+    <p class="mt-2 max-w-2xl text-sm text-blue-100/90">
+      Vue d’ensemble de votre activité : revenus estimés, occupation, répartition par type et dernières actions.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Revenus (estim. mois)</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-slate-900">{{ formatMoney(revenueMonthEst) }}</p>
+      <p class="mt-1 text-xs text-slate-500">Basé sur logements « occupés » × prix moyen × 22 nuits</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Taux d’occupation</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-indigo-700">{{ occupancyPct }}%</p>
+      <p class="mt-1 text-xs text-slate-500">Part des unités marquées occupées</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Note moyenne (avis)</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-amber-600">{{ reviewScore }}</p>
+      <p class="mt-1 text-xs text-slate-500">Module avis complet à brancher sur l’API</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Portfolio</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-slate-900">{{ filteredByHost.length }}</p>
+      <p class="mt-1 text-xs text-slate-500">Logements sous votre compte</p>
+    </div>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h3 class="font-headline text-lg font-bold text-slate-900">Intelligence Paiement & Annulation</h3>
+        <p class="text-sm text-slate-500">
+          Bloc innovant ajoute: suivi des flux encaisses, risque annulation et performance de conversion paiement.
+        </p>
+      </div>
+      <div class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+        Net securise: {{ formatMoney(netSecuredDT) }}
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <article
+        *ngFor="let insight of paymentInsights"
+        class="rounded-2xl border p-4"
+        [ngClass]="getToneClasses(insight.tone)">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">{{ insight.title }}</p>
+        <p class="mt-2 font-headline text-2xl font-extrabold">{{ insight.value }}</p>
+        <p class="mt-1 text-xs opacity-80">{{ insight.hint }}</p>
+      </article>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Reservations suivies</p>
+        <p class="mt-2 text-2xl font-extrabold text-slate-900">{{ totalReservations }}</p>
+        <p class="mt-1 text-sm text-slate-600">
+          {{ confirmedReservations }} confirmee(s), {{ pendingReservations }} en attente, {{ cancelledReservations }} annulee(s)
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Taux d'annulation</p>
+          <span class="text-sm font-bold text-rose-700">{{ cancellationRatePct }}%</span>
+        </div>
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-rose-100">
+          <div class="h-full rounded-full bg-rose-500" [style.width.%]="cancellationRatePct"></div>
+        </div>
+        <p class="mt-2 text-xs text-slate-600">Impact direct sur les revenus previsionnels.</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Couverture paiement</p>
+          <span class="text-sm font-bold text-emerald-700">{{ paymentCoveragePct }}%</span>
+        </div>
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-emerald-100">
+          <div class="h-full rounded-full bg-emerald-500" [style.width.%]="paymentCoveragePct"></div>
+        </div>
+        <p class="mt-2 text-xs text-slate-600">Part des reservations confirmees deja reglees.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h3 class="font-headline text-lg font-bold text-slate-900">Statuts</h3>
+    <p class="text-sm text-slate-500">Disponible / Occupé / Maintenance</p>
+    <div class="mt-6 space-y-4">
+      <div>
+        <div class="flex justify-between text-sm font-medium">
+          <span class="text-emerald-700">Disponible</span>
+          <span>{{ disponibleCount }}</span>
+        </div>
+        <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            class="h-full rounded-full bg-emerald-500"
+            [style.width.%]="filteredByHost.length ? (disponibleCount / filteredByHost.length) * 100 : 0"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm font-medium">
+          <span class="text-sky-700">Occupé</span>
+          <span>{{ occupeCount }}</span>
+        </div>
+        <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            class="h-full rounded-full bg-sky-500"
+            [style.width.%]="filteredByHost.length ? (occupeCount / filteredByHost.length) * 100 : 0"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm font-medium">
+          <span class="text-amber-700">Maintenance</span>
+          <span>{{ maintenanceCount }}</span>
+        </div>
+        <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            class="h-full rounded-full bg-amber-500"
+            [style.width.%]="filteredByHost.length ? (maintenanceCount / filteredByHost.length) * 100 : 0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="font-headline text-lg font-bold text-slate-900">Répartition par type</h3>
+      <p class="text-sm text-slate-500">Selon la catégorie du logement</p>
+      <div class="mt-6 space-y-4">
+        <div *ngFor="let row of typeDistribution">
+          <div class="flex justify-between text-sm">
+            <span class="font-semibold text-slate-800">{{ row.label }}</span>
+            <span class="text-slate-500">{{ row.count }} ({{ row.pct }}%)</span>
+          </div>
+          <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div class="h-full rounded-full bg-primary" [style.width.%]="row.pct"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 class="font-headline text-lg font-bold text-slate-900">Activité récente</h3>
+      <p class="text-sm text-slate-500">Dernières fiches créées ou mises à jour</p>
+      <ul class="mt-4 divide-y divide-slate-100">
+        <li *ngFor="let a of recentActivity" class="flex gap-4 py-4 first:pt-0">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-primary">
+            <span class="material-symbols-outlined text-xl">bolt</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-slate-900">{{ a.title }}</p>
+            <p class="text-sm text-slate-500">{{ a.sub }}</p>
+            <p class="mt-1 text-xs text-slate-400">{{ a.when }}</p>
+          </div>
+        </li>
+        <li *ngIf="recentActivity.length === 0" class="py-8 text-center text-sm text-slate-500">
+          Aucune activité récente.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

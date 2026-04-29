@@ -1,0 +1,280 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+  <!-- Navigation Header -->
+  <div class="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl bg-slate-950/70 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <button (click)="goBack()" class="group flex items-center gap-2 text-white/70 hover:text-white transition-all">
+          <lucide-icon name="arrow-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></lucide-icon>
+          <span class="text-sm font-medium">Retour</span>
+        </button>
+        <div class="flex items-center gap-4">
+          <button class="relative group">
+            <lucide-icon name="heart" class="w-5 h-5 text-white/70 group-hover:text-rose-500 transition-all"></lucide-icon>
+          </button>
+          <button class="relative group">
+            <lucide-icon name="share-2" class="w-5 h-5 text-white/70 group-hover:text-white transition-all"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <ng-container *ngIf="loading">
+    <div class="pt-20 pb-20">
+      <div class="max-w-7xl mx-auto px-4 space-y-8 animate-pulse">
+        <div class="h-80 rounded-2xl bg-white/10"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="h-12 rounded-xl bg-white/10 w-2/3"></div>
+            <div class="h-6 rounded-xl bg-white/10 w-1/2"></div>
+            <div class="grid grid-cols-4 gap-3">
+              <div class="h-12 rounded-xl bg-white/10"></div>
+              <div class="h-12 rounded-xl bg-white/10"></div>
+              <div class="h-12 rounded-xl bg-white/10"></div>
+              <div class="h-12 rounded-xl bg-white/10"></div>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="h-32 rounded-2xl bg-white/10"></div>
+            <div class="h-12 rounded-xl bg-white/10"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Error State -->
+  <ng-container *ngIf="!loading && error">
+    <div class="pt-24 pb-24">
+      <div class="max-w-2xl mx-auto px-4">
+        <div class="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-8 text-center">
+          <lucide-icon name="alert-circle" class="w-12 h-12 mx-auto mb-4 text-rose-400"></lucide-icon>
+          <p class="text-lg text-rose-300">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Main Content -->
+  <ng-container *ngIf="!loading && logement">
+    <div class="pt-24 pb-20">
+      <div class="max-w-7xl mx-auto px-4 space-y-12">
+        
+        <!-- Hero Image Gallery -->
+        <div class="group relative rounded-3xl overflow-hidden shadow-2xl">
+          <div class="relative h-[500px] bg-slate-950">
+            <img
+              [src]="getImageUrl()"
+              [alt]="logement.nom"
+              class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+            />
+            
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none"></div>
+
+            <!-- Image Counter -->
+            <div class="absolute top-6 right-6 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-sm font-medium">
+              {{ activeImageIndex + 1 }}/{{ imageUrls.length }}
+            </div>
+
+            <!-- Navigation Buttons -->
+            <button
+              *ngIf="imageUrls.length > 1"
+              (click)="prevImage()"
+              class="absolute left-6 top-1/2 -translate-y-1/2 group/btn"
+            >
+              <div class="rounded-full bg-white/10 backdrop-blur-md border border-white/20 p-4 hover:bg-white/20 transition-all group-hover/btn:scale-110">
+                <lucide-icon name="chevron-left" class="w-6 h-6"></lucide-icon>
+              </div>
+            </button>
+
+            <button
+              *ngIf="imageUrls.length > 1"
+              (click)="nextImage()"
+              class="absolute right-6 top-1/2 -translate-y-1/2 group/btn"
+            >
+              <div class="rounded-full bg-white/10 backdrop-blur-md border border-white/20 p-4 hover:bg-white/20 transition-all group-hover/btn:scale-110">
+                <lucide-icon name="chevron-right" class="w-6 h-6"></lucide-icon>
+              </div>
+            </button>
+
+            <!-- Title Overlay -->
+            <div class="absolute bottom-0 left-0 right-0 p-8">
+              <h1 class="text-5xl font-bold mb-2">{{ logement.nom }}</h1>
+              <div class="flex items-center gap-2 text-white/70">
+                <lucide-icon name="map-pin" class="w-4 h-4"></lucide-icon>
+                <span>{{ logement.ville }} · {{ logement.nomCategorie }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thumbnail Gallery -->
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 to-transparent p-6">
+            <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
+              <button
+                *ngFor="let thumb of imageUrls; let i = index"
+                (click)="selectImage(i)"
+                [class.ring-2]="activeImageIndex === i"
+                class="flex-shrink-0 h-20 w-28 rounded-2xl overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all ring-offset-slate-950 ring-offset-2"
+              >
+                <img [src]="thumb" [alt]="'Image ' + (i+1)" class="w-full h-full object-cover hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6 hover:bg-white/10 transition-all">
+                <div class="flex items-center gap-3 mb-3">
+                  <lucide-icon name="users" class="w-5 h-5 text-indigo-400"></lucide-icon>
+                  <span class="text-sm text-white/60">Capacité</span>
+                </div>
+                <p class="text-2xl font-bold">{{ logement.capacite }}</p>
+                <p class="text-xs text-white/40 mt-1">personne(s)</p>
+              </div>
+
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6 hover:bg-white/10 transition-all">
+                <div class="flex items-center gap-3 mb-3">
+                  <lucide-icon name="door-open" class="w-5 h-5 text-amber-400"></lucide-icon>
+                  <span class="text-sm text-white/60">Chambres</span>
+                </div>
+                <p class="text-2xl font-bold">{{ hostMeta.nbChambres ?? '–' }}</p>
+              </div>
+
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6 hover:bg-white/10 transition-all">
+                <div class="flex items-center gap-3 mb-3">
+                  <lucide-icon name="square-meter" class="w-5 h-5 text-emerald-400"></lucide-icon>
+                  <span class="text-sm text-white/60">Surface</span>
+                </div>
+                <p class="text-2xl font-bold">{{ hostMeta.surfaceM2 ?? '–' }}</p>
+                <p class="text-xs text-white/40 mt-1">m²</p>
+              </div>
+
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6 hover:bg-white/10 transition-all"
+                   [ngClass]="isAvailable() ? 'ring-2 ring-emerald-500' : 'ring-2 ring-rose-500'">
+                <div class="flex items-center gap-3 mb-3">
+                  <lucide-icon [name]="isAvailable() ? 'check-circle' : 'x-circle'" 
+                              [class]="isAvailable() ? 'text-emerald-400' : 'text-rose-400'"
+                              class="w-5 h-5"></lucide-icon>
+                  <span class="text-sm text-white/60">Statut</span>
+                </div>
+                <p class="text-2xl font-bold" [class]="isAvailable() ? 'text-emerald-400' : 'text-rose-400'">
+                  {{ isAvailable() ? 'Libre' : 'Occupé' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-8">
+              <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                <lucide-icon name="file-text" class="w-6 h-6 text-indigo-400"></lucide-icon>
+                Description
+              </h2>
+              <p class="text-white/70 leading-7 whitespace-pre-line">{{ cleanDescription }}</p>
+            </div>
+
+            <!-- Amenities -->
+            <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-8">
+              <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <lucide-icon name="star" class="w-6 h-6 text-amber-400"></lucide-icon>
+                Équipements & Services
+              </h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" *ngIf="hostMeta.equipements?.length">
+                <div *ngFor="let equip of hostMeta.equipements" class="flex items-center gap-3 text-white/70">
+                  <div class="w-2 h-2 rounded-full bg-indigo-400"></div>
+                  {{ equip }}
+                </div>
+              </div>
+              <p class="text-white/40 text-sm italic" *ngIf="!hostMeta.equipements?.length">Aucun équipement spécifié.</p>
+            </div>
+
+            <!-- Video Section -->
+            <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md overflow-hidden" *ngIf="logement.videoUrl">
+              <div class="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+              <div class="p-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                  <lucide-icon name="play-circle" class="w-6 h-6 text-rose-400"></lucide-icon>
+                  Visite Vidéo
+                </h2>
+                <div class="rounded-xl overflow-hidden shadow-2xl">
+                  <video 
+                    controls 
+                    [src]="getVideoSource()" 
+                    class="w-full bg-black aspect-video"
+                    poster="assets/images/default.jpg"
+                  ></video>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking Sidebar -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-24 space-y-4">
+              <!-- Price Card -->
+              <div class="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 p-8 shadow-2xl">
+                <p class="text-white/70 text-sm uppercase tracking-wider">Prix par nuit</p>
+                <p class="text-5xl font-bold text-white mt-3 mb-2">{{ getPriceLabel() }}</p>
+                <p class="text-indigo-100 text-sm">*Taxes et frais non inclus</p>
+              </div>
+
+              <!-- Booking Button -->
+              <button class="w-full rounded-2xl bg-white text-slate-900 px-6 py-4 font-bold text-lg hover:bg-slate-100 transition-all shadow-2xl hover:shadow-3xl flex items-center justify-center gap-2 group">
+                <lucide-icon name="calendar" class="w-5 h-5 group-hover:rotate-12 transition-transform"></lucide-icon>
+                Réserver maintenant
+              </button>
+
+              <!-- Info Cards -->
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6">
+                <div class="space-y-4">
+                  <div class="flex items-start gap-3">
+                    <lucide-icon name="check" class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5"></lucide-icon>
+                    <div>
+                      <p class="font-semibold text-sm">Annulation gratuite</p>
+                      <p class="text-xs text-white/50 mt-1">Jusqu'à 48h avant</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <lucide-icon name="check-circle" class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5"></lucide-icon>
+                    <div>
+                      <p class="font-semibold text-sm">Confirmation instantanée</p>
+                      <p class="text-xs text-white/50 mt-1">Email envoyé immédiatement</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <lucide-icon name="shield" class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"></lucide-icon>
+                    <div>
+                      <p class="font-semibold text-sm">Paiement sécurisé</p>
+                      <p class="text-xs text-white/50 mt-1">Vos données protégées</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Card -->
+              <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-6">
+                <p class="text-sm font-semibold mb-4">Hôte: {{ logement.nomHebergeur }}</p>
+                <div class="flex gap-3">
+                  <button class="flex-1 rounded-xl bg-white/10 hover:bg-white/20 py-2 transition-all flex items-center justify-center gap-2 text-sm">
+                    <lucide-icon name="message-square" class="w-4 h-4"></lucide-icon>
+                    Message
+                  </button>
+                  <button class="flex-1 rounded-xl bg-white/10 hover:bg-white/20 py-2 transition-all flex items-center justify-center gap-2 text-sm">
+                    <lucide-icon name="phone" class="w-4 h-4"></lucide-icon>
+                    Appel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

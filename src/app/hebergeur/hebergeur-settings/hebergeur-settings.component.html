@@ -1,0 +1,80 @@
+<div class="mx-auto max-w-4xl space-y-6">
+  <div class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+    <button
+      type="button"
+      (click)="setTab('profil')"
+      [class]="tab === 'profil' ? 'rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white' : 'rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50'">
+      Profil
+    </button>
+    <button
+      type="button"
+      (click)="setTab('notifications')"
+      [class]="tab === 'notifications' ? 'rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white' : 'rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50'">
+      Notifications
+    </button>
+    <button
+      type="button"
+      (click)="setTab('securite')"
+      [class]="tab === 'securite' ? 'rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white' : 'rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50'">
+      Sécurité
+    </button>
+  </div>
+
+  <div *ngIf="tab === 'profil'" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="font-headline text-lg font-bold text-slate-900">Profil hébergeur</h2>
+    <p class="text-sm text-slate-500">Données issues de votre session (API auth).</p>
+    <dl class="mt-6 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-xl bg-slate-50 p-4">
+        <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Identifiant</dt>
+        <dd class="mt-1 font-semibold text-slate-900">{{ user.id }}</dd>
+      </div>
+      <div class="rounded-xl bg-slate-50 p-4">
+        <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Nom d’utilisateur</dt>
+        <dd class="mt-1 font-semibold text-slate-900">{{ user.username }}</dd>
+      </div>
+      <div class="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+        <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Email</dt>
+        <dd class="mt-1 font-semibold text-slate-900">{{ user.email }}</dd>
+      </div>
+      <div class="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+        <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Rôle</dt>
+        <dd class="mt-1 font-semibold text-slate-900">{{ user.role }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div *ngIf="tab === 'notifications'" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="font-headline text-lg font-bold text-slate-900">Préférences de notifications</h2>
+    <p class="text-sm text-slate-500">Stockées localement jusqu’à branchement API.</p>
+    <div class="mt-6 space-y-4">
+      <label class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+        <span class="text-sm font-medium text-slate-800">Emails — nouvelles réservations</span>
+        <input type="checkbox" [(ngModel)]="notify.emailReservations" (change)="saveNotify()" />
+      </label>
+      <label class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+        <span class="text-sm font-medium text-slate-800">Emails — messages voyageurs</span>
+        <input type="checkbox" [(ngModel)]="notify.emailMessages" (change)="saveNotify()" />
+      </label>
+      <label class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+        <span class="text-sm font-medium text-slate-800">Offres & actualités TunisiaTour</span>
+        <input type="checkbox" [(ngModel)]="notify.pushMarketing" (change)="saveNotify()" />
+      </label>
+    </div>
+  </div>
+
+  <div *ngIf="tab === 'securite'" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="font-headline text-lg font-bold text-slate-900">Sécurité</h2>
+    <p class="text-sm text-slate-500">Mot de passe et accès au compte.</p>
+    <div class="mt-6 space-y-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+      <p class="text-sm text-slate-700">
+        Pour réinitialiser votre mot de passe, utilisez le flux « mot de passe oublié » depuis la page d’accueil, ou contactez l’administrateur si votre compte est géré par la plateforme.
+      </p>
+      <a
+        routerLink="/reset-password"
+        class="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">
+        <span class="material-symbols-outlined text-base">key</span>
+        Réinitialiser le mot de passe
+      </a>
+    </div>
+  </div>
+</div>

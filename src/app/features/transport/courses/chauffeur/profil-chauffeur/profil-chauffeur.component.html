@@ -1,0 +1,187 @@
+<!-- profil-chauffeur.component.html -->
+<div class="profile-container">
+  <!-- Header -->
+  <header class="profile-header">
+    <button class="back-btn" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1>Mon Profil</h1>
+    <button class="edit-btn" (click)="toggleEdit()" *ngIf="!isEditing">
+      <i class="fas fa-edit"></i>
+    </button>
+    <button
+      class="save-btn"
+      (click)="saveProfile()"
+      *ngIf="isEditing"
+      [disabled]="isSaving"
+    >
+      <i class="fas fa-check"></i>
+    </button>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="profile-content" *ngIf="!isLoading && chauffeur">
+    <!-- Avatar & Status -->
+    <div class="profile-hero">
+      <div class="avatar-section">
+        <div class="avatar">
+          {{ chauffeur.utilisateur?.username?.[0] || "C" }}
+        </div>
+        <div class="status-badge" [style.background-color]="getStatusColor()">
+          {{ getStatusText() }}
+        </div>
+      </div>
+
+      <h2>{{ chauffeur.utilisateur?.username || "Chauffeur" }}</h2>
+      <p class="license">Licence: {{ chauffeur.numeroLicence }}</p>
+
+      <!-- Rating -->
+      <div class="rating" *ngIf="chauffeur.noteMoyenne">
+        <span class="stars">
+          <i
+            *ngFor="let star of [1, 2, 3, 4, 5]"
+            class="fas fa-star"
+            [class.filled]="star <= chauffeur.noteMoyenne"
+          ></i>
+        </span>
+        <span class="rating-value">{{ chauffeur.noteMoyenne }}/5</span>
+        <!-- ✅ Enlevé pipe number temporairement -->
+      </div>
+    </div>
+
+    <!-- ✅ CORRIGÉ : Ajout de [formGroup] et ngSubmit -->
+    <form
+      class="form-section"
+      [formGroup]="profileForm"
+      (ngSubmit)="saveProfile()"
+    >
+      <div class="form-group">
+        <label>Nom d'utilisateur</label>
+        <input
+          type="text"
+          [value]="chauffeur.utilisateur?.username || ''"
+          disabled
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          [value]="chauffeur.utilisateur?.email || ''"
+          disabled
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Téléphone *</label>
+        <input
+          type="tel"
+          formControlName="telephone"
+          [class.editing]="isEditing"
+          [readonly]="!isEditing"
+        />
+        <span
+          class="error"
+          *ngIf="profileForm.get('telephone')?.invalid && isEditing"
+        >
+          Numéro invalide
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Numéro de Licence *</label>
+        <input
+          type="text"
+          formControlName="numeroLicence"
+          [class.editing]="isEditing"
+          [readonly]="!isEditing"
+        />
+      </div>
+
+      <!-- ✅ Bouton submit caché, utilisé par le bouton dans le header -->
+      <button type="submit" style="display: none"></button>
+    </form>
+
+    <!-- Actions Disponibilité -->
+    <div class="availability-section">
+      <h3>Disponibilité</h3>
+
+      <div class="availability-buttons">
+        <button
+          class="btn-available"
+          [class.active]="chauffeur.disponibilite === 'AVAILABLE'"
+          (click)="setDisponible()"
+        >
+          <i class="fas fa-check-circle"></i>
+          Disponible
+        </button>
+
+        <button
+          class="btn-unavailable"
+          [class.active]="chauffeur.disponibilite === 'UNAVAILABLE'"
+          (click)="setIndisponible()"
+        >
+          <i class="fas fa-times-circle"></i>
+          Indisponible
+        </button>
+      </div>
+    </div>
+
+    <!-- Position -->
+    <div class="location-section">
+      <h3>Ma Position</h3>
+      <div class="location-info" *ngIf="currentPosition">
+        <i class="fas fa-map-marker-alt"></i>
+        <span
+          >Lat: {{ currentPosition.lat.toFixed(4) }}, Lng:
+          {{ currentPosition.lng.toFixed(4) }}</span
+        >
+      </div>
+      <button
+        class="btn-locate"
+        (click)="getCurrentLocation()"
+        [disabled]="isLocating"
+      >
+        <i class="fas fa-crosshairs" *ngIf="!isLocating"></i>
+        <span *ngIf="isLocating">Localisation...</span>
+        <span *ngIf="!isLocating">Actualiser ma position</span>
+      </button>
+    </div>
+
+    <!-- Menu Navigation -->
+    <div class="menu-section">
+      <div class="menu-item" (click)="goToVehicles()">
+        <i class="fas fa-car"></i>
+        <span>Mes Véhicules</span>
+        <i class="fas fa-chevron-right arrow"></i>
+      </div>
+
+      <div class="menu-item" (click)="goToEarnings()">
+        <i class="fas fa-chart-line"></i>
+        <span>Mes Gains</span>
+        <i class="fas fa-chevron-right arrow"></i>
+      </div>
+    </div>
+
+    <!-- Solde -->
+    <div class="wallet-preview">
+      <div class="wallet-info">
+        <span class="label">Solde actuel</span>
+        <span class="amount">{{ chauffeur.solde || 0 }} TND</span>
+        <!-- ✅ Enlevé pipe number temporairement -->
+      </div>
+      <button
+        class="btn-wallet"
+        routerLink="/transport/courses/chauffeur/portefeuille"
+      >
+        Voir le portefeuille
+      </button>
+    </div>
+  </div>
+</div>

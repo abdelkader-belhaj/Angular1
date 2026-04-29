@@ -1,0 +1,743 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+  <!-- Loading State -->
+  <ng-container *ngIf="loading">
+    <div class="max-w-6xl mx-auto p-6 space-y-8 animate-pulse">
+      <div class="h-12 rounded-xl bg-slate-200 w-1/3"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 h-96 rounded-2xl bg-slate-200"></div>
+        <div class="space-y-4">
+          <div class="h-48 rounded-2xl bg-slate-200"></div>
+          <div class="h-12 rounded-xl bg-slate-200"></div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Error State -->
+  <ng-container *ngIf="!loading && error">
+    <div class="max-w-2xl mx-auto p-6 mt-20">
+      <div class="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
+        <lucide-icon name="alert-circle" class="w-12 h-12 mx-auto mb-4 text-rose-500"></lucide-icon>
+        <p class="text-lg text-rose-700">{{ error }}</p>
+        <button (click)="goBack()" class="mt-6 px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors">
+          Retour aux hébergements
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Main Content -->
+  <ng-container *ngIf="!loading && logement">
+    <div class="max-w-6xl mx-auto p-4 md:p-6">
+      
+      <!-- Header -->
+      <div class="mb-8">
+        <button (click)="goBack()" class="mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm">
+          <lucide-icon name="arrow-left" class="w-5 h-5"></lucide-icon>
+          Retour
+        </button>
+
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          <span class="inline-block px-3 py-1 bg-slate-200 text-slate-700 text-sm font-semibold rounded-full">{{ logement.nomCategorie }}</span>
+          <span class="inline-block px-3 py-1 text-sm font-semibold rounded-full" 
+                [ngClass]="isAvailable() ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
+            {{ isAvailable() ? '✓ Disponible' : '✗ Non disponible' }}
+          </span>
+        </div>
+
+        <h1 class="text-4xl font-bold text-slate-900 mb-4">{{ logement.nom }}</h1>
+
+        <div class="flex flex-wrap items-center gap-6 text-slate-600">
+          <div class="flex items-center gap-2">
+            <lucide-icon name="map-pin" class="w-5 h-5 text-slate-400"></lucide-icon>
+            <span>{{ logement.ville }}, {{ logement.adresse }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <lucide-icon name="users" class="w-5 h-5 text-slate-400"></lucide-icon>
+            <span>{{ logement.capacite }} personne{{ logement.capacite > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="flex items-center gap-2" *ngIf="hostMeta.nbChambres">
+            <lucide-icon name="door-open" class="w-5 h-5 text-slate-400"></lucide-icon>
+            <span>{{ hostMeta.nbChambres }} chambre{{ hostMeta.nbChambres > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="flex items-center gap-2" *ngIf="hostMeta.surfaceM2">
+            <lucide-icon name="maximize2" class="w-5 h-5 text-slate-400"></lucide-icon>
+            <span>{{ hostMeta.surfaceM2 }} m²</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Gallery -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Image principale -->
+        <div class="lg:col-span-2 relative aspect-video rounded-2xl overflow-hidden shadow-xl bg-slate-900 group">
+          <img
+            [src]="getImageUrl()"
+            [alt]="logement.nom"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+
+          <!-- Navigation buttons -->
+          <button
+            *ngIf="imageUrls.length > 1"
+            (click)="prevImage()"
+            class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-900 rounded-full p-3 shadow-lg transition-all hover:scale-110"
+          >
+            <lucide-icon name="chevron-left" class="w-6 h-6"></lucide-icon>
+          </button>
+
+          <button
+            *ngIf="imageUrls.length > 1"
+            (click)="nextImage()"
+            class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-900 rounded-full p-3 shadow-lg transition-all hover:scale-110"
+          >
+            <lucide-icon name="chevron-right" class="w-6 h-6"></lucide-icon>
+          </button>
+
+          <!-- Image counter -->
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-semibold">
+            {{ activeImageIndex + 1 }} / {{ imageUrls.length }}
+          </div>
+
+          <!-- Video button -->
+          <button
+            *ngIf="logement.videoUrl"
+            (click)="showVideoModal = true"
+            class="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 shadow-lg transition-all hover:scale-110"
+          >
+            <lucide-icon name="play-circle" class="w-6 h-6"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            *ngFor="let thumb of imageUrls.slice(0, 4); let i = index"
+            (click)="selectImage(i)"
+            [class.ring-2]="activeImageIndex === i"
+            class="aspect-video rounded-lg overflow-hidden transition-all hover:opacity-80"
+            [ngClass]="activeImageIndex === i ? 'ring-slate-900 ring-offset-2' : 'border border-slate-200'"
+          >
+            <img [src]="thumb" [alt]="'Image ' + (i+1)" class="w-full h-full object-cover" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-8">
+          <!-- Description (Always Visible) -->
+          <div class="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:shadow-lg transition-shadow">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <lucide-icon name="file-text" class="w-6 h-6 text-slate-400"></lucide-icon>
+              À propos de ce logement
+            </h2>
+            <p class="text-slate-600 leading-relaxed whitespace-pre-line text-lg">{{ cleanDescription }}</p>
+          </div>
+
+          <!-- Équipements (Always Visible) -->
+          <div class="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:shadow-lg transition-shadow" *ngIf="hostMeta.equipements?.length">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+              <lucide-icon name="star" class="w-6 h-6 text-slate-400"></lucide-icon>
+              Équipements & Services
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div *ngFor="let equip of hostMeta.equipements" class="flex items-center gap-4 group">
+                <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                  <div class="w-2.5 h-2.5 rounded-full bg-indigo-400 group-hover:scale-150 transition-transform"></div>
+                </div>
+                <span class="text-slate-700 font-medium text-lg">{{ equip }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video (Always Visible) -->
+          <div class="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:shadow-lg transition-shadow" *ngIf="logement.videoUrl">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+              <lucide-icon name="play-circle" class="w-6 h-6 text-slate-400"></lucide-icon>
+              Visite Vidéo
+            </h2>
+            <div class="relative overflow-hidden rounded-xl ring-1 ring-slate-200" style="padding-bottom: 56.25%;">
+              <video
+                [src]="getVideoSource()"
+                controls
+                class="absolute top-0 left-0 w-full h-full bg-slate-900 hover:opacity-95 transition-opacity"
+                poster="assets/images/default.jpg"
+              ></video>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Booking Card -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-24 space-y-4">
+            <!-- Price Card -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-8 shadow-xl">
+              <p class="text-slate-300 text-sm uppercase tracking-wider mb-2">Prix par nuit</p>
+              <p class="text-5xl font-bold mb-2">{{ getPriceLabel() }}</p>
+              <p class="text-slate-400 text-sm">*Taxes et frais non inclus</p>
+            </div>
+
+            <!-- Book Button (hidden if active reservation) -->
+            <ng-container *ngIf="!hasActiveReservation">
+              <button
+                (click)="onReserveClick()"
+                [disabled]="isSaturatedNow"
+                class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:text-slate-500 text-white font-semibold py-4 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center gap-2">
+                <lucide-icon name="calendar" class="w-5 h-5"></lucide-icon>
+                {{ isSaturatedNow ? 'Saturé pour le moment' : 'Réserver maintenant' }}
+              </button>
+            </ng-container>
+
+            <div *ngIf="isSaturatedNow" class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700 text-sm font-semibold">
+              Logement saturé pour le moment.
+              <span *ngIf="nextAvailableDateLabel"> Une place sera disponible le {{ nextAvailableDateLabel }}.</span>
+            </div>
+
+            <!-- Smart AI Negotiator — TOUJOURS VISIBLE pour les clients touristes -->
+            <div *ngIf="isTouristUser || !isAuthenticated" class="space-y-2 mt-3">
+              <!-- Séparateur avec explication du flux -->
+              <div *ngIf="!hasActiveReservation" class="flex items-center gap-2">
+                <div class="flex-1 h-px bg-slate-200"></div>
+                <span class="text-xs text-slate-400 font-medium whitespace-nowrap">ou négociez d'abord</span>
+                <div class="flex-1 h-px bg-slate-200"></div>
+              </div>
+
+              <button (click)="openNegotiator()"
+                [disabled]="isSaturatedNow"
+                class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-indigo-200 hover:shadow-xl disabled:shadow-none flex items-center justify-center gap-2 group">
+                <lucide-icon name="bot" class="w-5 h-5 group-hover:animate-bounce"></lucide-icon>
+                {{ isSaturatedNow ? 'Négociation indisponible (saturé)' : 'Négocier le prix avec l\'Agent IA 🤖' }}
+              </button>
+
+              <!-- Indication du prix négocié en cours si accord trouvé -->
+              <div *ngIf="negotiationStatus === 'ACCEPTED' && negotiatedPrice" class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-center">
+                <p class="text-xs text-emerald-600 font-medium">Prix négocié validé :</p>
+                <div class="flex flex-col items-center gap-2 mt-1">
+                  <p class="text-emerald-700 font-bold text-2xl">{{ negotiatedPrice.toFixed(2) }} DT</p>
+                  <span class="text-xs bg-emerald-500 text-white px-2 py-1 rounded-md shadow-sm font-semibold">D'accord équipe Tunisia Tour ✓</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Cliquez sur "Réserver" ci-dessous pour confirmer à ce prix</p>
+              </div>
+            </div>
+
+            <p class="text-sm text-slate-400 mt-3" *ngIf="!isAuthenticated">
+              Connectez-vous ou créez un compte client touristique pour réserver.
+            </p>
+            <p class="text-sm text-amber-500 mt-3" *ngIf="isAuthenticated && !isTouristUser">
+              Vous devez être connecté en tant que client touriste pour réserver.
+            </p>
+
+            <div *ngIf="hasActiveReservation" class="rounded-2xl bg-indigo-50 border border-indigo-200 p-4 text-indigo-800">
+              <div class="flex items-start gap-3">
+                <lucide-icon name="check-circle" class="w-5 h-5 mt-0.5 flex-shrink-0"></lucide-icon>
+                <div>
+                  <p class="font-semibold text-sm">Votre réservation est confirmée.</p>
+                  <p class="text-sm mt-1">Un email de confirmation a été envoyé. Vous pourrez l'annuler ou la modifier pendant les 2 premières heures suivant sa création en cliquant sur "Mes Réservations" dans la barre de navigation.</p>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="bookingSuccess" class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800">
+              <p>{{ bookingSuccess }}</p>
+              <button
+                type="button"
+                (click)="goToSmartLockGuide()"
+                class="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors">
+                <lucide-icon name="key" class="w-4 h-4"></lucide-icon>
+                Voir comment fonctionne la clé intelligente
+              </button>
+            </div>
+
+            <!-- Payment Button (after reservation success) -->
+            <div *ngIf="bookingSuccess && lastReservation" class="mt-4 space-y-3">
+              <button
+                type="button"
+                (click)="openPaymentModal()"
+                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3">
+                <lucide-icon name="credit-card" class="w-5 h-5"></lucide-icon>
+                <span>Procéder au paiement</span>
+                <span class="text-sm font-semibold ml-auto">{{ lastReservation.prixTotal }} DT</span>
+              </button>
+              <p class="text-xs text-slate-500 text-center">Paiement sécurisé par Stripe</p>
+            </div>
+
+            <form *ngIf="showReservationForm" [formGroup]="reservationForm" (ngSubmit)="submitReservation()" class="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+              <h3 class="text-lg font-semibold">Formulaire de réservation</h3>
+
+              <!-- Date Range Picker -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700">Sélectionner les dates</label>
+                <button type="button" (click)="showDatePicker = !showDatePicker" class="w-full p-3 border border-slate-200 rounded-lg text-left hover:bg-slate-50 transition-colors">
+                  <span *ngIf="!selectedDateStart && !selectedDateEnd" class="text-slate-500">Cliquez pour sélectionner</span>
+                  <span *ngIf="selectedDateStart && selectedDateEnd" class="text-slate-900 font-medium">
+                    {{ formatDateDisplay(selectedDateStart) }} → {{ formatDateDisplay(selectedDateEnd) }}
+                  </span>
+                </button>
+                <app-date-range-picker *ngIf="showDatePicker" (rangeSelected)="onDateRangeSelected($event)"></app-date-range-picker>
+                <div *ngIf="!selectedDateEnd" class="text-sm text-amber-600">
+                  Veuillez sélectionner une période (date d'arrivée et départ).
+                </div>
+              </div>
+
+              <!-- Number of People -->
+              <label class="block text-sm text-slate-700">
+                Nombre de personnes
+                <input type="number" min="1" [max]="(logement.availablePlaces || logement.capacite || 10)" formControlName="nbPersonnes" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3" />
+              </label>
+              <div *ngIf="reservationForm.controls.nbPersonnes.touched && reservationForm.controls.nbPersonnes.invalid" class="text-sm text-red-600">
+                Nombre de personnes invalide (max: {{ logement.availablePlaces || logement.capacite || 10 }}).
+              </div>
+
+              <!-- Error Message -->
+              <p class="text-sm text-red-600" *ngIf="bookingError">{{ bookingError }}</p>
+
+              <!-- Submit Button -->
+              <button type="submit" [disabled]="isBooking || !selectedDateEnd || isSaturatedNow" class="w-full rounded-2xl bg-slate-900 text-white py-4 font-semibold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-transparent relative overflow-hidden" [class.!bg-emerald-600]="negotiationStatus === 'ACCEPTED'">
+                <div *ngIf="negotiationStatus === 'ACCEPTED'" class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+                <span *ngIf="negotiationStatus === 'ACCEPTED'">{{ isBooking ? 'Confirmation...' : 'Réserver au tarif négocié (' + negotiatedPrice + ' DT)' }}</span>
+                <span *ngIf="negotiationStatus !== 'ACCEPTED'">{{ isBooking ? 'Confirmation...' : 'Confirmer la réservation' }}</span>
+              </button>
+            </form>
+
+            <app-login-dialog [isOpen]="showLoginDialog" (closed)="onLoginDialogClosed()"></app-login-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODALE CONDITIONS GÉNÉRALES DE RÉSERVATION
+════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showTermsModal"
+  class="fixed inset-0 z-[300] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-0 sm:px-4"
+  (click)="showTermsModal = false">
+
+  <div class="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- ── En-tête ── -->
+    <div class="relative bg-gradient-to-r from-slate-900 to-indigo-900 text-white px-6 pt-6 pb-5 shrink-0">
+      <!-- Tirette mobile -->
+      <div class="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-white/30 sm:hidden"></div>
+      <div class="flex items-start gap-4 mt-2">
+        <div class="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+          <lucide-icon name="file-text" class="w-6 h-6 text-white"></lucide-icon>
+        </div>
+        <div>
+          <h2 class="text-lg font-black leading-tight">Conditions de réservation</h2>
+          <p class="text-white/70 text-xs mt-1">Veuillez lire et accepter avant de continuer</p>
+        </div>
+        <button type="button" (click)="showTermsModal = false"
+          class="ml-auto shrink-0 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+          <lucide-icon name="x" class="w-4 h-4 text-white"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Corps scrollable ── -->
+    <div class="overflow-y-auto flex-1 divide-y divide-slate-100">
+
+      <!-- Section 1 : Règles du logement -->
+      <div class="px-6 py-5 space-y-3">
+        <div class="flex items-center gap-2.5 mb-1">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+            <lucide-icon name="home" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          </div>
+          <h3 class="text-sm font-black text-slate-800">Règles du logement</h3>
+        </div>
+        <ul class="space-y-2.5">
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
+              <lucide-icon name="check" class="w-3 h-3 text-emerald-600"></lucide-icon>
+            </span>
+            <span class="text-sm text-slate-600">Respecter le règlement intérieur et les consignes de l'hébergeur.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
+              <lucide-icon name="check" class="w-3 h-3 text-emerald-600"></lucide-icon>
+            </span>
+            <span class="text-sm text-slate-600">Maintenir la propreté des lieux tout au long du séjour.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
+              <lucide-icon name="check" class="w-3 h-3 text-emerald-600"></lucide-icon>
+            </span>
+            <span class="text-sm text-slate-600">Ne pas dépasser le nombre de personnes autorisé.</span>
+          </li>
+
+        </ul>
+      </div>
+
+      <!-- Section 2 : Politique d'annulation -->
+      <div class="px-6 py-5 space-y-3">
+        <div class="flex items-center gap-2.5 mb-1">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <lucide-icon name="clock" class="w-4 h-4 text-amber-600"></lucide-icon>
+          </div>
+          <h3 class="text-sm font-black text-slate-800">Politique d'annulation & remboursement</h3>
+        </div>
+        <div class="space-y-2">
+          <!-- Barème -->
+          <div class="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2">
+            <div class="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="text-xs font-semibold text-emerald-800">Annulation dans les 2 premières heures</span>
+            </div>
+            <div class="flex items-center justify-center rounded-xl bg-emerald-500 px-3 py-2">
+              <span class="text-xs font-black text-white">90%</span>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-xl bg-lime-50 border border-lime-200 px-3 py-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-lime-500 shrink-0"></span>
+              <span class="text-xs font-semibold text-lime-800">Entre 2h et 24h après la réservation</span>
+            </div>
+            <div class="flex items-center justify-center rounded-xl bg-lime-500 px-3 py-2">
+              <span class="text-xs font-black text-white">70%</span>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+              <span class="text-xs font-semibold text-amber-800">Entre 24h et 3 jours après la réservation</span>
+            </div>
+            <div class="flex items-center justify-center rounded-xl bg-amber-500 px-3 py-2">
+              <span class="text-xs font-black text-white">40%</span>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+              <span class="text-xs font-semibold text-rose-700">Plus de 3 jours après la réservation</span>
+            </div>
+            <div class="flex items-center justify-center rounded-xl bg-rose-500 px-3 py-2">
+              <span class="text-xs font-black text-white">0%</span>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2 rounded-xl bg-slate-100 p-3 mt-1">
+            <lucide-icon name="info" class="w-4 h-4 text-slate-500 mt-0.5 shrink-0"></lucide-icon>
+            <p class="text-xs text-slate-600">Une <strong class="text-slate-800">retenue de 10%</strong> est appliquée sur tout remboursement au titre des frais de service et dégâts éventuels.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 : Responsabilité & dommages -->
+      <div class="px-6 py-5 space-y-3">
+        <div class="flex items-center gap-2.5 mb-1">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center shrink-0">
+            <lucide-icon name="shield-alert" class="w-4 h-4 text-rose-600"></lucide-icon>
+          </div>
+          <h3 class="text-sm font-black text-slate-800">Responsabilité & dommages</h3>
+        </div>
+        <ul class="space-y-2.5">
+          <li class="flex items-start gap-3">
+            <lucide-icon name="alert-circle" class="w-4 h-4 text-rose-400 mt-0.5 shrink-0"></lucide-icon>
+            <span class="text-sm text-slate-600">Tout objet cassé ou détérioré sera <strong class="text-slate-800">facturé à sa valeur réelle</strong>.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <lucide-icon name="alert-circle" class="w-4 h-4 text-rose-400 mt-0.5 shrink-0"></lucide-icon>
+            <span class="text-sm text-slate-600">Le locataire est entièrement responsable des dommages causés durant son séjour.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <lucide-icon name="alert-circle" class="w-4 h-4 text-rose-400 mt-0.5 shrink-0"></lucide-icon>
+            <span class="text-sm text-slate-600">Les frais de nettoyage exceptionnels seront déduits de la caution.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <lucide-icon name="mail" class="w-4 h-4 text-indigo-400 mt-0.5 shrink-0"></lucide-icon>
+            <span class="text-sm text-slate-600">
+              En cas de litige, contactez HyperCloud :
+              <a href="mailto:hyperhypercloud@gmail.com" class="text-indigo-600 font-semibold hover:underline ml-1">hyperhypercloud&#64;gmail.com</a>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Pied : checkbox + boutons ── -->
+    <div class="px-6 py-5 bg-slate-50 border-t border-slate-200 space-y-4 shrink-0">
+
+      <!-- Checkbox -->
+      <label class="flex items-start gap-3 cursor-pointer select-none group">
+        <div class="mt-0.5 shrink-0 relative">
+          <input type="checkbox" [(ngModel)]="termsAccepted" [ngModelOptions]="{standalone: true}" class="peer sr-only" />
+          <div class="w-5 h-5 rounded-md border-2 border-slate-300 bg-white group-hover:border-indigo-400 peer-checked:border-indigo-600 peer-checked:bg-indigo-600 transition-all flex items-center justify-center">
+            <lucide-icon *ngIf="termsAccepted" name="check" class="w-3 h-3 text-white"></lucide-icon>
+          </div>
+        </div>
+        <span class="text-sm text-slate-700 leading-relaxed font-medium">
+          J'ai lu et j'accepte toutes les conditions de réservation, la politique d'annulation et la responsabilité en cas de dommages.
+        </span>
+      </label>
+
+      <!-- Boutons -->
+      <div class="flex gap-3">
+        <button type="button" (click)="showTermsModal = false"
+          class="flex-1 rounded-2xl border border-slate-200 bg-white text-slate-600 font-semibold py-3 hover:bg-slate-100 transition-colors text-sm">
+          Annuler
+        </button>
+        <button type="button" (click)="acceptAndReserve()" [disabled]="!termsAccepted"
+          class="flex-1 rounded-2xl bg-slate-900 text-white font-bold py-3 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+          <lucide-icon name="calendar-check" class="w-4 h-4"></lucide-icon>
+          J'accepte et je réserve
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+            <!-- SMART LOCK / GEO-SECURED ACCESS (Uniquement visible si Réservé ou pour tester en Demo) -->
+            <div class="bg-gradient-to-br from-slate-950 via-indigo-900 to-cyan-900 rounded-3xl p-6 shadow-[0_20px_55px_-18px_rgba(15,23,42,0.65)] border border-cyan-300/20 text-white relative overflow-hidden transition-all duration-500"
+                 [ngClass]="{'ring-4 ring-emerald-500/50 shadow-[0_0_20px_10px_rgba(16,185,129,0.2)]': geoAccessStatus === 'success', 'ring-4 ring-rose-500/50': geoAccessStatus === 'error'}"
+                *ngIf="canShowSmartLock">
+              
+              <!-- Pattern décoratif -->
+              <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+              <div class="absolute -left-14 -bottom-16 w-48 h-48 bg-cyan-300/10 rounded-full blur-3xl"></div>
+              <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-indigo-200 to-cyan-300"></div>
+
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <!-- Icone de serrure animé -->
+                <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 transition-all duration-500" 
+                     [ngClass]="{
+                       'bg-emerald-500 text-white scale-110 shadow-[0_0_15px_5px_rgba(16,185,129,0.4)]': geoAccessStatus === 'success',
+                       'bg-rose-500 text-white': geoAccessStatus === 'error',
+                       'animate-pulse': isVerifyingLocation
+                     }">
+                  <lucide-icon [name]="geoAccessStatus === 'success' ? 'unlock' : 'lock'" class="w-8 h-8"></lucide-icon>
+                </div>
+                
+                <h3 class="text-xl font-black mb-1 tracking-wide">Cle de la chambre</h3>
+                <p class="text-sm text-cyan-100 mb-5 font-medium">Cle Intelligente - Deverrouillage geographique securise</p>
+                <div class="w-full rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 mb-5 text-left text-xs text-cyan-50 space-y-1.5">
+                  <p class="font-semibold text-white">Comment ca marche :</p>
+                  <p>1. Arrivez devant le logement.</p>
+                  <p>2. Activez votre position GPS.</p>
+                  <p>3. Appuyez pour obtenir la cle de votre chambre.</p>
+                </div>
+
+                <!-- STATUS: INITIAL -->
+                <ng-container *ngIf="geoAccessStatus === 'idle'">
+                  <button (click)="unlockSmartDoor()" [disabled]="isVerifyingLocation"
+                    class="w-full bg-white text-indigo-950 font-black py-3.5 rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 mb-2 disabled:opacity-50 shadow-lg shadow-black/20">
+                    <lucide-icon [name]="isVerifyingLocation ? 'loader-2' : 'map-pin'" [class.animate-spin]="isVerifyingLocation" class="w-5 h-5"></lucide-icon>
+                    {{ isVerifyingLocation ? 'Verification GPS...' : 'Obtenir la cle de ma chambre' }}
+                  </button>
+                  <p class="text-xs text-cyan-50/90 mt-2 !leading-relaxed">Placez-vous a moins de 50 metres du logement pour recuperer votre cle unique.</p>
+                  <div class="mt-3 rounded-xl border border-amber-300/40 bg-amber-200/10 px-3 py-2 text-[11px] font-semibold text-amber-100">
+                    Cle personnelle, secrete et unique: ne la partagez avec personne.
+                  </div>
+                </ng-container>
+
+                <!-- STATUS: SUCCESS -->
+                <ng-container *ngIf="geoAccessStatus === 'success'">
+                  <div class="bg-emerald-500/20 border border-emerald-400/30 rounded-2xl p-4 w-full mb-3">
+                    <p class="text-emerald-100 text-sm font-medium mb-1">Position validee. Voici la cle de votre chambre :</p>
+                    <p class="text-4xl font-black tracking-widest text-emerald-400 font-mono">{{ geoUnlockCode }}</p>
+                  </div>
+                  <p class="text-xs text-rose-200 font-semibold">Cle strictement confidentielle - usage personnel uniquement.</p>
+                  <p class="text-xs text-white/70 mt-1">{{ geoAccessMessage }}</p>
+                </ng-container>
+
+                <!-- STATUS: ERROR -->
+                <ng-container *ngIf="geoAccessStatus === 'error'">
+                  <div class="bg-rose-500/20 border border-rose-400/30 rounded-xl w-full p-3 mb-4">
+                    <p class="text-rose-200 text-sm">{{ geoAccessMessage }}</p>
+                  </div>
+                  <button (click)="geoAccessStatus = 'idle'" 
+                    class="text-xs bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg transition-colors">
+                    Réessayer
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+
+            <!-- Infos essentielles compactes -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Infos essentielles</h4>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold">Experience simplifiee</span>
+              </div>
+
+              <div class="grid grid-cols-1 gap-2.5 text-sm">
+                <div class="flex items-start gap-2.5 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+                  <lucide-icon name="check" class="w-4 h-4 text-emerald-500 mt-0.5"></lucide-icon>
+                  <div>
+                    <p class="font-semibold text-slate-900">Annulation et modification</p>
+                    <p class="text-xs text-slate-500">Disponibles pendant les 2 premieres heures.</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+                  <lucide-icon name="check-circle" class="w-4 h-4 text-emerald-500 mt-0.5"></lucide-icon>
+                  <div>
+                    <p class="font-semibold text-slate-900">Confirmation instantanee</p>
+                    <p class="text-xs text-slate-500">Email envoye immediatement apres reservation.</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+                  <lucide-icon name="shield-check" class="w-4 h-4 text-indigo-500 mt-0.5"></lucide-icon>
+                  <div>
+                    <p class="font-semibold text-slate-900">Hote</p>
+                    <p class="text-xs text-slate-500">{{ logement.nomHebergeur }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Video Modal -->
+  <div *ngIf="showVideoModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" (click)="showVideoModal = false">
+    <div class="max-w-4xl w-full" (click)="$event.stopPropagation()">
+      <div class="relative">
+        <button
+          (click)="showVideoModal = false"
+          class="absolute -top-12 right-0 text-white hover:text-slate-300 transition-colors"
+        >
+          <lucide-icon name="x" class="w-8 h-8"></lucide-icon>
+        </button>
+        <div class="relative" style="padding-bottom: 56.25%;">
+          <video
+            [src]="getVideoSource()"
+            controls
+            autoplay
+            class="absolute top-0 left-0 w-full h-full rounded-lg"
+          ></video>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Broker AI Chat Modal -->
+  <div *ngIf="showNegotiator" class="chat-modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 drop-shadow-2xl" (click)="showNegotiator = false">
+    <div class="chat-modal-panel bg-white w-full max-w-md rounded-[2rem] overflow-hidden flex flex-col shadow-2xl ring-1 ring-slate-200 max-h-[90vh]" (click)="$event.stopPropagation()">
+      
+      <!-- Chat Header (Fixed at top) -->
+      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+              <lucide-icon name="bot" class="w-6 h-6"></lucide-icon>
+            </div>
+            <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-indigo-600 rounded-full"></div>
+          </div>
+          <div>
+            <h3 class="font-bold">Agent IA Autonome</h3>
+            <p class="text-xs text-indigo-100 font-medium">Assistant Négociateur du Propriétaire</p>
+          </div>
+        </div>
+        <button (click)="showNegotiator = false" class="text-white hover:text-rose-200 transition-colors p-2 rounded-full hover:bg-white/10"><lucide-icon name="x" class="w-5 h-5"></lucide-icon></button>
+      </div>
+
+      <!-- Chat Body (Scrollable area) -->
+      <div class="chat-scroll relative p-5 bg-slate-50 flex flex-col gap-4 overflow-y-auto h-[350px] w-full" #chatBody>
+        <div *ngFor="let msg of aiMessages" [ngClass]="msg.role === 'bot' ? 'self-start' : 'self-end'" class="max-w-[85%] flex items-end gap-2 shrink-0">
+          
+          <div *ngIf="msg.role === 'bot'" class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+            <lucide-icon name="bot" class="w-3 h-3 text-indigo-600"></lucide-icon>
+          </div>
+          
+          <div [ngClass]="msg.role === 'bot' ? 'bg-white text-slate-700 border border-slate-200 rounded-2xl rounded-bl-sm shadow-sm' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-2xl rounded-br-sm shadow-md'" class="p-3 text-sm font-medium leading-relaxed">
+            {{ msg.text }}
+          </div>
+        </div>
+
+        <!-- Animation ... en cours de négociation -->
+        <div *ngIf="isNegotiating" class="self-start max-w-[85%] flex items-end gap-2 shrink-0">
+          <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+            <lucide-icon name="bot" class="w-3 h-3 text-indigo-600"></lucide-icon>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl rounded-bl-sm p-3 text-sm flex gap-2 items-center shadow-sm h-10 px-4 justify-center">
+            <div class="w-2 h-2 bg-indigo-400 rounded-full dot-1"></div>
+            <div class="w-2 h-2 bg-indigo-400 rounded-full dot-2"></div>
+            <div class="w-2 h-2 bg-indigo-400 rounded-full dot-3"></div>
+          </div>
+        </div>
+
+        <!-- Bouton Accepter Contre-Offre -->
+        <div *ngIf="negotiationStatus === 'COUNTER_OFFER' && !isNegotiating" class="self-center mt-2 w-full px-2 py-4 shrink-0">
+          <button (click)="acceptCounterOffer()" class="w-full py-4 bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-emerald-200 flex justify-center items-center gap-2 transform hover:scale-105 active:scale-95">
+            <lucide-icon name="check-circle" class="w-6 h-6"></lucide-icon> J'ACCEPTE L'OFFRE !
+          </button>
+        </div>
+        
+        <!-- Espace vide à la fin pour être sûr qu'on peut toujours scroller sous le dernier message -->
+        <div class="h-4 shrink-0 w-full"></div>
+      </div>
+
+      <!-- Chat Input (Fixed at bottom) -->
+      <div class="p-4 bg-white border-t border-slate-200 shrink-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" *ngIf="negotiationStatus !== 'ACCEPTED'">
+        <div class="space-y-3">
+
+          <!-- Thermomètre de chaleur (indice sans révéler les seuils) -->
+          <div class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] text-slate-500 font-medium">Température de votre offre</span>
+              <span class="text-[11px] font-bold" [style.color]="heatLabel.color">{{ heatLabel.text }}</span>
+            </div>
+            <div class="relative h-2.5 rounded-full bg-slate-200 overflow-hidden">
+              <div class="absolute h-full rounded-full transition-all duration-700 ease-out"
+                [style.width.%]="heatLabel.bar"
+                [style.background]="'linear-gradient(90deg, #6366f1, ' + heatLabel.color + ')'">
+              </div>
+            </div>
+          </div>
+
+          <!-- Chips de suggestion rapide -->
+          <div class="flex gap-2 flex-wrap">
+            <button *ngFor="let s of quickSuggestions" type="button"
+              (click)="applyQuickSuggestion(s.value)"
+              [disabled]="isNegotiating"
+              class="flex-1 min-w-0 text-center rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 py-2 px-1 text-[11px] font-bold hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed leading-tight">
+              <span class="block">{{ s.icon }}</span>
+              <span class="block truncate">{{ s.label }}</span>
+              <span class="block text-indigo-500">{{ s.value.toFixed(0) }} DT</span>
+            </button>
+          </div>
+
+          <!-- Input libre + bouton envoyer -->
+          <div class="flex gap-2 items-center">
+            <div class="flex-1 relative">
+              <input
+                type="number"
+                [(ngModel)]="userOfferAmount"
+                [min]="minNegotiationPrice"
+                [max]="maxNegotiationPrice"
+                (keyup.enter)="validateAndSendOffer()"
+                placeholder="Votre offre en DT..."
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-10"
+                [disabled]="isNegotiating" />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">DT</span>
+            </div>
+            <button type="button"
+              (click)="validateAndSendOffer()"
+              [disabled]="isNegotiating || !userOfferAmount"
+              class="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-3 font-bold text-sm hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+              <lucide-icon name="send" class="w-4 h-4"></lucide-icon>
+              Envoyer
+            </button>
+          </div>
+
+          <!-- Message d'erreur de validation -->
+          <p *ngIf="negotiationInputError" class="text-[11px] text-red-500 font-semibold text-center">⚠️ {{ negotiationInputError }}</p>
+
+          <p class="text-[10px] text-slate-400 text-center">💡 Le vendeur devient plus flexible à chaque offre. Stratégie : commencez bas, remontez progressivement.</p>
+        </div>
+      </div>
+      
+      <div class="p-5 bg-white border-t border-slate-100" *ngIf="negotiationStatus === 'ACCEPTED'">
+        <!-- Negotiated price badge -->
+        <div class="mb-3 flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-2">
+          <span class="text-xs text-emerald-600 font-medium">Prix négocié :</span>
+          <span class="text-emerald-700 font-bold text-xl ml-1 mr-2">{{ negotiatedPrice?.toFixed(2) }} DT</span>
+          <span class="text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-full font-semibold shadow-sm">D'accord équipe Tunisia Tour ✓</span>
+        </div>
+        <button (click)="confirmNegotiatedReservation()" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-200 flex justify-center items-center gap-2">
+           <lucide-icon name="shopping-bag" class="w-5 h-5"></lucide-icon> Confirmer la réservation à {{ negotiatedPrice?.toFixed(2) }} DT
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<app-footer></app-footer>

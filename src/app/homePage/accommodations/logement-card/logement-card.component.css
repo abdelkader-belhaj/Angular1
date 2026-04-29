@@ -1,0 +1,18 @@
+.maintenance-card {
+	position: relative;
+	box-shadow: 0 20px 44px -24px rgba(217, 119, 6, 0.45);
+}
+
+.maintenance-card::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.18) 50%, transparent 80%);
+	animation: maintenanceShine 2.2s linear infinite;
+	pointer-events: none;
+}
+
+@keyframes maintenanceShine {
+	from { transform: translateX(-40%); }
+	to { transform: translateX(40%); }
+}

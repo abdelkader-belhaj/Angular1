@@ -1,0 +1,223 @@
+<div *ngIf="loading" class="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">Chargement…</div>
+
+<section *ngIf="!loading" class="mx-auto max-w-5xl space-y-6">
+  <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-100 px-6 py-5">
+      <h2 class="font-headline text-xl font-bold text-slate-900">Nouveau logement</h2>
+      <p class="text-sm text-slate-500">Informations de base, localisation, détails, équipements et photos.</p>
+    </div>
+
+    <form class="space-y-8 p-6" (ngSubmit)="save()">
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Informations</h3>
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+          <label class="block md:col-span-2">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Nom du logement *</span>
+            <input [(ngModel)]="formData.nom" name="nom" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['nom']">{{ formErrors['nom'] }}</small>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Catégorie *</span>
+            <select [(ngModel)]="formData.idCategorie" name="idCategorie" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+              <option [ngValue]="0" disabled>Sélectionner…</option>
+              <option *ngFor="let c of categories" [ngValue]="c.idCategorie">{{ c.nomCategorie }}</option>
+            </select>
+            <small class="text-rose-600" *ngIf="formErrors['idCategorie']">{{ formErrors['idCategorie'] }}</small>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Capacité (personnes) *</span>
+            <input type="number" min="1" [(ngModel)]="formData.capacite" name="capacite" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['capacite']">{{ formErrors['capacite'] }}</small>
+          </label>
+          <label class="block md:col-span-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="block text-sm font-medium text-slate-700">Description *</span>
+              <button 
+                type="button" 
+                (click)="enhanceDescription()"
+                [disabled]="enhancingDescription || !formData.description"
+                title="Corriger l'orthographe et embellir"
+                class="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span *ngIf="enhancingDescription" class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+                <span *ngIf="!enhancingDescription" class="material-symbols-outlined text-[16px]">edit_note</span>
+                {{ enhancingDescription ? 'Correction...' : '✨ Corriger & Embellir' }}
+              </button>
+            </div>
+            <textarea rows="4" [(ngModel)]="formData.description" name="description" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" placeholder="Décrivez l’expérience, l’ambiance, les atouts…"></textarea>
+            <small class="text-rose-600 block mt-1" *ngIf="formErrors['description']">{{ formErrors['description'] }}</small>
+          </label>
+
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Localisation</h3>
+        <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-slate-700">Latitude</label>
+              <input type="number" step="any" [(ngModel)]="formData.latitude" name="latitude" (ngModelChange)="onCoordinatesChange()" class="w-full rounded-xl border border-slate-200 px-4 py-3" placeholder="Ex: 36.8065" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-slate-700">Longitude</label>
+              <input type="number" step="any" [(ngModel)]="formData.longitude" name="longitude" (ngModelChange)="onCoordinatesChange()" class="w-full rounded-xl border border-slate-200 px-4 py-3" placeholder="Ex: 10.1815" />
+            </div>
+            <button type="button" (click)="getLocation()" [disabled]="resolvingLocation" class="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 h-[50px] flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed disabled:bg-indigo-300">
+              <span *ngIf="resolvingLocation" class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+              {{ resolvingLocation ? 'Génération en cours...' : 'Obtenir ma position actuelle' }}
+            </button>
+          </div>
+          <p *ngIf="resolvingLocation" class="mt-2 inline-flex items-center gap-2 text-xs text-indigo-700">
+            <span class="material-symbols-outlined text-[14px] animate-spin">hourglass_top</span>
+            Génération automatique de la ville et de l'adresse en cours...
+          </p>
+          <p *ngIf="formErrors['gps']" class="text-rose-500 text-xs mt-2">{{ formErrors['gps'] }}</p>
+        </div>
+
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Ville *</span>
+            <input [(ngModel)]="formData.ville" name="ville" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['ville']">{{ formErrors['ville'] }}</small>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Adresse *</span>
+            <input [(ngModel)]="formData.adresse" name="adresse" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['adresse']">{{ formErrors['adresse'] }}</small>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Détails & tarif</h3>
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Chambres</span>
+            <input type="number" min="0" [(ngModel)]="nbChambres" name="nbChambres" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['nbChambres']">{{ formErrors['nbChambres'] }}</small>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700">Surface (m²)</span>
+            <input type="number" min="0" [(ngModel)]="surfaceM2" name="surface" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+            <small class="text-rose-600" *ngIf="formErrors['surfaceM2']">{{ formErrors['surfaceM2'] }}</small>
+          </label>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-6">
+          <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" [(ngModel)]="formData.disponible" name="disponible" [disabled]="maintenance" />
+            Disponible à la réservation
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm text-amber-900">
+            <input type="checkbox" [(ngModel)]="maintenance" name="maint" />
+            En maintenance (indisponible)
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Équipements</h3>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            *ngFor="let eq of equipementOptions"
+            (click)="toggleEquipement(eq)"
+            [class]="
+              isSelectedEq(eq)
+                ? 'rounded-full border border-blue-900 bg-blue-900 px-3 py-1.5 text-xs font-semibold text-white'
+                : 'rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50'
+            ">
+            {{ eq }}
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Tarification & Prédiction IA</h3>
+        <label class="block mt-4">
+          <span class="mb-1 block text-sm font-medium text-slate-700">Prix / nuit idéal (TND) *</span>
+          <p class="text-xs text-slate-500 mb-2">Saisissez votre prix manuellement ou laissez notre intelligence artificielle évaluer votre description !</p>
+          <div class="flex gap-2">
+            <input type="number" step="0.01" [(ngModel)]="formData.prixNuit" name="prix" class="w-full md:w-1/2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-blue-900 text-lg" />
+            <button 
+              type="button" 
+              (click)="predictOptimalPrice()"
+              [disabled]="predictingPrice"
+              [class]="predictingPrice ? 'flex shrink-0 items-center justify-center rounded-xl bg-slate-200 px-6 font-semibold text-slate-400 shadow-sm cursor-not-allowed transition' : 'flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 font-semibold text-white shadow-sm hover:from-purple-700 hover:to-blue-700 transition gap-2'"
+              title="Prédiction IA selon description">
+              <span *ngIf="!predictingPrice" class="material-symbols-outlined text-[18px]">auto_awesome</span>
+              <span *ngIf="!predictingPrice">Prédire avec l'IA</span>
+              <span *ngIf="predictingPrice" class="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+            </button>
+          </div>
+          <small class="text-rose-600" *ngIf="formErrors['prixNuit']">{{ formErrors['prixNuit'] }}</small>
+        </label>
+      </div>
+
+      <div class="media-block">
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Photos</h3>
+        <p class="mt-1 text-xs text-slate-500">Ajoutez plusieurs visuels de qualité pour augmenter l'attractivité de votre annonce.</p>
+
+        <div class="upload-shell mt-4">
+          <div class="upload-shell__icon" aria-hidden="true">🖼️</div>
+          <div class="upload-shell__content">
+            <p class="upload-shell__title">Galerie photos du logement</p>
+            <p class="upload-shell__hint">PNG, JPG, WEBP · Ajout une image à la fois</p>
+          </div>
+          <label class="upload-shell__cta">
+            <span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
+            Sélectionner une image
+            <input type="file" accept="image/*" class="upload-native-input" (change)="onFileSelected($event)" />
+          </label>
+        </div>
+
+        <div *ngIf="formData.imageUrls.length" class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div *ngFor="let img of formData.imageUrls; let i = index" class="media-card">
+            <img [src]="getImage(img)" class="media-card__image" alt="Aperçu image logement" />
+            <div class="media-card__footer">
+              <span class="truncate text-[11px] font-semibold text-slate-600">Image {{ i + 1 }}</span>
+              <button type="button" (click)="removeImage(i)" class="media-card__delete" title="Supprimer l'image">×</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="media-block">
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Vidéo</h3>
+        <p class="mt-1 text-xs text-slate-500">Ajoutez une vidéo courte pour montrer l'ambiance réelle du logement.</p>
+
+        <div class="upload-shell mt-4 upload-shell--video">
+          <div class="upload-shell__icon" aria-hidden="true">🎬</div>
+          <div class="upload-shell__content">
+            <p class="upload-shell__title">Vidéo de présentation</p>
+            <p class="upload-shell__hint">MP4, MOV, WEBM · 1 vidéo recommandée</p>
+          </div>
+          <label class="upload-shell__cta upload-shell__cta--video">
+            <span class="material-symbols-outlined text-[16px]">video_call</span>
+            Sélectionner une vidéo
+            <input type="file" accept="video/*" class="upload-native-input" (change)="onVideoSelected($event)" />
+          </label>
+        </div>
+
+        <div *ngIf="formData.videoUrl" class="mt-4 video-pill">
+          <span class="material-symbols-outlined video-pill__icon">videocam</span>
+          <span class="flex-1 truncate text-sm font-medium text-slate-700">{{ formData.videoUrl }}</span>
+          <button type="button" (click)="removeVideo()" class="media-card__delete" title="Supprimer la vidéo">×</button>
+        </div>
+      </div>
+
+      <div *ngIf="requestError" class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{{ requestError }}</div>
+
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="submit"
+          [disabled]="saving"
+          class="rounded-xl bg-blue-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60">
+          {{ saving ? 'Publication…' : 'Publier le logement' }}
+        </button>
+        <button type="button" routerLink="/hebergeur/logements" class="rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

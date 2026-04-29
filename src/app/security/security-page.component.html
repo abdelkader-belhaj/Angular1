@@ -1,92 +1,343 @@
-<main class="settings-page">
-  <section class="settings-card">
-    <header>
-      <p class="eyebrow">Securite</p>
-      <h1>Mot de passe et 2FA</h1>
-      <p>Renforcez la securite de votre compte apres login.</p>
-    </header>
+<main class="security-shell">
+  <section class="security-page">
+    <section class="security-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">TunisiaTour Security</p>
+        <h1>Protegez votre compte avec une experience plus claire et professionnelle</h1>
+        <p class="hero-text">
+          Centralisez la securite de votre espace TunisiaTour : mot de passe, verification en deux etapes
+          et recommandations adaptees a votre mode de connexion.
+        </p>
 
-    <section class="notice-card" *ngIf="showTwoFactorPrompt && !twoFactorSetup">
-      <div class="two-factor-head">
-        <div>
-          <p class="eyebrow">2FA</p>
-          <h2>Etape de securite recommandee</h2>
+        <div class="hero-badges">
+          <span class="hero-chip">
+            <span class="material-symbols-outlined">shield_lock</span>
+            Protection du compte
+          </span>
+          <span class="hero-chip">
+            <span class="material-symbols-outlined">travel_explore</span>
+            Theme TunisiaTour
+          </span>
         </div>
-        <span class="status-badge">Recommande</span>
       </div>
 
-      <p class="helper-text">
-        Votre compte n a pas encore de 2FA. Le 2FA protege votre compte apres la connexion.
-        Il reste facultatif, mais fortement recommande.
-      </p>
+      <aside class="security-score-card">
+        <p class="score-label">Niveau de securite</p>
+        <div class="score-value">{{ securityScore }}%</div>
+        <p class="score-text">{{ securityLevelLabel }}</p>
+        <div class="score-bar" aria-hidden="true">
+          <span [style.width.%]="securityScore"></span>
+        </div>
 
-      <div class="notice-actions">
-        <button type="button" (click)="loadTwoFactorSetup()" [disabled]="isLoadingTwoFactor">
-          {{ isLoadingTwoFactor ? 'Preparation...' : 'Activer le 2FA' }}
-        </button>
-        <button type="button" class="secondary-btn" (click)="skipTwoFactor()">Plus tard</button>
-      </div>
+        <div class="score-list">
+          <div class="mini-item">
+            <span class="material-symbols-outlined">verified_user</span>
+            <div>
+              <strong>2FA</strong>
+              <small>{{ currentUser?.twoFactorEnabled ? 'Active' : 'A activer' }}</small>
+            </div>
+          </div>
+
+          <div class="mini-item">
+            <span class="material-symbols-outlined">key</span>
+            <div>
+              <strong>Mot de passe</strong>
+              <small>{{ passwordStatusLabel }}</small>
+            </div>
+          </div>
+
+          <div class="mini-item">
+            <span class="material-symbols-outlined">monitoring</span>
+            <div>
+              <strong>Robustesse</strong>
+              <small>{{ passwordStrengthLabel }}</small>
+            </div>
+          </div>
+        </div>
+      </aside>
     </section>
 
-    <section class="two-factor-card" *ngIf="twoFactorSetup">
-      <div class="two-factor-head">
+    <section class="overview-grid">
+      <article class="overview-card">
+        <div class="overview-icon ocean">
+          <span class="material-symbols-outlined">admin_panel_settings</span>
+        </div>
         <div>
-          <p class="eyebrow">2FA</p>
-          <h2>Configuration TOTP</h2>
+          <p class="overview-label">Compte</p>
+          <h2>{{ currentUser?.username || 'Utilisateur' }}</h2>
+          <p class="overview-text">{{ currentUser?.email || 'Email indisponible' }}</p>
         </div>
-        <span class="status-badge" [class.active]="currentUser?.twoFactorEnabled">
-          {{ currentUser?.twoFactorEnabled ? 'Active' : 'En attente' }}
-        </span>
-      </div>
+      </article>
 
-      <p class="helper-text" *ngIf="!currentUser?.twoFactorEnabled">
-        Ajoutez votre compte dans une application d authentification avec la cle manuelle ci-dessous.
-      </p>
-
-      <div class="qr-wrap">
-        <img *ngIf="twoFactorSetup.qrCodeDataUrl" [src]="twoFactorSetup.qrCodeDataUrl" alt="QR code 2FA" />
-        <div class="secret-box">
-          <span>Cle manuelle</span>
-          <strong>{{ twoFactorSetup.secret }}</strong>
-          <small class="helper-text">Tu peux utiliser Google Authenticator, Microsoft Authenticator ou Authy via l option "Entrer une cle".</small>
+      <article class="overview-card">
+        <div class="overview-icon emerald">
+          <span class="material-symbols-outlined">security</span>
         </div>
-      </div>
+        <div>
+          <p class="overview-label">Authentification</p>
+          <h2>{{ currentUser?.twoFactorEnabled ? 'Renforcee' : 'Standard' }}</h2>
+          <p class="overview-text">
+            {{ currentUser?.twoFactorEnabled ? 'Votre compte profite deja d une verification supplementaire.' : 'Ajoutez une couche de protection supplementaire.' }}
+          </p>
+        </div>
+      </article>
 
-      <form class="two-factor-actions" [formGroup]="twoFactorForm" (ngSubmit)="verifyTwoFactor()" novalidate>
-        <label>
-          <span>Code a 6 chiffres</span>
-          <input type="text" formControlName="code" maxlength="6" placeholder="123456" />
-        </label>
-        <p class="error" *ngIf="twoFactorError">{{ twoFactorError }}</p>
-        <p class="success" *ngIf="twoFactorMessage">{{ twoFactorMessage }}</p>
-        <button type="submit" [disabled]="isVerifyingTwoFactor">
-          {{ isVerifyingTwoFactor ? 'Verification...' : 'Valider et activer' }}
-        </button>
-      </form>
+      <article class="overview-card">
+        <div class="overview-icon sand">
+          <span class="material-symbols-outlined">login</span>
+        </div>
+        <div>
+          <p class="overview-label">Connexion</p>
+          <h2>{{ usesGoogleLogin ? 'Google' : 'Email + mot de passe' }}</h2>
+          <p class="overview-text">
+            {{ usesGoogleLogin ? 'Vous pouvez aussi definir un mot de passe local pour plus de flexibilite.' : 'Votre acces principal utilise deja un mot de passe local.' }}
+          </p>
+        </div>
+      </article>
     </section>
 
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-      <label>
-        <span>Mot de passe actuel</span>
-        <input type="password" formControlName="oldPassword" />
-      </label>
+    <section class="security-card">
+      <nav class="security-tabs" aria-label="Navigation securite">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeSection === 'twoFactor'"
+          (click)="setActiveSection('twoFactor')"
+        >
+          <span class="material-symbols-outlined">shield_lock</span>
+          2FA
+        </button>
 
-      <label>
-        <span>Nouveau mot de passe</span>
-        <input type="password" formControlName="newPassword" />
-      </label>
+        <button
+          type="button"
+          class="tab-btn"
+          *ngIf="showAddPasswordSection"
+          [class.active]="activeSection === 'addPassword'"
+          (click)="setActiveSection('addPassword')"
+        >
+          <span class="material-symbols-outlined">password</span>
+          Ajouter un mot de passe
+        </button>
 
-      <label>
-        <span>Confirmer le mot de passe</span>
-        <input type="password" formControlName="confirmPassword" />
-      </label>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeSection === 'changePassword'"
+          (click)="setActiveSection('changePassword')"
+        >
+          <span class="material-symbols-outlined">key_vertical</span>
+          Changer le mot de passe
+        </button>
+      </nav>
 
-      <p class="error" *ngIf="error">{{ error }}</p>
-      <p class="success" *ngIf="message">{{ message }}</p>
+      <section class="panel-card" *ngIf="activeSection === 'twoFactor'">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Double verification</p>
+            <h2>Authentification a deux facteurs</h2>
+            <p class="panel-subtitle">Ajoutez un code temporaire pour securiser encore plus vos connexions.</p>
+          </div>
+          <span class="status-badge" [class.active]="currentUser?.twoFactorEnabled">
+            {{ currentUser?.twoFactorEnabled ? 'Active' : 'Inactif' }}
+          </span>
+        </div>
 
-      <button type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Mise a jour...' : 'Modifier le mot de passe' }}
-      </button>
-    </form>
+        <ng-container *ngIf="canShowTwoFactor; else twoFactorNotAvailable">
+          <div class="info-banner" *ngIf="showTwoFactorPrompt && !twoFactorSetup && !currentUser?.twoFactorEnabled">
+            <span class="material-symbols-outlined">tip_of_the_day</span>
+            <p>Votre compte n utilise pas encore le 2FA. Activez-le pour mieux proteger votre acces TunisiaTour.</p>
+          </div>
+
+          <div class="notice-actions" *ngIf="showTwoFactorPrompt && !twoFactorSetup && !currentUser?.twoFactorEnabled">
+            <button type="button" (click)="loadTwoFactorSetup()" [disabled]="isLoadingTwoFactor">
+              <span class="material-symbols-outlined">{{ isLoadingTwoFactor ? 'progress_activity' : 'qr_code_2' }}</span>
+              {{ isLoadingTwoFactor ? 'Preparation...' : 'Activer le 2FA' }}
+            </button>
+            <button type="button" class="secondary-btn" (click)="skipTwoFactor()">
+              <span class="material-symbols-outlined">schedule</span>
+              Plus tard
+            </button>
+          </div>
+
+          <p class="success surface-message" *ngIf="currentUser?.twoFactorEnabled && !twoFactorSetup">
+            Le 2FA est deja actif sur votre compte.
+          </p>
+
+          <section class="two-factor-card" *ngIf="twoFactorSetup">
+            <div class="setup-intro">
+              <div>
+                <p class="eyebrow">Configuration</p>
+                <h3>Scannez le QR code puis confirmez avec le code recu</h3>
+              </div>
+              <p class="helper-text">
+                Compatible avec Google Authenticator, Microsoft Authenticator et Authy.
+              </p>
+            </div>
+
+            <div class="qr-wrap">
+              <div class="qr-panel">
+                <img *ngIf="twoFactorSetup.qrCodeDataUrl" [src]="twoFactorSetup.qrCodeDataUrl" alt="QR code 2FA" />
+              </div>
+
+              <div class="secret-box">
+                <div class="secret-head">
+                  <span class="material-symbols-outlined">key</span>
+                  <div>
+                    <span>Cle manuelle</span>
+                    <strong>{{ twoFactorSetup.secret }}</strong>
+                  </div>
+                </div>
+
+                <div class="secret-meta">
+                  <p><strong>Compte :</strong> {{ twoFactorSetup.accountName }}</p>
+                  <p><strong>Service :</strong> {{ twoFactorSetup.issuer }}</p>
+                </div>
+              </div>
+            </div>
+
+            <form class="two-factor-actions" [formGroup]="twoFactorForm" (ngSubmit)="verifyTwoFactor()" novalidate>
+              <label>
+                <span>Code a 6 chiffres</span>
+                <input type="text" formControlName="code" maxlength="6" placeholder="123456" />
+              </label>
+              <p class="error" *ngIf="twoFactorError">{{ twoFactorError }}</p>
+              <p class="success" *ngIf="twoFactorMessage">{{ twoFactorMessage }}</p>
+              <button type="submit" [disabled]="isVerifyingTwoFactor">
+                <span class="material-symbols-outlined">{{ isVerifyingTwoFactor ? 'progress_activity' : 'verified' }}</span>
+                {{ isVerifyingTwoFactor ? 'Verification...' : 'Valider et activer' }}
+              </button>
+            </form>
+          </section>
+        </ng-container>
+
+        <ng-template #twoFactorNotAvailable>
+          <div class="empty-state">
+            <span class="material-symbols-outlined">shield</span>
+            <p>Le 2FA n est pas disponible pour ce profil.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="panel-card" *ngIf="showAddPasswordSection && activeSection === 'addPassword'">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Mot de passe</p>
+            <h2>Ajoutez un mot de passe pour votre compte</h2>
+            <p class="panel-subtitle">Gardez la connexion Google et ajoutez une methode de secours plus flexible.</p>
+          </div>
+          <span class="status-badge warm">Setup</span>
+        </div>
+
+        <div class="info-banner" *ngIf="recommendedPasswordSetup">
+          <span class="material-symbols-outlined">info</span>
+          <p>Vous etes connecte via Google. Definissez maintenant un mot de passe pour activer aussi la connexion email + mot de passe.</p>
+        </div>
+
+        <p class="helper-text" *ngIf="!recommendedPasswordSetup">
+          Votre compte a deja un mot de passe. Utilisez l onglet "Changer le mot de passe" pour le modifier.
+        </p>
+
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate *ngIf="recommendedPasswordSetup">
+          <label>
+            <span>Nouveau mot de passe</span>
+            <div class="password-field">
+              <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" placeholder="Entrez votre nouveau mot de passe" />
+              <button type="button" class="icon-btn" (click)="togglePasswordVisibility('new')">
+                <span class="material-symbols-outlined">{{ showNewPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </label>
+
+          <label>
+            <span>Confirmer le mot de passe</span>
+            <div class="password-field">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirmez votre nouveau mot de passe" />
+              <button type="button" class="icon-btn" (click)="togglePasswordVisibility('confirm')">
+                <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </label>
+
+          <div class="strength-box">
+            <div class="strength-head">
+              <span>Force du mot de passe</span>
+              <strong>{{ passwordStrengthLabel }}</strong>
+            </div>
+            <div class="strength-bar" aria-hidden="true">
+              <span [style.width.%]="passwordStrength"></span>
+            </div>
+          </div>
+
+          <p class="error" *ngIf="error">{{ error }}</p>
+          <p class="success" *ngIf="message">{{ message }}</p>
+
+          <button type="submit" [disabled]="isSubmitting || !hasPasswordInput">
+            <span class="material-symbols-outlined">{{ isSubmitting ? 'progress_activity' : 'lock_reset' }}</span>
+            {{ isSubmitting ? 'Mise a jour...' : 'Ajouter mon mot de passe' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="panel-card" *ngIf="activeSection === 'changePassword'">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Mot de passe</p>
+            <h2>Changer le mot de passe</h2>
+            <p class="panel-subtitle">Mettez a jour vos acces regulièrement pour proteger vos donnees et vos reservations.</p>
+          </div>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <label>
+            <span>Mot de passe actuel</span>
+            <div class="password-field">
+              <input [type]="showOldPassword ? 'text' : 'password'" formControlName="oldPassword" />
+              <button type="button" class="icon-btn" (click)="togglePasswordVisibility('old')">
+                <span class="material-symbols-outlined">{{ showOldPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <small class="helper-text">Si votre compte est 100% Google, ce champ peut rester vide.</small>
+          </label>
+
+          <label>
+            <span>Nouveau mot de passe</span>
+            <div class="password-field">
+              <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" placeholder="Entrez votre nouveau mot de passe" />
+              <button type="button" class="icon-btn" (click)="togglePasswordVisibility('new')">
+                <span class="material-symbols-outlined">{{ showNewPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </label>
+
+          <label>
+            <span>Confirmer le mot de passe</span>
+            <div class="password-field">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirmez votre nouveau mot de passe" />
+              <button type="button" class="icon-btn" (click)="togglePasswordVisibility('confirm')">
+                <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </label>
+
+          <div class="strength-box">
+            <div class="strength-head">
+              <span>Force du mot de passe</span>
+              <strong>{{ passwordStrengthLabel }}</strong>
+            </div>
+            <div class="strength-bar" aria-hidden="true">
+              <span [style.width.%]="passwordStrength"></span>
+            </div>
+          </div>
+
+          <p class="error" *ngIf="error">{{ error }}</p>
+          <p class="success" *ngIf="message">{{ message }}</p>
+
+          <button type="submit" [disabled]="isSubmitting || !hasPasswordInput">
+            <span class="material-symbols-outlined">{{ isSubmitting ? 'progress_activity' : 'key' }}</span>
+            {{ isSubmitting ? 'Mise a jour...' : 'Modifier le mot de passe' }}
+          </button>
+        </form>
+      </section>
+    </section>
   </section>
 </main>

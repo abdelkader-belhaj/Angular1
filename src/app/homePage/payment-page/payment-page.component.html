@@ -1,0 +1,138 @@
+<div class="min-h-screen payment-shell py-10 px-4">
+  <div class="mx-auto w-full max-w-5xl">
+    <button
+      type="button"
+      (click)="backToReservations()"
+      class="mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+      <lucide-icon name="arrow-left" class="w-4 h-4"></lucide-icon>
+      Retour aux réservations
+    </button>
+
+    <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+      <div class="bg-gradient-to-r from-blue-900 via-cyan-700 to-emerald-600 px-8 py-8 text-white">
+        <p class="text-xs uppercase tracking-[0.2em] font-bold text-white/90">Route Paiement</p>
+        <h1 class="mt-2 text-3xl font-black leading-tight">Interface de paiement sécurisée</h1>
+        <p class="mt-2 text-sm text-white/90">Remplissez les informations client et carte pour finaliser votre réservation.</p>
+      </div>
+
+      <div class="grid gap-6 p-8 lg:grid-cols-[1.4fr_0.9fr]">
+        <section class="space-y-5">
+          <form [formGroup]="paymentForm" class="space-y-5" novalidate>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <h2 class="text-base font-black text-slate-800">Informations client</h2>
+              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                  <label class="field-label" for="fullName">Nom complet</label>
+                  <input id="fullName" type="text" formControlName="fullName" class="field-input" placeholder="Ex: Mohamed Trabelsi" />
+                  <p *ngIf="paymentForm.controls.fullName.touched && paymentForm.controls.fullName.invalid" class="field-error">Nom requis (minimum 3 caractères).</p>
+                </div>
+
+                <div>
+                  <label class="field-label" for="email">Email</label>
+                  <input id="email" type="email" formControlName="email" class="field-input" placeholder="exemple@email.com" />
+                  <p *ngIf="paymentForm.controls.email.touched && paymentForm.controls.email.invalid" class="field-error">Email valide requis.</p>
+                </div>
+
+                <div>
+                  <label class="field-label" for="phone">Téléphone</label>
+                  <input id="phone" type="tel" formControlName="phone" class="field-input" placeholder="+216 12 345 678" />
+                  <p *ngIf="paymentForm.controls.phone.touched && paymentForm.controls.phone.invalid" class="field-error">Téléphone valide requis.</p>
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="field-label" for="addressLine1">Adresse</label>
+                  <input id="addressLine1" type="text" formControlName="addressLine1" class="field-input" placeholder="Rue, numéro, quartier" />
+                  <p *ngIf="paymentForm.controls.addressLine1.touched && paymentForm.controls.addressLine1.invalid" class="field-error">Adresse requise.</p>
+                </div>
+
+                <div>
+                  <label class="field-label" for="city">Ville</label>
+                  <input id="city" type="text" formControlName="city" class="field-input" placeholder="Tunis" />
+                  <p *ngIf="paymentForm.controls.city.touched && paymentForm.controls.city.invalid" class="field-error">Ville requise.</p>
+                </div>
+
+                <div>
+                  <label class="field-label" for="postalCode">Code postal</label>
+                  <input id="postalCode" type="text" formControlName="postalCode" class="field-input" placeholder="1000" />
+                  <p *ngIf="paymentForm.controls.postalCode.touched && paymentForm.controls.postalCode.invalid" class="field-error">Code postal requis.</p>
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="field-label" for="country">Pays</label>
+                  <select id="country" formControlName="country" class="field-input">
+                    <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+              <h2 class="text-base font-black text-slate-800">Informations de carte</h2>
+              <p class="mt-1 text-xs text-slate-500">Champs carte fournis et sécurisés par Stripe.</p>
+              <div
+                #cardElement
+                class="mt-4 rounded-2xl border-2 border-slate-200 bg-white p-4 transition-colors hover:border-cyan-400 focus-within:border-cyan-600"
+                id="card-element">
+              </div>
+              <p *ngIf="!cardReady" class="mt-2 text-xs font-semibold text-slate-500">Chargement sécurisé du champ carte...</p>
+            </div>
+
+            <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              <input type="checkbox" formControlName="acceptTerms" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600" />
+              <span>Je confirme que mes informations de facturation sont exactes et j'accepte de procéder au paiement.</span>
+            </label>
+            <p *ngIf="paymentForm.controls.acceptTerms.touched && paymentForm.controls.acceptTerms.invalid" class="field-error -mt-3">Vous devez accepter cette confirmation.</p>
+          </form>
+
+          <div *ngIf="errorMessage" class="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {{ errorMessage }}
+          </div>
+
+          <div *ngIf="successMessage" class="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+            {{ successMessage }}
+          </div>
+
+          <button
+            type="button"
+            (click)="confirmPayment()"
+            [disabled]="isProcessing || !clientSecret || paymentForm.invalid || !cardReady"
+            class="w-full rounded-2xl bg-gradient-to-r from-blue-800 to-cyan-600 px-5 py-3.5 text-base font-black text-white shadow-lg transition-all hover:from-blue-900 hover:to-cyan-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {{ isProcessing ? 'Traitement en cours...' : 'Payer maintenant' }}
+          </button>
+        </section>
+
+        <aside class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 h-fit">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Résumé</p>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-semibold text-slate-500">Montant total</p>
+            <p class="mt-1 text-3xl font-black text-indigo-700">{{ amountFormatted.split(' ')[0] }}</p>
+            <p class="text-xs font-semibold text-slate-500">{{ amountFormatted.split(' ')[1] }}</p>
+          </div>
+
+          <div class="rounded-xl border border-cyan-200 bg-cyan-50 p-4">
+            <div class="flex items-start gap-2">
+              <lucide-icon name="shield-check" class="w-4 h-4 mt-0.5 text-cyan-700"></lucide-icon>
+              <p class="text-xs font-semibold text-cyan-900">Paiement traité par Stripe avec chiffrement des données.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-600 space-y-1.5">
+            <p class="font-semibold">Champs à remplir obligatoires</p>
+            <p>Nom complet, email, téléphone</p>
+            <p>Adresse, ville, code postal, pays</p>
+            <p>Détails carte Stripe (numéro, date, CVC)</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-600 space-y-1.5">
+            <p class="font-semibold">Cartes de test Stripe</p>
+            <p>4242 4242 4242 4242 (succès)</p>
+            <p>4000 0000 0000 0002 (refus)</p>
+            <p>4000 0025 0000 3155 (3D Secure)</p>
+            <p>Date future, CVC au choix, code postal au choix</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>

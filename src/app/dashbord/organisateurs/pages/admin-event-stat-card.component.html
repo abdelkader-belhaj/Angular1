@@ -1,0 +1,52 @@
+<div class="relative rounded-2xl border border-outline bg-surface-container overflow-hidden p-5 hover:-translate-y-1 transition-transform duration-200 cursor-default">
+
+  <!-- Bande colorée -->
+  <div class="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" [ngClass]="getAccentColor()"></div>
+
+  <div class="flex items-center gap-4 mt-2">
+
+    <!-- Icône -->
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" [ngClass]="getIconBg()">
+      <ng-container [ngSwitch]="status">
+
+        <svg *ngSwitchCase="'DRAFT'" class="w-5 h-5" [ngClass]="getIconColor()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+
+        <svg *ngSwitchCase="'PUBLISHED'" class="w-5 h-5" [ngClass]="getIconColor()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+
+        <svg *ngSwitchCase="'REJECTED'" class="w-5 h-5" [ngClass]="getIconColor()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+
+        <svg *ngSwitchCase="'CANCELLED'" class="w-5 h-5" [ngClass]="getIconColor()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        </svg>
+
+      </ng-container>
+    </div>
+
+    <!-- Contenu -->
+    <div class="flex flex-col gap-0.5 min-w-0">
+      <span class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        {{ getStatusLabel() }}
+      </span>
+      <span class="text-3xl font-bold text-on-surface tracking-tight leading-none">
+        {{ count }}
+      </span>
+      <span class="text-xs text-on-surface-variant mt-0.5">
+        {{ getStatusHint() }}
+      </span>
+    </div>
+
+  </div>
+</div>

@@ -8,6 +8,9 @@ import { RouterModule } from '@angular/router';
 import { ProductsPageComponent } from './pages/products-page.component';
 import { ProductDetailPageComponent } from './pages/product-detail-page.component';
 
+// Shared
+import { HomeSharedModule } from '../../homePage/home-shared.module';
+
 @NgModule({
   declarations: [
     ProductsPageComponent,
@@ -18,7 +21,8 @@ import { ProductDetailPageComponent } from './pages/product-detail-page.componen
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule
+    RouterModule,
+    HomeSharedModule
   ]
 })
 export class ProductsModule { }

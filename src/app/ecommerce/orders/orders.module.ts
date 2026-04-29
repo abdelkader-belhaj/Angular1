@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
 import { OrderConfirmationPageComponent } from './pages/order-confirmation-page.component';
 import { MyOrdersPageComponent } from './pages/my-orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page.component';
+import { HomeSharedModule } from '../../homePage/home-shared.module';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { OrderDetailPageComponent } from './pages/order-detail-page.component';
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule
+    RouterModule,
+    HomeSharedModule
   ],
   exports: [
     OrderConfirmationPageComponent,

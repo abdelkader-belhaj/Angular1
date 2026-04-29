@@ -1,0 +1,202 @@
+<app-navbar></app-navbar>
+
+<!-- ========== PAGE WRAPPER ========== -->
+<div class="min-h-screen bg-slate-50 page-shell" [class.page-dark]="isDarkMode">
+
+  <!-- ── HEADER HERO ── -->
+  <div class="relative overflow-hidden bg-white border-b border-slate-200 pt-14 pb-16 px-6" [class.hero-dark]="isDarkMode">
+    <!-- Decorative blobs -->
+    <div class="absolute top-0 right-0 w-72 h-72 bg-indigo-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+      <div class="theme-top-row">
+        <button
+          type="button"
+          (click)="toggleThemeMode()"
+          class="theme-switch"
+          [class.is-on]="isDarkMode"
+          aria-label="Basculer le thème"
+        >
+          <span class="theme-switch-thumb" aria-hidden="true"></span>
+          <span class="theme-switch-moon" aria-hidden="true"></span>
+          <span class="theme-switch-stars" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="hero-topline">
+        <div class="hero-brand">
+          <div class="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm">
+            <lucide-icon name="plane" class="w-5 h-5 text-indigo-600"></lucide-icon>
+          </div>
+          <div>
+            <span class="text-indigo-600 text-sm font-bold tracking-wider uppercase block">Espace Client</span>
+            <span class="text-slate-500 text-xs font-medium">Réservations de vols</span>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button
+            type="button"
+            routerLink="/vols"
+            class="hero-action hero-action--notif"
+            aria-label="Voir les vols disponibles"
+          >
+            <span class="hero-action-icon">
+              <lucide-icon name="search" class="w-4 h-4"></lucide-icon>
+            </span>
+            <span class="hero-action-text">
+              <strong>Vols</strong>
+              <small>Explorer les destinations</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            routerLink="/reclamations/mes"
+            class="hero-action hero-action--claim"
+            aria-label="Accéder à mes réclamations"
+          >
+            <span class="hero-action-icon hero-action-icon--amber">
+              <lucide-icon name="message-square" class="w-4 h-4"></lucide-icon>
+            </span>
+            <span class="hero-action-text">
+              <strong>Réclamations</strong>
+              <small>Ouvrir ou suivre un dossier</small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <p class="mt-1 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Mes réservations de vols</p>
+
+      <!-- Stats bar -->
+      <div class="summary-strip mt-4" *ngIf="!loading">
+        <div class="summary-chip summary-chip--indigo">
+          <lucide-icon name="plane" class="w-4 h-4 text-indigo-600"></lucide-icon>
+          <div>
+            <p class="summary-value">{{ reservations.length }}</p>
+            <p class="summary-label">Vols</p>
+          </div>
+        </div>
+        <div class="summary-chip summary-chip--emerald">
+          <lucide-icon name="check-circle" class="w-4 h-4 text-emerald-600"></lucide-icon>
+          <div>
+            <p class="summary-value">{{ confirmedCount }}</p>
+            <p class="summary-label">Confirmés</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="max-w-5xl mx-auto px-4 md:px-6 -mt-12 pb-20 relative z-10">
+
+    <div *ngIf="error" class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">
+      <p class="font-semibold">Erreur de chargement</p>
+      <p class="text-sm">{{ error }}</p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-24 gap-4">
+      <div class="w-14 h-14 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+      <p class="text-slate-500 font-semibold">Chargement de vos réservations...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && confirmedCount === 0"
+      class="bg-white border border-slate-100 shadow-sm rounded-3xl p-12 text-center mt-4">
+      <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-100">
+        <lucide-icon name="plane-x" class="w-10 h-10 text-indigo-500"></lucide-icon>
+      </div>
+      <h3 class="text-xl font-extrabold text-slate-800 mb-2">Aucune réservation de vol</h3>
+      <p class="text-slate-500 mb-8 max-w-sm mx-auto">Vous n'avez pas encore de réservation de vol. Explorez nos destinations pour commencer.</p>
+      <button routerLink="/vols"
+        class="inline-flex items-center gap-2 px-8 py-3.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+        <lucide-icon name="search" class="w-5 h-5"></lucide-icon>
+        Explorer les vols
+      </button>
+    </div>
+
+    <!-- ── RESERVATION CARDS GRID ── -->
+    <div *ngIf="!loading && reservations.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+
+      <div *ngFor="let res of reservations"
+        class="group relative bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1">
+
+        <!-- Status bar (top accent) -->
+        <div class="h-1 w-full"
+          [ngClass]="{
+            'bg-gradient-to-r from-amber-400 to-orange-400': res.statut === 'en_attente',
+            'bg-gradient-to-r from-emerald-400 to-teal-400': res.statut === 'confirmee',
+            'bg-gradient-to-r from-rose-500 to-red-500': res.statut === 'annulee'
+          }">
+        </div>
+
+        <!-- Card Content -->
+        <div class="p-6 flex flex-col gap-4 h-full">
+
+          <!-- Card Header -->
+          <div class="flex justify-between items-start gap-3">
+            <div>
+              <h4 class="font-extrabold text-lg text-slate-800 leading-tight">Vol {{ res.numeroVol || res.id }}</h4>
+              <p class="text-slate-500 text-sm font-medium flex items-center gap-1.5 mt-1">
+                <lucide-icon name="map-pin" class="w-3.5 h-3.5"></lucide-icon>
+                {{ res.depart }} → {{ res.arrivee }}
+              </p>
+            </div>
+            <!-- Status badge -->
+            <span class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-black border"
+              [ngClass]="getStatutColor(res.statut)">
+              {{ getStatutLibelle(res.statut) }}
+            </span>
+          </div>
+
+          <!-- Flight Details Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Départ</p>
+              <p class="text-slate-800 font-bold text-sm">{{ formatDate(res.dateDepart) }}</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Arrivée</p>
+              <p class="text-slate-800 font-bold text-sm">{{ formatDate(res.dateArrivee) }}</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Passagers</p>
+              <p class="text-slate-800 font-bold text-sm flex items-center gap-1.5">
+                <lucide-icon name="users" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+                {{ res.nbPassagers || 1 }} personne{{ (res.nbPassagers || 1) > 1 ? 's' : '' }}
+              </p>
+            </div>
+            <div class="bg-indigo-50 rounded-2xl p-3 border border-indigo-100">
+              <p class="text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">Prix total</p>
+              <p class="text-indigo-900 font-black text-lg leading-none">{{ res.prixTotal || res.prix }} <span class="text-sm font-semibold text-indigo-500">TND</span></p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 pt-2 mt-auto border-t border-slate-200">
+            <button type="button"
+              class="flex-1 py-3 bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-colors text-sm"
+              (click)="voirDetails(res.id)">
+              <lucide-icon name="eye" class="w-4 h-4"></lucide-icon>
+              Voir détails
+            </button>
+            
+            <button *ngIf="res.statut === 'confirmee'" type="button"
+              class="flex-1 py-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors text-sm"
+              (click)="annulerReservation(res.id)">
+              <lucide-icon name="x-circle" class="w-4 h-4"></lucide-icon>
+              Annuler
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

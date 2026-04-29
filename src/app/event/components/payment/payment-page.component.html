@@ -1,0 +1,87 @@
+<div class="pay-page">
+  <button class="btn-back" (click)="goBack()">← Retour aux événements</button>
+
+  <div *ngIf="loading" class="skel-pay"></div>
+
+  <div *ngIf="!loading && reservation && !paid" class="pay-layout">
+    <aside class="order-recap">
+      <h3>Récapitulatif</h3>
+      <div class="recap-row">
+        <span>Événement</span>
+        <b>{{ reservation.eventTitle || 'Réservation' }}</b>
+      </div>
+      <div class="recap-row">
+        <span>Billets</span>
+        <b>{{ reservation.numberOfTickets }}</b>
+      </div>
+      <div class="recap-row">
+        <span>Prix par place</span>
+        <b>{{ unitPrice | number:'1.2-2' }} TND</b>
+      </div>
+      <div class="recap-row">
+        <span>Statut</span>
+        <b>{{ reservation.status }}</b>
+      </div>
+      <div class="recap-row total-row">
+        <span>Total</span>
+        <b class="total-amt">{{ payableAmount | number:'1.2-2' }} TND</b>
+      </div>
+      <div class="recap-row" *ngIf="promoApplied">
+        <span>Promo appliquée</span>
+        <b>-{{ promoPercent }}%</b>
+      </div>
+      <p class="secure-badge">🔒 Paiement sécurisé</p>
+    </aside>
+
+    <section class="pay-form">
+      <h2>Payer avec Stripe</h2>
+
+      <div *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+      <div class="promo-pay-box">
+        <div class="promo-meta" *ngIf="hasPromoCodeAvailable">
+          <small>🎟️ Code promo disponible: <strong class="promo-code-value">{{ eventInfo?.promoCode }}</strong></small>
+        </div>
+        <div class="promo-meta" *ngIf="hasPromoValidity">
+          <small>
+            Date de validité:
+            <span *ngIf="eventInfo?.promoStartDate">du {{ eventInfo?.promoStartDate | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span *ngIf="eventInfo?.promoStartDate && eventInfo?.promoEndDate"> au </span>
+            <span *ngIf="eventInfo?.promoEndDate">{{ eventInfo?.promoEndDate | date:'dd/MM/yyyy HH:mm' }}</span>
+          </small>
+        </div>
+        <label>Code promo</label>
+        <div class="promo-pay-row">
+          <input type="text" [(ngModel)]="promoCodeInput" placeholder="Ex: FARAH10" />
+          <button type="button" class="meth-btn" (click)="applyPromoCode()">Appliquer</button>
+        </div>
+        <small class="promo-ok" *ngIf="promoApplied">Code validé: réduction appliquée.</small>
+        <small class="promo-err" *ngIf="promoError">{{ promoError }}</small>
+      </div>
+
+      <div class="method-tabs">
+        <button class="meth-btn active" type="button">Stripe</button>
+      </div>
+
+      <div *ngIf="selectedMethod === 'STRIPE'" class="alt-pay stripe-pay-block">
+        <div class="alt-ico">🔒</div>
+        <p>Paiement sécurisé via Stripe. Vous serez redirigé vers la page officielle de paiement.</p>
+        <p class="stripe-note">Stripe facture en EUR avec conversion automatique depuis le TND. Les codes promo valides sont appliqués avant la redirection.</p>
+      </div>
+
+      <button class="btn-pay-main" (click)="confirmPayment()" [disabled]="processing">
+        {{ processing ? 'Redirection Stripe...' : 'Payer avec Stripe' }}
+      </button>
+    </section>
+  </div>
+
+  <section *ngIf="!loading && reservation && paid" class="success-card">
+    <div class="success-ico">✅</div>
+    <h2>Paiement confirmé</h2>
+    <p>Votre réservation est validée. Vous pouvez maintenant accéder à votre ticket.</p>
+    <p class="redirect-note">Redirection vers vos réservations en cours...</p>
+    <button class="btn-pay-main" (click)="goToTicket()">Voir mon ticket</button>
+  </section>
+
+  <div *ngIf="!loading && !reservation && errorMsg" class="error-msg">{{ errorMsg }}</div>
+</div>

@@ -1,0 +1,267 @@
+<div class="page-vols">
+
+  <!-- BANNIÈRE -->
+  <div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">✈ Trouvez Votre Vol</h1>
+      <p class="hero-sub">{{ vols.length }} vol(s) disponible(s)</p>
+
+      <div class="glass-search">
+        <div class="gs-field">
+          <label class="gs-label">DÉPART</label>
+          <input [(ngModel)]="depart" (input)="filtrer()" placeholder="TUN" class="gs-input" />
+        </div>
+        <div class="gs-divider">→</div>
+        <div class="gs-field">
+          <label class="gs-label">ARRIVÉE</label>
+          <input [(ngModel)]="arrivee" (input)="filtrer()" placeholder="CDG" class="gs-input" />
+        </div>
+        <div class="gs-field">
+          <label class="gs-label">DATE</label>
+          <input [(ngModel)]="date" (input)="filtrer()" type="date" class="gs-input" />
+        </div>
+        <button class="gs-btn" (click)="rechercher()">
+          <span>Rechercher</span><span>→</span>
+        </button>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-action panier-btn" (click)="router.navigate(['/mes-reservations'])">
+          🎫 Mes Réservations
+        </button>
+        <button class="btn-action res-btn">
+          🛒 Mon Panier
+          <span class="badge-count" *ngIf="panierCount > 0">{{ panierCount }}</span>
+        </button>
+        <button class="btn-action reset-btn" *ngIf="searched" (click)="resetRecherche()">
+          ✕ Réinitialiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="vols-grid" *ngIf="loading">
+    <div class="vol-card skel" *ngFor="let i of [1,2,3,4,5,6]">
+      <div class="sl"></div><div class="sl short"></div><div class="sl"></div>
+    </div>
+  </div>
+
+  <!-- ERREUR -->
+  <div class="msg-error" *ngIf="error && !loading">⚠ {{ error }}</div>
+
+  <!-- VIDE -->
+  <div class="msg-empty" *ngIf="!loading && !error && vols.length === 0">
+    <span>🔍</span>
+    <p>Aucun vol trouvé</p>
+    <button class="gs-btn" (click)="resetRecherche()">Voir tous les vols</button>
+  </div>
+
+  <!-- GRILLE -->
+  <div class="vols-grid" *ngIf="!loading && vols.length > 0">
+    <div class="vol-card" *ngFor="let vol of vols"
+      [class.in-panier]="estDansPanier(vol.id)">
+
+      <div class="panier-badge" *ngIf="estDansPanier(vol.id)">✓ Dans le panier</div>
+
+      <div class="card-top" [class.mt]="estDansPanier(vol.id)">
+        <span class="badge">{{ vol.numero }}</span>
+        <span class="societe">{{ vol.societeNom }}</span>
+        <span class="promo-badge" *ngIf="vol.offre" 
+              style="background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; border: 1px solid #fcd34d;">
+          PROMO -{{ vol.offre!.pourcentage }}%
+        </span>
+      </div>
+
+      <div class="route">
+        <div class="city">
+          <span class="code">{{ vol.depart }}</span>
+          <span class="lbl">Départ</span>
+        </div>
+        <div class="mid">
+          <div class="line"></div>
+          <span class="plane">✈</span>
+          <!-- Escales Timeline -->
+          <div class="escale-timeline" *ngIf="vol.escales && vol.escales.length > 0">
+            <div class="dot" *ngFor="let esc of vol.escales" [title]="esc.ville + ' (' + esc.duree + ')'"></div>
+          </div>
+          <span class="escale-tag" *ngIf="vol.escales && vol.escales.length > 0">
+            {{ vol.escales.length }} escale{{ vol.escales.length > 1 ? 's' : '' }}
+          </span>
+        </div>
+        <div class="city">
+          <span class="code">{{ vol.arrivee }}</span>
+          <span class="lbl">Arrivée</span>
+        </div>
+      </div>
+
+      <div class="infos">
+        <div class="info"><span class="il">Date</span><span class="iv">{{ vol.dateDepart | date:'dd/MM/yy' }}</span></div>
+        <div class="info"><span class="il">Heure</span><span class="iv">{{ vol.heureDepart }}</span></div>
+        <div class="info"><span class="il">Places</span><span class="iv" [class.low]="vol.places < 10">{{ vol.places }}</span></div>
+        <div class="info" *ngIf="vol.retard && vol.retard > 0">
+           <span class="il" style="color: #d97706;">⚠️ Retard</span>
+           <span class="iv" style="color: #d97706; font-weight: 800;">+{{ formatRetard(vol.retard) }}</span>
+        </div>
+      </div>
+
+      <div class="vol-escales-list" *ngIf="vol.escales && vol.escales.length > 0">
+        <span *ngFor="let esc of vol.escales" class="esc-item">📍 {{ esc.ville }} ({{ esc.duree }})</span>
+      </div>
+
+      <div class="card-footer">
+        <div class="price-block">
+          <span class="prix-old" *ngIf="vol.offre">{{ vol.prix | currency:'TND':'symbol':'1.0-2' }}</span>
+          <span class="prix" [class.promo]="vol.offre">
+            {{ (vol.offre ? vol.prix * (1 - vol.offre!.pourcentage/100) : vol.prix) | currency:'TND':'symbol':'1.0-2' }}
+          </span>
+        </div>
+        <div class="actions">
+          <button class="btn-cart" [class.in-cart]="estDansPanier(vol.id)"
+            (click)="togglePanier(vol)" [disabled]="vol.places === 0"
+            [title]="estDansPanier(vol.id) ? 'Retirer du panier' : 'Ajouter au panier'">
+            {{ estDansPanier(vol.id) ? '✓' : '🛒' }}
+          </button>
+          <button class="btn-res" (click)="ouvrirModal(vol)" [disabled]="vol.places === 0">
+            Réserver
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL ══ -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="fermerModal()">✕</button>
+
+      <!-- ÉTAPE CONFIRM -->
+      <div *ngIf="etape === 'confirm'">
+        <h2 class="modal-title">Réserver un vol</h2>
+
+        <div class="mcard" *ngIf="volAller">
+          <span class="mcard-lbl">✈ Vol aller</span>
+          <div class="mcard-route">
+            <strong>{{ volAller.depart }}</strong>
+            <span class="marrow">→</span>
+            <strong>{{ volAller.arrivee }}</strong>
+          </div>
+          <span class="mcard-num">
+            {{ volAller.numero }} · {{ volAller.dateDepart | date:'dd/MM/yyyy' }} · {{ volAller.heureDepart }}
+          </span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volAller.offre">
+              {{ volAller.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volAller.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volAller.offre ? volAller.prix * (1 - volAller.offre!.pourcentage/100) : volAller.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
+        </div>
+
+        <div class="mcard retour" *ngIf="volRetour">
+          <span class="mcard-lbl">🔁 Vol retour</span>
+          <div class="mcard-route">
+            <strong>{{ volRetour.depart }}</strong>
+            <span class="marrow">→</span>
+            <strong>{{ volRetour.arrivee }}</strong>
+          </div>
+          <span class="mcard-num">
+            {{ volRetour.numero }} · {{ volRetour.dateDepart | date:'dd/MM/yyyy' }} · {{ volRetour.heureDepart }}
+          </span>
+          <span class="mcard-prix">
+            <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.75rem;" *ngIf="volRetour.offre">
+              {{ volRetour.prix | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            <span [style.color]="volRetour.offre ? '#ef4444' : '#0ea5e9'">
+              {{ (volRetour.offre ? volRetour.prix * (1 - volRetour.offre!.pourcentage/100) : volRetour.prix) | currency:'TND':'symbol':'1.0-2' }}
+            </span>
+            /pers
+          </span>
+          <button class="mcard-remove" (click)="annulerRetour()">✕ Retirer</button>
+        </div>
+
+        <button class="btn-add-retour" (click)="choisirAllerRetour()" *ngIf="!volRetour">
+          ↔ Ajouter un vol retour
+        </button>
+
+        <div class="nb-wrap">
+          <span class="nb-lbl">Passagers</span>
+          <div class="nb-ctrl">
+            <button (click)="nbPassagers > 1 ? nbPassagers = nbPassagers - 1 : null">−</button>
+            <span>{{ nbPassagers }}</span>
+            <button (click)="nbPassagers < 9 ? nbPassagers = nbPassagers + 1 : null">+</button>
+          </div>
+        </div>
+
+        <div class="prix-total">
+          Total : <strong>{{ prixTotal | currency:'TND':'symbol':'1.0-2' }}</strong>
+        </div>
+
+        <div class="success-msg" *ngIf="reservationSuccess">{{ reservationSuccess }}</div>
+        <div class="error-msg" *ngIf="reservationError">{{ reservationError }}</div>
+
+        <div class="mactions" *ngIf="!reservationSuccess">
+          <button class="mbtn-cancel" (click)="fermerModal()">Annuler</button>
+          <button class="mbtn-confirm" (click)="confirmerReservation()" [disabled]="reservationLoading">
+            {{ reservationLoading ? 'En cours...' : 'Confirmer' }}
+          </button>
+        </div>
+        <div class="mactions" *ngIf="reservationSuccess">
+          <button class="mbtn-confirm" (click)="router.navigate(['/mes-reservations'])">
+            Voir mes réservations
+          </button>
+          <button class="mbtn-cancel" (click)="fermerModal()">Fermer</button>
+        </div>
+      </div>
+
+      <!-- ÉTAPE RETOUR -->
+      <div *ngIf="etape === 'retour'">
+        <h2 class="modal-title">🔁 Choisir le vol retour</h2>
+        <p class="retour-hint">
+          Retour depuis <strong>{{ volAller?.arrivee }}</strong>
+          vers <strong>{{ volAller?.depart }}</strong>
+          · après le {{ volAller?.dateDepart | date:'dd/MM/yyyy' }}
+        </p>
+
+        <!-- Loading return flights -->
+        <div class="loading-retour" *ngIf="loading" style="text-align: center; padding: 20px; color: #0ea5e9;">
+          <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #0ea5e9; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+          Recherche des vols retour...
+        </div>
+
+        <div class="no-retour" *ngIf="!loading && volsRetour.length === 0">
+          Aucun vol retour disponible.
+          <button class="reset-link" (click)="annulerRetour()">Continuer en aller simple</button>
+        </div>
+
+        <div class="retour-list" *ngIf="volsRetour.length > 0">
+          <div class="retour-card" *ngFor="let vr of volsRetour" (click)="selectionnerRetour(vr)">
+            <div class="rc-route">
+              <strong>{{ vr.depart }}</strong><span>→</span><strong>{{ vr.arrivee }}</strong>
+            </div>
+            <div class="rc-info">
+              <span>{{ vr.numero }}</span>
+              <span>{{ vr.dateDepart | date:'dd/MM/yyyy' }}</span>
+              <span>{{ vr.heureDepart }}</span>
+              <span class="rc-prix">
+                <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.65rem;" *ngIf="vr.offre">
+                  {{ vr.prix | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+                <span [style.color]="vr.offre ? '#ef4444' : '#0ea5e9'">
+                  {{ (vr.offre ? vr.prix * (1 - vr.offre!.pourcentage/100) : vr.prix) | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mactions" style="margin-top:16px">
+          <button class="mbtn-cancel" (click)="annulerRetour()">← Retour</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

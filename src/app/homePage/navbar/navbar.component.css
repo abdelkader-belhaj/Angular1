@@ -55,6 +55,15 @@
   color: var(--primary);
 }
 
+/* Ajouté: style menu organisateur */
+.menu-organisateur a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #b7cde4;
+  color: #0b4f8a;
+  background: #f3f9ff;
+}
+
 .btn {
   border: none;
   background: var(--primary);
@@ -118,20 +127,37 @@
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 240px;
+  min-width: 290px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 14px 34px rgba(10, 22, 41, 0.2);
-  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 20px 44px rgba(10, 22, 41, 0.18);
+  padding: 10px;
   z-index: 200;
+}
+
+.user-dropdown-head {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px 10px;
+}
+
+.dropdown-title {
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.dropdown-subtitle {
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .user-bio-preview {
   margin: 2px 4px 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f8fbff;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3f8fd 100%);
   border: 1px solid var(--border);
 }
 
@@ -145,29 +171,141 @@
 
 .user-dropdown button {
   width: 100%;
-  text-align: left;
   border: 0;
   background: transparent;
   color: var(--text);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  text-align: left;
+
+  justify-content: space-between;
+  gap: 10px;
+
 }
 
 .user-dropdown button:hover {
   background: #f5f8ff;
 }
 
+.user-dropdown button .material-symbols-outlined {
+  font-size: 18px;
+  color: #0f66b5;
+}
+
 .user-dropdown hr {
   border: 0;
   border-top: 1px solid var(--border);
-  margin: 6px 0;
+  margin: 8px 0;
 }
 
 .logout-item {
   color: #b42318 !important;
 }
+
+/* ========== STYLES SPÉCIFIQUES: MES RÉSERVATIONS ========== */
+/* Section pour le bouton Mes Réservations et ses notifications */
+.auth-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reservations-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 2px solid var(--primary);
+  background: white;
+  color: var(--primary);
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  position: relative;
+}
+
+.reservations-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* Badge de notification pour les réservations non lues */
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #fff;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4);
+  z-index: 2;
+}
+
+/* Animation du badge de notification */
+.notif-badge-ping {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: rgba(220, 38, 38, 0.45);
+  animation: notifPing 1.4s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes notifPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+/* ========== FIN STYLES: MES RÉSERVATIONS ========== */
+
+
+
+.logout-item .material-symbols-outlined {
+  color: #b42318 !important;
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+
+}
+
 
 @media (max-width: 720px) {
   .navbar-inner {

@@ -78,6 +78,10 @@
         {{ isSubmitting ? 'Connexion...' : 'Se connecter' }}
       </button>
 
+      <div class="google-button-shell">
+        <div #googleButton class="google-button"></div>
+      </div>
+
       <p class="switch-text">
         Pas encore de compte ?
         <button type="button" class="text-link" (click)="switchMode('register')">Creer un compte</button>

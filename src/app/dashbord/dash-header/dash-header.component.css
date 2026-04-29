@@ -4,12 +4,18 @@
 
 .admin-header {
   position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.admin-header.compact {
+  margin-bottom: 0.85rem;
+  gap: 0.5rem;
 }
 
 .admin-menu {
   position: relative;
-  align-self: flex-start;
-  margin-left: auto;
+  align-self: center;
+  flex-shrink: 0;
 }
 
 .admin-trigger {
@@ -92,7 +98,15 @@
 }
 
 @media (max-width: 1023px) {
+  .admin-header {
+    margin-bottom: 1rem;
+  }
+
+  .admin-header.compact {
+    margin-bottom: 0.5rem;
+  }
+
   .admin-menu {
-    margin-left: 0;
+    align-self: center;
   }
 }

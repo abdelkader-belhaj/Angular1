@@ -1,0 +1,15 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgArtisan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#bgArtisan)"/>
+  <circle cx="50" cy="28" r="12" fill="white" opacity="0.9"/>
+  <path d="M 40 70 L 45 55 L 50 65 L 55 50 L 60 70 Z" fill="white" opacity="0.9"/>
+  <g fill="white" opacity="0.6">
+    <circle cx="35" cy="52" r="2"/>
+    <circle cx="65" cy="52" r="2"/>
+  </g>
+</svg>

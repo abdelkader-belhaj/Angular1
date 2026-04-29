@@ -1,0 +1,115 @@
+<div 
+  class="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all hover:shadow-xl shadow-sm"
+  [ngClass]="isMaintenanceMode() ? 'maintenance-card cursor-not-allowed border-amber-200 bg-amber-50' : (isSaturated() ? 'ring-1 ring-rose-200 bg-rose-50/30 cursor-pointer' : 'cursor-pointer')"
+  [style.transform]="isHovered ? 'translateY(-4px)' : 'translateY(0)'"
+  [style.animationDelay]="getDelay()"
+  [style.animationDuration]="'0.4s'"
+  (mouseenter)="setHover(true)"
+  (mouseleave)="setHover(false)"
+  (click)="navigateToDetails()"
+>
+  <!-- Slider d'images -->
+  <div class="relative h-72 overflow-hidden bg-gray-100">
+    <img 
+      [src]="currentImageUrl()" 
+      [alt]="logement.nom"
+      class="w-full h-full object-cover transition-all duration-700 ease-in-out"
+      [class.scale-105]="!isHovered"
+      [class.scale-100]="isHovered"
+    />
+
+    <!-- Overlay doux -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+    
+    <div *ngIf="isMaintenanceMode()" class="absolute inset-0 bg-gradient-to-t from-amber-700/70 via-amber-500/20 to-transparent"></div>
+
+    <!-- Badge catégorie -->
+    <div class="absolute top-4 left-4">
+      <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 bg-white/95 backdrop-blur-sm shadow-sm text-gray-700">
+        {{ logement.nomCategorie }}
+      </div>
+    </div>
+
+    <!-- Badge saturation -->
+    <div *ngIf="!isMaintenanceMode() && isSaturated()" class="absolute bottom-4 left-4 right-4 rounded-xl bg-rose-600/95 text-white px-3 py-2 text-xs font-bold shadow-lg backdrop-blur-sm">
+      Saturé pour le moment
+      <span *ngIf="getNextAvailableDateLabel()" class="ml-1 font-medium">• Libération: {{ getNextAvailableDateLabel() }}</span>
+    </div>
+
+    <div *ngIf="isMaintenanceMode()" class="absolute bottom-4 left-4 right-4 rounded-2xl border border-amber-200 bg-amber-50/95 px-3 py-3 text-center shadow-xl backdrop-blur-sm">
+      <p class="text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">{{ getMaintenanceLabel() }}</p>
+      <p class="text-xs font-semibold text-amber-700 mt-1">Logement en maintenance, retour tres bientot</p>
+    </div>
+
+    <!-- Bouton favori -->
+    <button 
+      (click)="toggleFavorite($event)"
+      class="absolute top-4 right-4 p-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 hover:scale-105"
+      type="button"
+    >
+      <lucide-icon 
+        name="heart" 
+        [class]="'w-4 h-4 transition-colors ' + (isFavorite ? 'fill-rose-500 text-rose-500' : 'text-gray-600')">
+      </lucide-icon>
+    </button>
+  </div>
+
+  <!-- Contenu -->
+  <div class="p-5">
+    <div class="flex items-start justify-between mb-2 gap-3">
+      <div class="flex-1">
+        <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{ logement.nom }}</h3>
+        <p *ngIf="isMaintenanceMode()" class="text-xs font-black uppercase tracking-[0.18em] text-amber-700 mt-1">Coming Soon</p>
+      </div>
+      <div *ngIf="!isMaintenanceMode() && logement.disponible" class="ml-2 w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></div>
+    </div>
+    
+    <div class="flex items-center gap-1.5 mb-3">
+      <lucide-icon name="map-pin" class="w-3.5 h-3.5 text-gray-400"></lucide-icon>
+      <p class="text-sm text-gray-500 line-clamp-1">{{ logement.ville }}</p>
+    </div>
+
+    <div class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold border border-slate-100"
+      [ngClass]="!isSaturated() ? 'text-slate-600' : 'text-rose-600 bg-rose-50 border-rose-100'">
+      <lucide-icon [name]="!isSaturated() ? 'users' : 'alert-circle'" class="w-3 h-3" [ngClass]="!isSaturated() ? 'text-indigo-500' : 'text-rose-500'"></lucide-icon>
+      <span>{{ isMaintenanceMode() ? 'Acces detail bloque temporairement' : getAvailablePlacesLabel() }}</span>
+    </div>
+
+    <p *ngIf="!isMaintenanceMode() && isSaturated() && getNextAvailableDateLabel()" class="text-[11px] text-rose-600 mb-2 font-semibold">
+      Une place sera disponible le {{ getNextAvailableDateLabel() }}
+    </p>
+
+    <p class="text-sm text-gray-600 mb-3 leading-relaxed">{{ getCleanDescription() }}</p>
+
+    <div class="flex items-center pt-4 border-t border-gray-100" [ngClass]="aiScore ? 'justify-between' : 'justify-end'">
+      
+      <!-- � Badge Score IA avec étoiles GOLD statiques -->
+      <ng-container *ngIf="aiScore">
+        <div class="stars-container">
+          <!-- Étoiles GOLD classiques (pas d'animation) -->
+          <div class="stars-wrapper flex items-center" style="gap:3px;">
+            <ng-container *ngFor="let s of getStars()">
+              <span 
+                *ngIf="s.filled" 
+                [ngClass]="['star-filled', s.scoreClass]"
+                title="Logement {{aiScore | number:'1.1-1'}} étoiles"
+              >★</span>
+              <span *ngIf="!s.filled" class="star-empty">★</span>
+            </ng-container>
+          </div>
+          
+          <!-- Score numérique -->
+          <span 
+            [ngClass]="getScoreBadgeClass(aiScore)"
+            title="Score IA: {{aiScore | number:'1.1-1'}}/5"
+          >{{ aiScore | number:'1.1-1' }}</span>
+        </div>
+      </ng-container>
+
+      <div class="text-right">
+        <p class="text-lg font-semibold text-gray-900">{{ priceDisplay }}</p>
+        <p class="text-xs text-gray-500">/ nuit</p>
+      </div>
+    </div>
+  </div>
+</div>

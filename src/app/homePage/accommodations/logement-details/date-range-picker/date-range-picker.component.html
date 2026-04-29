@@ -1,0 +1,37 @@
+<div class="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <button type="button" (click)="prevMonth()" class="px-3 py-2 hover:bg-slate-100 rounded-lg text-sm">← Précédent</button>
+    <h3 class="font-semibold text-slate-900">{{ getMonthYear() }}</h3>
+    <button type="button" (click)="nextMonth()" class="px-3 py-2 hover:bg-slate-100 rounded-lg text-sm">Suivant →</button>
+  </div>
+
+  <div class="grid grid-cols-7 gap-2">
+    <div *ngFor="let day of weekDays" class="text-center text-xs font-bold text-slate-500 py-2">
+      {{ day }}
+    </div>
+    
+    <button type="button"
+      *ngFor="let day of daysInMonth"
+      (click)="selectDate(day)"
+      [disabled]="!day || isPastDate(day)"
+      class="aspect-square rounded-lg text-sm font-medium transition-colors"
+      [ngClass]="{
+        'text-slate-300 cursor-not-allowed': !day || isPastDate(day),
+        'bg-slate-900 text-white': isSelectedDate(day),
+        'bg-slate-100 text-slate-700 hover:bg-slate-200': day && !isSelectedDate(day) && !isInRange(day) && !isPastDate(day),
+        'bg-slate-200 text-slate-700': isInRange(day) && !isSelectedDate(day)
+      }"
+    >
+      {{ day?.getDate() }}
+    </button>
+  </div>
+
+  <div *ngIf="selectedStart && selectedEnd" class="border-t pt-4 space-y-2">
+    <p class="text-sm font-semibold text-slate-900">
+      Période sélectionnée:
+    </p>
+    <p class="text-sm text-slate-600">
+      {{ formatDate(selectedStart) }} → {{ formatDate(selectedEnd) }}
+    </p>
+  </div>
+</div>

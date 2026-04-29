@@ -1,0 +1,13 @@
+<div class="profile-banner" *ngIf="isAuthenticated && currentUser">
+  <div class="profile-content">
+    <div class="profile-item">
+      <span class="label">Email</span>
+      <span class="value">{{ currentUser?.email }}</span>
+    </div>
+    <div class="profile-divider"></div>
+    <div class="profile-item">
+      <span class="label">Rôle</span>
+      <span class="value role-badge">{{ getRoleLabel(currentUser?.role) }}</span>
+    </div>
+  </div>
+</div>

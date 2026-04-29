@@ -250,6 +250,16 @@ h2 {
   cursor: default;
 }
 
+.google-button-shell {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.google-button {
+  min-height: 44px;
+}
+
 .submit-btn.secondary {
   background: #ffffff;
   color: var(--primary);

@@ -1,0 +1,110 @@
+
+/* � ÉTOILES GOLD STATIQUES LUXE - SANS ANIMATION 🏆 */
+
+/* Étoile remplie - OR BEAU & RICHE */
+.star-filled {
+  font-size: 22px;
+  line-height: 1;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  color: #FFD700;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
+}
+
+/* Étoile vide - GRIS DOUX */
+.star-empty {
+  font-size: 22px;
+  line-height: 1;
+  display: inline-block;
+  color: #e8e5e0;
+  font-weight: 300;
+}
+
+/* Score 1 étoile - Or foncé */
+.star-score-1 {
+  color: #DAA520;
+  text-shadow: 0 1px 2px rgba(218, 165, 32, 0.2);
+}
+
+/* Score 2 étoiles - Or moyen */
+.star-score-2 {
+  color: #F0C800;
+  text-shadow: 0 1px 2px rgba(240, 200, 0, 0.25);
+}
+
+/* Score 3 étoiles - Or classique */
+.star-score-3 {
+  color: #FFD700;
+  text-shadow: 0 1px 2px rgba(255, 215, 0, 0.3);
+}
+
+/* Score 4 étoiles - Or lumineux */
+.star-score-4 {
+  color: #FFDE59;
+  text-shadow: 0 1px 2px rgba(255, 222, 89, 0.25);
+}
+
+/* Score 5 étoiles - Or brillant premium */
+.star-score-5 {
+  color: #FFED4E;
+  text-shadow: 0 1px 3px rgba(255, 237, 78, 0.35);
+}
+
+/* Conteneur discret et doux avec beau gold */
+.stars-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 8px;
+  border: 1px solid rgba(212, 167, 69, 0.18);
+  box-shadow: 0 2px 6px rgba(212, 167, 69, 0.08);
+}
+
+.stars-container:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(212, 167, 69, 0.25);
+  box-shadow: 0 2px 8px rgba(212, 167, 69, 0.12);
+}
+
+/* Badge score numérique - or lumineux */
+.score-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  min-width: 28px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: rgba(255, 215, 0, 0.12);
+  color: #B8860B;
+}
+
+.score-badge.score-5 {
+  background: rgba(255, 215, 0, 0.2);
+  color: #996600;
+  font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .star-filled,
+  .star-empty {
+    font-size: 18px;
+  }
+
+  .stars-container {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  .score-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}

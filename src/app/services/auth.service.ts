@@ -19,6 +19,10 @@ interface UserResponse {
   phone?: string;
   bio?: string;
   profileImage?: string;
+  hasFaceId?: boolean;
+  faceModelName?: string;
+  faceDetectorBackend?: string;
+  faceThreshold?: number;
 }
 
 interface AuthResponse {
@@ -56,6 +60,11 @@ interface LoginRequest {
   password: string;
 }
 
+// Ajouté: Google login
+interface GoogleLoginRequest {
+  idToken: string;
+}
+
 interface RegisterRequest {
   username: string;
   email: string;
@@ -89,7 +98,6 @@ interface ResetPasswordRequest {
 
 interface UpdateCurrentUserRequest {
   username: string;
-  email: string;
   phone?: string;
   bio?: string;
   profileImage?: string;
@@ -100,7 +108,7 @@ interface UpdateCurrentFaceIdRequest {
 }
 
 interface ChangeCurrentPasswordRequest {
-  oldPassword: string;
+  oldPassword?: string;
   newPassword: string;
   confirmPassword: string;
 }
@@ -113,11 +121,21 @@ export class AuthService {
   private readonly tokenStorageKey = 'auth_token';
   private readonly userStorageKey = 'auth_user';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login`, payload)
+      .pipe(
+        map((response) => response.data),
+        tap((auth) => this.persistAuth(auth))
+      );
+  }
+
+  // Ajouté: Google login
+  loginWithGoogle(payload: GoogleLoginRequest): Observable<AuthResponse> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.authApiUrl}/login-google`, payload)
       .pipe(
         map((response) => response.data),
         tap((auth) => this.persistAuth(auth))
@@ -165,11 +183,9 @@ export class AuthService {
 
   updateCurrentUserProfile(payload: UpdateCurrentUserRequest): Observable<UserResponse> {
     const currentUser = this.getCurrentUser();
-
     if (!currentUser?.id) {
       throw new Error('Utilisateur non connecte');
     }
-
     return this.http
       .put<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}`, payload)
       .pipe(
@@ -182,11 +198,9 @@ export class AuthService {
 
   updateCurrentUserFaceId(payload: UpdateCurrentFaceIdRequest): Observable<UserResponse> {
     const currentUser = this.getCurrentUser();
-
     if (!currentUser?.id) {
       throw new Error('Utilisateur non connecte');
     }
-
     return this.http
       .patch<ApiResponse<UserResponse>>(`${this.usersApiUrl}/${currentUser.id}/face-id`, payload)
       .pipe(
@@ -199,11 +213,9 @@ export class AuthService {
 
   changeCurrentUserPassword(payload: ChangeCurrentPasswordRequest): Observable<void> {
     const currentUser = this.getCurrentUser();
-
     if (!currentUser?.id) {
       throw new Error('Utilisateur non connecte');
     }
-
     return this.http
       .patch<ApiResponse<null>>(`${this.usersApiUrl}/${currentUser.id}/password`, payload)
       .pipe(map(() => void 0));
@@ -255,12 +267,16 @@ export class AuthService {
     return !!localStorage.getItem(this.tokenStorageKey);
   }
 
+  // Ajouté: getToken
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenStorageKey);
+  }
+
   getCurrentUser(): UserResponse | null {
     const raw = localStorage.getItem(this.userStorageKey);
     if (!raw) {
       return null;
     }
-
     try {
       return JSON.parse(raw) as UserResponse;
     } catch {
@@ -272,11 +288,19 @@ export class AuthService {
     return this.getCurrentUser()?.role === 'ADMIN';
   }
 
+  // Ajouté: isOrganisateur et isClient
+  isOrganisateur(): boolean {
+    return this.getCurrentUser()?.role === 'ORGANISATEUR';
+  }
+
+  isClient(): boolean {
+    return this.getCurrentUser()?.role === 'CLIENT_TOURISTE';
+  }
+
   isPendingApproval(user?: UserResponse | null): boolean {
     if (!user?.role) {
       return false;
     }
-
     return user.role !== 'CLIENT_TOURISTE' && user.enabled === false;
   }
 
@@ -289,7 +313,7 @@ export class AuthService {
       case 'HEBERGEUR':
         return '/hebergeur';
       case 'TRANSPORTEUR':
-        return '/transporteur';
+        return '/transport';
       case 'AIRLINE_PARTNER':
         return '/airline-partner';
       case 'ORGANISATEUR':
@@ -298,27 +322,14 @@ export class AuthService {
         return '/artisan';
       case 'SOCIETE':
         return '/societe';
-      default:
-        return '/';
+      default: return '/';
     }
   }
 
   private persistAuth(auth: AuthResponse): void {
-    if (!auth?.user) {
-      this.clearLocalAuth();
-      return;
-    }
-
-    if (this.isPendingApproval(auth.user)) {
-      this.clearLocalAuth();
-      return;
-    }
-
-    if (!auth.token) {
-      this.clearLocalAuth();
-      return;
-    }
-
+    if (!auth?.user) { this.clearLocalAuth(); return; }
+    if (this.isPendingApproval(auth.user)) { this.clearLocalAuth(); return; }
+    if (!auth.token) { this.clearLocalAuth(); return; }
     localStorage.setItem(this.tokenStorageKey, auth.token);
     localStorage.setItem(this.userStorageKey, JSON.stringify(auth.user));
   }

@@ -1,0 +1,446 @@
+<div class="space-y-6">
+  <!-- ─── HostHub : vue cartes ─── -->
+  <ng-container *ngIf="hostHubMode">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="relative max-w-md flex-1">
+        <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+        <input
+          [(ngModel)]="searchQuery"
+          name="hostSearch"
+          type="search"
+          placeholder="Rechercher par nom, ville ou type…"
+          class="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-900" />
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <select [(ngModel)]="statusFilter" name="statusFilter" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">
+          <option [ngValue]="'all'">Tous les statuts</option>
+          <option [ngValue]="'disponible'">Disponible</option>
+          <option [ngValue]="'occupe'">Occupé</option>
+          <option [ngValue]="'maintenance'">Maintenance</option>
+        </select>
+        <label class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">
+          <span class="font-medium">Type</span>
+          <select [(ngModel)]="selectedCategoryId" name="catHost" class="border-0 bg-transparent text-sm outline-none">
+            <option [ngValue]="0">Toutes</option>
+            <option *ngFor="let category of categories" [ngValue]="category.idCategorie">{{ category.nomCategorie }}</option>
+          </select>
+        </label>
+        <a
+          routerLink="/hebergeur/logements/ajout"
+          class="inline-flex items-center gap-2 rounded-2xl bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">
+          <span class="material-symbols-outlined text-lg">add</span>
+          Nouveau logement
+        </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</p>
+        <p class="mt-1 font-headline text-2xl font-extrabold text-slate-900">{{ filteredLogements.length }}</p>
+      </div>
+      <div class="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 shadow-sm">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Disponible</p>
+        <p class="mt-1 font-headline text-2xl font-extrabold text-emerald-900">{{ statusCounts.disponible }}</p>
+      </div>
+      <div class="rounded-2xl border border-sky-100 bg-sky-50/80 p-4 shadow-sm">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-sky-900">Occupé</p>
+        <p class="mt-1 font-headline text-2xl font-extrabold text-sky-950">{{ statusCounts.occupe }}</p>
+      </div>
+      <div class="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 shadow-sm">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-amber-900">Maintenance</p>
+        <p class="mt-1 font-headline text-2xl font-extrabold text-amber-950">{{ statusCounts.maintenance }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-500">Chargement…</div>
+    <div *ngIf="error" class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">{{ loadError }}</div>
+
+    <div *ngIf="!loading && !error" class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <article
+        *ngFor="let logement of displayedLogements"
+        class="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+        <div class="relative h-48 overflow-hidden bg-slate-100">
+          <img
+            [src]="getImage(getPrimaryImage(logement))"
+            [alt]="logement.nom"
+            class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            (error)="$any($event.target).src = 'assets/images/default.jpg'" />
+          <span
+            class="absolute left-3 top-3 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset"
+            [ngClass]="hostStatusClass(logement)">
+            {{ hostStatusLabel(logement) }}
+          </span>
+        </div>
+        <div class="flex flex-1 flex-col p-5">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-headline text-lg font-bold text-slate-900 leading-tight">{{ logement.nom }}</h3>
+            <p class="shrink-0 text-sm font-bold text-blue-900">{{ formatPrice(logement.prixNuit) }}</p>
+          </div>
+          <p class="mt-1 text-xs font-medium text-slate-500">{{ logement.nomCategorie }} · {{ logement.ville || '—' }}</p>
+          <p class="mt-3 line-clamp-3 flex-1 text-sm text-slate-600">{{ cardExcerpt(logement) }}</p>
+          <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              (click)="openEditModal(logement)"
+              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-blue-900 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800">
+              <span class="material-symbols-outlined text-base">edit</span>
+              Modifier
+            </button>
+            <button
+              type="button"
+              (click)="openDeleteModal(logement)"
+              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">
+              <span class="material-symbols-outlined text-base">delete</span>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+    <p *ngIf="!loading && !error && displayedLogements.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-white py-14 text-center text-slate-500">
+      Aucun logement ne correspond à vos filtres.
+    </p>
+  </ng-container>
+
+  <!-- ─── Admin : tableau ─── -->
+  <ng-container *ngIf="!hostHubMode">
+  <div class="flex justify-start">
+    <label class="flex items-center gap-3 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm text-slate-700 shadow-sm">
+      <span class="font-semibold">Catégorie :</span>
+      <select [(ngModel)]="selectedCategoryId" class="rounded-full border-none bg-transparent text-sm text-slate-900 outline-none focus:ring-0">
+        <option [ngValue]="0">Toutes</option>
+        <option *ngFor="let category of categories" [ngValue]="category.idCategorie">{{ category.nomCategorie }}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      (click)="setAdminArchiveView('active')"
+      class="rounded-full px-4 py-2 text-xs font-semibold transition"
+      [ngClass]="adminArchiveView === 'active' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
+      Actifs ({{ adminActiveCount }})
+    </button>
+    <button
+      type="button"
+      (click)="setAdminArchiveView('archived')"
+      class="rounded-full px-4 py-2 text-xs font-semibold transition"
+      [ngClass]="adminArchiveView === 'archived' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'">
+      Archivés ({{ adminArchivedCount }})
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
+    <div></div>
+    <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm w-full max-w-xs">
+      <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Total</div>
+      <div class="mt-3 text-3xl font-bold text-slate-900">{{ adminVisibleLogements.length }}</div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50 text-left text-xs uppercase tracking-[0.2em] text-slate-500">
+        <tr>
+          <th class="px-5 py-4">Nom</th>
+          <th class="px-5 py-4">Catégorie</th>
+          <th class="px-5 py-4">Hébergeur</th>
+          <th class="px-5 py-4">Ville</th>
+          <th class="px-5 py-4">Prix / nuit</th>
+          <th class="px-5 py-4">Capacité</th>
+          <th class="px-5 py-4">Statut</th>
+          <th class="px-5 py-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200 bg-white">
+        <tr *ngFor="let logement of adminVisibleLogements" class="hover:bg-slate-50">
+          <td class="px-5 py-4 text-sm font-semibold text-slate-900">{{ logement.nom }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ logement.nomCategorie }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ logement.nomHebergeur }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ logement.ville || '-' }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ formatPrice(logement.prixNuit) }}</td>
+          <td class="px-5 py-4 text-sm text-slate-600">{{ logement.capacite }}</td>
+          <td class="px-5 py-4 text-sm font-medium" [ngClass]="{ 'text-emerald-600': logement.disponible, 'text-rose-600': !logement.disponible }">
+            {{ logement.disponible ? 'Disponible' : 'Indisponible' }}
+          </td>
+          <td class="px-5 py-4 text-sm">
+            <div class="admin-actions-row flex flex-nowrap items-center gap-2">
+              <button
+                type="button"
+                class="admin-action-btn admin-action-edit"
+                title="Modifier"
+                aria-label="Modifier"
+                (click)="openEditModal(logement)">
+                <span class="material-symbols-outlined text-[15px]">edit</span>
+              </button>
+              <button
+                type="button"
+                class="admin-action-btn"
+                [ngClass]="isAdminArchived(logement) ? 'admin-action-restore' : 'admin-action-archive'"
+                [title]="getArchiveActionLabel(logement)"
+                [attr.aria-label]="getArchiveActionLabel(logement)"
+                (click)="toggleArchiveLogement(logement)">
+                <span class="material-symbols-outlined text-[15px]">{{ isAdminArchived(logement) ? 'unarchive' : 'archive' }}</span>
+              </button>
+              <button
+                type="button"
+                class="admin-action-btn admin-action-delete"
+                title="Supprimer"
+                aria-label="Supprimer"
+                (click)="openDeleteModal(logement)">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+    <tr *ngIf="!loading && adminVisibleLogements.length === 0">
+      <td colspan="8" class="px-5 py-10 text-center text-slate-500">
+        Aucun hébergement dans cette vue.
+      </td>
+    </tr>
+  </tbody>
+    </table>
+    <div *ngIf="loading" class="p-8 text-center text-slate-500">Chargement des hébergements...</div>
+    <div *ngIf="error" class="p-8 text-center text-rose-600">{{ loadError || 'Erreur lors du chargement des hébergements.' }}</div>
+  </div>
+  </ng-container>
+</div>
+
+<div *ngIf="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+  <div class="w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5 flex-shrink-0">
+      <div>
+        <h2 class="text-xl font-semibold">{{ selectedLogement ? "Modifier l'hébergement" : 'Nouveau logement' }}</h2>
+        <p class="text-sm text-slate-500">
+          {{ selectedLogement ? 'Mettez à jour les informations affichées aux voyageurs.' : 'Création rapide depuis le tableau admin.' }}
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" class="rounded-full p-2 text-slate-500 transition hover:bg-slate-100" (click)="scrollModalTop()">
+          <span class="material-symbols-outlined">keyboard_arrow_up</span>
+        </button>
+        <button type="button" class="rounded-full p-2 text-slate-500 transition hover:bg-slate-100" (click)="scrollModalBottom()">
+          <span class="material-symbols-outlined">keyboard_arrow_down</span>
+        </button>
+        <button type="button" class="rounded-full p-2 text-slate-500 transition hover:bg-slate-100" (click)="closeEditModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto" id="modalContent">
+      <form class="space-y-6 p-6" (ngSubmit)="saveLogement()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Nom du logement</span>
+          <input name="nom" type="text" [(ngModel)]="formData.nom" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+          <small class="text-rose-600" *ngIf="formErrors.nom">{{ formErrors.nom }}</small>
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Catégorie</span>
+          <select
+            name="idCategorie"
+            [(ngModel)]="formData.idCategorie"
+            class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option [ngValue]="0" disabled>Sélectionnez…</option>
+            <option *ngFor="let category of categories" [ngValue]="category.idCategorie">{{ category.nomCategorie }}</option>
+          </select>
+          <small class="text-rose-600" *ngIf="formErrors.idCategorie">{{ formErrors.idCategorie }}</small>
+        </label>
+        <label class="block md:col-span-2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="block text-sm font-medium text-slate-700">Description</span>
+            <button 
+              type="button" 
+              (click)="enhanceDescription()"
+              [disabled]="enhancingDescription || !formData.description"
+              title="Corriger l'orthographe et embellir"
+              class="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span *ngIf="enhancingDescription" class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+              <span *ngIf="!enhancingDescription" class="material-symbols-outlined text-[16px]">edit_note</span>
+              {{ enhancingDescription ? 'Correction...' : '✨ Corriger & Embellir' }}
+            </button>
+          </div>
+          <textarea name="description" rows="3" [(ngModel)]="formData.description" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900"></textarea>
+          <small class="text-rose-600 block mt-1" *ngIf="formErrors.description">{{ formErrors.description }}</small>
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Ville</span>
+          <input name="ville" type="text" [(ngModel)]="formData.ville" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+          <small class="text-rose-600" *ngIf="formErrors.ville">{{ formErrors.ville }}</small>
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Adresse</span>
+          <input name="adresse" type="text" [(ngModel)]="formData.adresse" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+          <small class="text-rose-600" *ngIf="formErrors.adresse">{{ formErrors.adresse }}</small>
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Prix / nuit</span>
+          <div class="flex gap-2">
+            <input name="prixNuit" type="number" step="0.01" [(ngModel)]="formData.prixNuit" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+            <button 
+              type="button" 
+              (click)="predictOptimalPrice()"
+              [disabled]="predictingPrice"
+              [class]="predictingPrice ? 'flex shrink-0 items-center justify-center rounded-3xl bg-slate-200 px-3 font-semibold text-slate-400 shadow-sm cursor-not-allowed transition w-12' : 'flex shrink-0 items-center justify-center rounded-3xl bg-[#5939e6] px-3 font-semibold text-white shadow-sm hover:bg-[#4a2ccc] transition w-12'"
+              title="Prédiction IA selon description">
+              <span *ngIf="!predictingPrice" class="material-symbols-outlined text-[18px]">auto_awesome</span>
+              <span *ngIf="predictingPrice" class="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+            </button>
+          </div>
+          <small class="text-rose-600" *ngIf="formErrors.prixNuit">{{ formErrors.prixNuit }}</small>
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Capacité</span>
+          <input name="capacite" type="number" min="1" [(ngModel)]="formData.capacite" class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+          <small class="text-rose-600" *ngIf="formErrors.capacite">{{ formErrors.capacite }}</small>
+        </label>
+        <label class="block md:col-span-2">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Images (plusieurs possibles)</span>
+          <div class="space-y-3">
+            <select
+              [ngModel]="selectedAssetImage"
+              (ngModelChange)="selectedAssetImage = $event"
+              name="selectedAssetImage"
+              class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+              <option value="">Sélectionner une image de assets/images</option>
+              <option *ngFor="let img of imageOptions" [value]="img">{{ img }}</option>
+            </select>
+            <div class="flex gap-2">
+              <input
+                [(ngModel)]="selectedAssetImage"
+                name="selectedAssetImageManual"
+                placeholder="Ou saisir un nom exact de fichier"
+                class="w-full rounded-3xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+              <button type="button" (click)="addImageFromAssets()" class="rounded-3xl bg-blue-900 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-800">
+                Ajouter
+              </button>
+            </div>
+            <div *ngIf="formData.imageUrls.length > 0" class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <div *ngFor="let image of formData.imageUrls; let i = index" class="relative group">
+                <img [src]="getImage(image)"
+                     class="w-full h-24 object-cover rounded-lg border border-slate-200"
+                     alt="Aperçu {{ i + 1 }}"/>
+                <button type="button"
+                        (click)="removeImage(i)"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
+                  ×
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">Les images ajoutées sont enregistrées en base par leur nom exact puis rechargées depuis assets/images.</p>
+          </div>
+        </label>
+        <label class="block md:col-span-2">
+          <span class="mb-2 block text-sm font-medium text-slate-700">Vidéo</span>
+          <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+            <span class="material-symbols-outlined text-slate-400 text-4xl">video_file</span>
+            <span class="text-sm text-slate-500 mt-1">Cliquez pour choisir une vidéo</span>
+            <span class="text-xs text-slate-400">MP4, AVI, MOV</span>
+            <input type="file" accept="video/*" class="hidden" (change)="onFileSelected($event, 'videoUrl')"/>
+          </label>
+          <video *ngIf="formData.videoUrl"
+                 [src]="getVideo(formData.videoUrl)"
+                 class="mt-3 w-full h-40 object-cover rounded-lg border border-slate-200"
+                 controls>
+          </video>
+        </label>
+        <div *ngIf="hostHubMode" class="md:col-span-2 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
+          <label class="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              name="maintenance"
+              [(ngModel)]="editMeta.maintenance"
+              (change)="onMaintenanceToggle()"
+              class="h-4 w-4 rounded border-slate-300 text-amber-700" />
+            <span class="text-sm font-medium text-amber-950">Mettre en maintenance (indisponible)</span>
+          </label>
+          <p class="mt-1 text-xs text-amber-900/80">Le statut « maintenance » est enregistré dans les métadonnées HostHub.</p>
+        </div>
+        <label class="flex items-center gap-3">
+          <input
+            name="disponible"
+            type="checkbox"
+            [(ngModel)]="formData.disponible"
+            [disabled]="!!editMeta.maintenance && hostHubMode"
+            class="h-4 w-4 rounded border-slate-300 text-blue-900" />
+          <span class="text-sm text-slate-700">Disponible à la réservation</span>
+        </label>
+        
+        <div *ngIf="!hostHubMode && selectedLogement" class="md:col-span-2 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <label class="block">
+            <div class="flex items-center justify-between mb-2">
+              <span class="block text-sm font-semibold text-amber-900">Motif de la modification (obligatoire) *</span>
+              <button 
+                type="button" 
+                (click)="enhanceReason()"
+                [disabled]="enhancingReason || !actionReason"
+                title="Corriger l'orthographe et embellir via IA"
+                class="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span *ngIf="enhancingReason" class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+                <span *ngIf="!enhancingReason" class="material-symbols-outlined text-[16px]">edit_note</span>
+                {{ enhancingReason ? 'Correction...' : '✨ Corriger & Embellir' }}
+              </button>
+            </div>
+            <p class="mb-3 text-xs text-amber-800">Ce motif sera envoyé dans les notifications de l'hébergeur pour lui expliquer ce changement.</p>
+            <textarea name="actionReason" rows="2" [(ngModel)]="actionReason" class="w-full rounded-2xl border border-amber-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500" placeholder="Ex: L'adresse était incomplète..."></textarea>
+            <small class="text-rose-600 font-medium" *ngIf="reasonError">{{ reasonError }}</small>
+          </label>
+        </div>
+      </div>
+
+      <div *ngIf="requestError" class="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{{ requestError }}</div>
+    </form>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 p-6 border-t border-slate-200 flex-shrink-0">
+      <button type="submit" class="rounded-3xl bg-blue-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800" (click)="saveLogement()">
+        {{ selectedLogement ? 'Enregistrer' : 'Créer' }}
+      </button>
+      <button type="button" class="rounded-3xl border border-slate-300 px-6 py-3 text-sm text-slate-700 transition hover:bg-slate-100" (click)="closeEditModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+  <div class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+    <div class="border-b border-slate-200 px-6 py-5">
+      <h2 class="text-xl font-semibold">Supprimer l’hébergement</h2>
+      <p class="mt-1 text-sm text-slate-500">Cette action est irréversible et supprime le logement sélectionné.</p>
+    </div>
+    <div class="p-6">
+      <p class="text-sm text-slate-700">Vous êtes sur le point de supprimer :</p>
+      <p class="mt-3 text-lg font-semibold text-slate-900">{{ deletingLogement?.nom }}</p>
+      <p class="mt-1 text-sm text-slate-600">Hébergeur : {{ deletingLogement?.nomHebergeur }}</p>
+      <p class="mt-1 text-sm text-slate-600">Catégorie : {{ deletingLogement?.nomCategorie }}</p>
+
+      <div *ngIf="!hostHubMode" class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4">
+          <label class="block">
+            <div class="flex items-center justify-between mb-2">
+              <span class="block text-sm font-semibold text-rose-900">Motif de la suppression (obligatoire) *</span>
+              <button 
+                type="button" 
+                (click)="enhanceReason()"
+                [disabled]="enhancingReason || !actionReason"
+                title="Corriger l'orthographe et embellir via IA"
+                class="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span *ngIf="enhancingReason" class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+                <span *ngIf="!enhancingReason" class="material-symbols-outlined text-[16px]">edit_note</span>
+                {{ enhancingReason ? 'Correction...' : '✨ Corriger & Embellir' }}
+              </button>
+            </div>
+            <p class="mb-3 text-xs text-rose-800">Ce motif sera envoyé dans les notifications de l'hébergeur pour lui expliquer la suppression de son bien.</p>
+            <textarea name="deleteReason" rows="2" [(ngModel)]="actionReason" class="w-full rounded-2xl border border-rose-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" placeholder="Ex: Logement non-conforme aux conditions..."></textarea>
+            <small class="text-rose-600 font-medium font-bold mt-1 inline-block" *ngIf="reasonError">{{ reasonError }}</small>
+          </label>
+      </div>
+
+      <div *ngIf="requestError" class="mt-4 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{{ requestError }}</div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button type="button" class="rounded-3xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-rose-500" (click)="confirmDelete()">Supprimer définitivement</button>
+        <button type="button" class="rounded-3xl border border-slate-300 px-6 py-3 text-sm text-slate-700 transition hover:bg-slate-100" (click)="closeDeleteModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>

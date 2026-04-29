@@ -8,6 +8,7 @@ import { DealsPageComponent } from './pages/deals-page.component';
 import { DealDetailPageComponent } from './pages/deal-detail-page.component';
 import { MyFavoritesPageComponent } from './pages/my-favorites-page.component';
 import { CustomSelectComponent } from './pages/custom-select.component';
+import { HomeSharedModule } from '../../homePage/home-shared.module';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { CustomSelectComponent } from './pages/custom-select.component';
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule
+    RouterModule,
+    HomeSharedModule
   ],
   exports: [
     DealsPageComponent,
